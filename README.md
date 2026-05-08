@@ -21,3 +21,7 @@ With a GitHub CLI version that includes `gh skill`:
 ```bash
 gh skill install smcllns/agent-skills markdown-comments --scope user
 ```
+
+## License
+
+MIT
