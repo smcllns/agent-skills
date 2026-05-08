@@ -1,7 +1,6 @@
 ---
 name: markdown-comments
 description: "Resolve human-authored comments in Obsidian notes and other markdown files using blockquote threads and inline #agent directives."
-user-invocable: true
 ---
 
 # Markdown Comments

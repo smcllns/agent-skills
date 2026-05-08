@@ -25,7 +25,7 @@ npx skills add smcllns/agent-skills --skill markdown-comments --global --agent c
 npx skills add smcllns/agent-skills --skill markdown-comments --global --agent claude-code
 ```
 
-With GitHub CLI 2.90+:
+With a GitHub CLI version that includes `gh skill`:
 
 ```bash
 gh skill preview smcllns/agent-skills markdown-comments
@@ -44,6 +44,8 @@ From this repository:
 ```bash
 mkdir -p skills/markdown-comments
 cp ../dotfiles/skills/markdown-comments/SKILL.md skills/markdown-comments/SKILL.md
+perl -0pi -e 's/^user-invocable:.*\n//m' skills/markdown-comments/SKILL.md
+npx skills-ref validate skills/markdown-comments
 npx skills add . --list
 ```
 
