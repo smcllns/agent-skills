@@ -1,6 +1,6 @@
-# Agent Skills
+# Skills
 
-A collection of my skills I use regularly and are useful to share - across productivity, writing code, research, design, decision making, etc.
+A collection of my skills I use regularly and can be useful to others - across productivity, writing code, research, design, decision making, etc.
 
 | Skill | Purpose |
 | --- | --- |
@@ -13,13 +13,7 @@ A collection of my skills I use regularly and are useful to share - across produ
 With the `skills.sh` CLI:
 
 ```bash
-npx skills@latest add smcllns/agent-skills
-```
-
-With a GitHub CLI version that includes `gh skill`:
-
-```bash
-gh skill install smcllns/agent-skills obsidian-comments --scope user
+npx skills@latest add smcllns/skills
 ```
 
 ## License
