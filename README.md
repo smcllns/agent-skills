@@ -4,7 +4,7 @@ A collection of my skills I use regularly and are useful to share - across produ
 
 | Skill | Purpose |
 | --- | --- |
-| `markdown-comments` | Enables inline agent prompts in Obsidian notes or other markdown files using blockquote threads or agent directives like #claude. |
+| `obsidian-comments` | Resolves inline #claude/#codex (etc) comments in Markdown notes by making the requested edits and replying in place. |
 
 (more coming, gotta clean em up...)
 
@@ -19,7 +19,7 @@ npx skills@latest add smcllns/agent-skills
 With a GitHub CLI version that includes `gh skill`:
 
 ```bash
-gh skill install smcllns/agent-skills markdown-comments --scope user
+gh skill install smcllns/agent-skills obsidian-comments --scope user
 ```
 
 ## License

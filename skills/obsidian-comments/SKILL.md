@@ -1,11 +1,11 @@
 ---
-name: markdown-comments
-description: "Resolve human-authored comments in Obsidian notes and other markdown files using blockquote threads and inline #agent directives."
+name: obsidian-comments
+description: "Resolve inline #claude/#codex comments in Obsidian notes by making the requested edits and replying in place. Also works with other agent tags and Markdown files."
 ---
 
-# Markdown Comments
+# Obsidian Comments
 
-Resolve comments a human left for an agent in markdown files. Work in place, preserve the conversation, and reply as the current agent.
+Resolve `#claude`/`#codex` comments a human left in Obsidian notes. Work in place, preserve the conversation, and reply as the current agent. This also works in plain Markdown files and with other agent tags.
 
 ## Comment Shapes
 
@@ -15,11 +15,10 @@ Resolve comments a human left for an agent in markdown files. Work in place, pre
 > @claude: Trimmed to 3 bullets and kept the tradeoffs inline in each.
 ```
 
-**Inline directive** -- imperative request addressed to an agent.
+**Inline hashtag comment** -- imperative prompt addressed to an agent. This is the primary use case.
 ```markdown
-#codex can you put the above into a table?
 #claude pls clean up all this broken formatting from my copy paste?
-#gemini can include the link to the PR at the end here please?
+#codex can you put the above into a table?
 ```
 
 **Unresolved rule:** a comment is unresolved when the line(s) immediately after it are not a `> @agent:` reply. Treat `agent` as the assistant/tool doing the work.
