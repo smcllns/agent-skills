@@ -4,7 +4,7 @@ A collection of my skills I use regularly and are useful to share - across produ
 
 | Skill | Purpose |
 | --- | --- |
-| `obsidian-comments` | Resolves inline #claude/#codex (etc) comments in Markdown notes by making the requested edits and replying in place. |
+| `obsidian-comments` | Resolves inline #claude/#codex (etc) comments in Obsidian or other local markdown notes by making the requested edits and responding in place. |
 
 (more coming, gotta clean em up...)
 
