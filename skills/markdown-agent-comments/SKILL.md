@@ -13,9 +13,7 @@ Resolve comments a human left for an agent in markdown files. Work in place, pre
 
 ### Callout thread
 
-Two states — **active** (`[!NOTE]+`, expanded) and **resolved** (`[!DONE]-`, collapsed, with a one-line outcome summary in the title).
-
-Active (agent reply ends with a question, so the thread stays open):
+**Active** (`[!NOTE]+`, expanded — agent reply ends with a question, thread stays open):
 
 > [!NOTE]+ @sam: this section is too wordy — can we simplify?
 >
@@ -23,7 +21,7 @@ Active (agent reply ends with a question, so the thread stays open):
 >
 >
 
-Resolved (agent collapses + summarizes once the thread is done):
+**Resolved** (`[!DONE]-`, collapsed with a one-line outcome summary):
 
 > [!DONE]- trimmed section to 3 bullets per @sam
 > @sam: this section is too wordy — can we simplify?
@@ -60,8 +58,6 @@ Agent does the work, then converts to:
 >
 > @claude: done — removed broken newlines and added missing periods at the end of sentences. No changes to text content.
 
-Human mental model: this is like `claude -p` mode for these comments — complete the ask without further human input.
-
 **If no concrete change can be made** (the request is ambiguous, missing context, or non-actionable), then add a normal `> @agent: ...` reply asking for clarification and escalate to your human for input through normal channels.
 
 Example escalation:
@@ -90,13 +86,9 @@ For each unresolved comment:
 - Do the requested work when it is concrete. For discussion comments, answer concisely.
 - If the comment sits on a task item, update the checkbox too.
 
-Then follow the path that matches the shape:
+For thread comments:
 
-**Thread comments** (`[!NOTE]+` or shorthand forms):
-
-- **Upgrade** any shorthand form to `> [!NOTE]+ @sam: ...` on first reply.
-- **Reply** once below the original line as `> @agent: ...`, using the agent name the user would expect (`@codex`, `@claude`, `@pi`, `@hermes`, etc).
-- **Separate speaker turns** with a blank quoted line (`>`) before each new speaker. Do not put `> @sam:` and `> @agent:` on adjacent lines; renderers collapse them into one paragraph with an unstyleable `<br>`.
+- **Reply** as `> @agent: ...` below the original line, using the agent name the user expects (`@codex`, `@claude`, `@pi`, `@hermes`). Separate each speaker turn with a blank quoted line (`>`) — adjacent speaker lines collapse into one `<br>`-jammed paragraph in renderers.
 - **Pre-open user input** when your reply asks the human a question or needs another response: end with two blank quoted lines after your reply so the user can type on the final line.
   ```markdown
   > @claude: I need input from you to act — should I do #1 or #3?
@@ -106,10 +98,4 @@ Then follow the path that matches the shape:
 - **Resolve** when the thread is done: change `[!NOTE]+` → `[!DONE]-` and write a one-line outcome summary as the callout title. Preserve the thread inside. **Title convention:** past-tense action + scope, ≤ ~60 chars. Examples:
     - `[!DONE]- trimmed intro to 3 bullets per @sam`
     - `[!DONE]- agreed on Tuesday migration kickoff`
-    - `[!DONE]- kept queue worker in deployment section`
-
-**Inline directives** (`#agent ...`):
-
-- Action the request.
-- **Wrap directly** into a `[!DONE]-` callout: one-line outcome summary as the title, the original `#agent` directive preserved as the first line inside, a blank quoted line, then your `@agent: done — ...` reply. No `[!NOTE]+` stage.
 
