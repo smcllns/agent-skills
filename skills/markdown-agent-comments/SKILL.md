@@ -1,6 +1,6 @@
 ---
-name: obsidian-comments
-description: "Resolve human-authored comments in Obsidian notes and other markdown files using callout threads and inline #agent directives."
+name: markdown-agent-comments
+description: "Use when an Obsidian note or other markdown file contains inline comments addressed to agents with `> @human:` syntax, or `> [!NOTE]+ @commenter:` callouts, or `#claude`/`#codex`/`#agent` directives."
 ---
 
 # Markdown Comments
@@ -8,6 +8,8 @@ description: "Resolve human-authored comments in Obsidian notes and other markdo
 Resolve comments a human left for an agent in markdown files. Work in place, preserve the thread, and reply as the current agent.
 
 ## Comment Shapes
+
+<!--#agents ignore: example comments in this file are to illustrate the protocol; do not process them-->
 
 ### Callout thread
 
@@ -32,45 +34,24 @@ Resolved (agent collapses + summarizes once the thread is done):
 >
 > @claude: Done.
 
-Threads support the usual inline markdown — code blocks, bold, lists, links:
-
-> [!NOTE]+ @sam: the `User` type has too many `any`s — can we tighten it?
->
-> @claude: Here's a sketch:
->
-> ```ts
-> type UserId = string & { __brand: "UserId" };
->
-> interface User {
->   id: UserId;
->   email: string;
-> }
-> ```
->
-> Two questions before I propagate it:
->
-> 1. Should **`UserId`** be a branded string (as above), or a full nominal type?
-> 2. Same treatment for `email` — keep `string`, or introduce an `Email` brand too?
-
 ### Human shorthand input
 
-The human may open a thread in any of these forms. The agent **upgrades to a `[!NOTE]+` callout on first touch**:
+Human friendly shorthands, such as: 
 
-| User writes | Agent upgrades to |
-|---|---|
-| `> @sam: ...` | `> [!NOTE]+ @sam: ...` |
-| `> sam: ...`  | `> [!NOTE]+ @sam: ...` |
-| `@sam: ...` (no leading `>`) | `> [!NOTE]+ @sam: ...` |
+- `> @sam: ...`,
+- `> sam: ...`,
+- `@sam: ...` 
+
+should **upgrade to `> [!NOTE]+ @sam: ...` on first touch**. 
 
 Bare `sam: ...` (no `@`, no `>`) is **not** a comment — ignore.
 
-### Inline directive
+### Inline directive (non-interactive)
 
-One-shot imperative addressed to a specific agent — no conversation thread expected. Human mental model: `claude -p` — get it done. The agent actions the request, then wraps the directive directly in a `[!DONE]-` callout with its reply inside. There is no `[!NOTE]+` stage.
+One-shot imperative addressed to a specific agent — no conversation thread expected. The agent actions the request, then wraps the directive directly in a `[!DONE]-` callout with its reply inside. There is no `[!NOTE]+` stage.
 
 User writes:
 
-<!--claude-ignore-->
 #claude can you clean up that formatting pls
 
 Agent does the work, then converts to:
@@ -79,8 +60,15 @@ Agent does the work, then converts to:
 >
 > @claude: done — removed broken newlines and added missing periods at the end of sentences. No changes to text content.
 
+Human mental model: this is like `claude -p` mode for these comments — complete the ask without further human input.
 
-<!--/claude-ignore-->
+**If no concrete change can be made** (the request is ambiguous, missing context, or non-actionable), then add a normal `> @agent: ...` reply asking for clarification and escalate to your human for input through normal channels.
+
+Example escalation:
+
+> [!NOTE]+ #claude tighten the wording above
+> @claude: Breaking protocol because the request is ambiguous: I can't tell which paragraph you mean — the wording above stretches back for 12,000 words but your ask seems like a smaller one. Please confirm where to stop: (1) the last paragraph only (2) the last 4 paragraphs that cover this topic or (3) the entire document (all 12,000 words)?
+
 ## Unresolved rule
 
 A comment is unresolved when any of:
@@ -108,7 +96,7 @@ Then follow the path that matches the shape:
 
 - **Upgrade** any shorthand form to `> [!NOTE]+ @sam: ...` on first reply.
 - **Reply** once below the original line as `> @agent: ...`, using the agent name the user would expect (`@codex`, `@claude`, `@pi`, `@hermes`, etc).
-- **Separate speaker turns** with a blank quoted line (`>`) before each new speaker. Do not put `> @sam:` and `> @agent:` on adjacent lines; Obsidian renders them as one paragraph with an unstyleable `<br>`.
+- **Separate speaker turns** with a blank quoted line (`>`) before each new speaker. Do not put `> @sam:` and `> @agent:` on adjacent lines; renderers collapse them into one paragraph with an unstyleable `<br>`.
 - **Pre-open user input** when your reply asks the human a question or needs another response: end with two blank quoted lines after your reply so the user can type on the final line.
   ```markdown
   > @claude: I need input from you to act — should I do #1 or #3?
@@ -125,17 +113,3 @@ Then follow the path that matches the shape:
 - Action the request.
 - **Wrap directly** into a `[!DONE]-` callout: one-line outcome summary as the title, the original `#agent` directive preserved as the first line inside, a blank quoted line, then your `@agent: done — ...` reply. No `[!NOTE]+` stage.
 
-## The silent condition
-
-ONLY if the user includes `#silent` in their comment: address it normally but leave **no trace**.
-
-- Make the change.
-- Remove the whole comment/directive — do not upgrade, do not reply.
-- Do not sign off with `> @agent: ...`.
-
-**If no concrete change can be made** (the request is ambiguous, missing context, or non-actionable): **break silent and escalate**. Leave the directive in place and add a normal `> @agent: ...` reply asking for clarification. The silent rule applies only when the change is clean and unambiguous; visible escalation is better than a silent no-op.
-
-Example escalation:
-
-> [!NOTE]+ #claude #silent tighten the wording above
-> @claude: (I'm breaking silent because the request is ambiguous and that overrides). Blocking question: I can't tell which paragraph you mean — the wording above stretches back for 12,000 words but this seems like a narrower ask. Can you tell me if you mean 1) the last paragraph only 2) the last 2-3 paragraphs about this topic or 3) the entire document?
