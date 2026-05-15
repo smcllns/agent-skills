@@ -1,11 +1,11 @@
 ---
 name: obsidian-html-docs
-description: "Author HTML files for the Obsidian HTML Docs plugin (smcllns/obsidian-plugin-html-docs). Use when creating .html docs intended to render inline in Obsidian: theme tokens, sandbox constraints, asset rules, embed sizing, and things that silently do not work."
+description: "Author HTML files for the Obsidian HTML Docs plugin (github.com/smcllns/obsidian-plugin-html-docs). Use when creating .html docs intended to render inline in Obsidian: theme tokens, sandbox constraints, asset rules, embed sizing, and things that silently do not work."
 ---
 
 # Obsidian HTML Docs authoring guide
 
-The plugin renders each `.html` file in a sandboxed iframe via Blob URL. No `allow-same-origin`, no vault path resolution, no storage. Author within that envelope.
+The [HTML Docs plugin](https://community.obsidian.md/account/plugins/html-docs) for Obsidian renders each `.html` file in a sandboxed iframe via Blob URL. No `allow-same-origin`, no vault path resolution, no storage. Author within that envelope.
 
 ## Linking and embedding
 
