@@ -77,6 +77,10 @@ If the **last non-blank speaker line is from the agent** — even when the agent
 
 A `> [!DONE]-` callout is resolved — leave it alone unless reopened.
 
+## Scanning multiple files
+
+When triaging across many files, sort matches by file mtime descending — actionable threads cluster in recently-modified files. Don't cap the result list silently; if you must, cap after sorting, never before.
+
 ## Resolution Contract
 
 For each unresolved comment:
