@@ -77,9 +77,11 @@ If the **last non-blank speaker line is from the agent** — even when the agent
 
 A `> [!DONE]-` callout is resolved — leave it alone unless reopened.
 
-## Scanning multiple files
+## Scanning for comments to resolve
 
-When triaging across many files, sort matches by file mtime descending — actionable threads cluster in recently-modified files. Don't cap the result list silently; if you must, cap after sorting, never before.
+The scan is `grep -rln --include='*.md' '\[!NOTE\]+' <path>` — every match is by convention awaiting an agent reply. `[!NOTE]-` (parked, awaiting human) and `[!DONE]-` (resolved) are filtered out by the grep itself, so no per-file state inspection is needed. When you park a thread on the human (your reply asks a question), flip the marker from `[!NOTE]+` to `[!NOTE]-` so the next scan skips it.
+
+Across many files, sort matches by file mtime descending — actionable threads cluster in recently-modified files. Don't cap the result list silently; if you must, cap after sorting, never before.
 
 ## Resolution Contract
 
