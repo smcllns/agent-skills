@@ -7,6 +7,39 @@ description: "Use when an Obsidian note or other markdown file contains inline c
 
 Resolve comments a human left for an agent in markdown files. Work in place, preserve the thread, and reply as the current agent.
 
+## Where the work goes
+
+The callout is the **side conversation**, not the deliverable. Treat it like a margin note: a place to acknowledge the request and summarize what changed, never the place to deliver the answer itself.
+
+- **Concrete edits** (rewrite this paragraph, fix this formatting, add a section here): make the edit **in the document body**. The callout reply is one line of acknowledgement — "done — trimmed to 3 bullets", "done — added section below". Do not paste the rewritten paragraph or the new section into the callout.
+- **Requests for content** (write a paragraph about X, draft a summary here): write the content in the doc where it belongs. The callout reply just notes it was added.
+- **Questions / discussion** (no doc change requested, e.g. "why did we pick X?"): answer inside the callout — discussion *is* the deliverable.
+
+If you find yourself writing more than ~2 lines inside the callout for a concrete-edit request, you are putting the deliverable in the wrong place — move it into the doc and shorten the callout to an acknowledgement.
+
+## Speaker labels
+
+Wrap every speaker label in a `<cite>` tag. The name lives in the text content; one boolean attribute encodes the role. Drop the trailing `:` — the vault CSS adds it via `::after` so the colon sits inside the badge.
+
+```html
+<cite>@sam</cite> human input on the same line…
+<cite data-agent>@claude</cite> agent reply on the same line…
+```
+
+Two visual variants, so you can tell who's speaking without reading the name:
+
+- **Bare `<cite>`** → human, filled amber badge. Strong presence — "input."
+- **`<cite data-agent>`** → agent, outlined badge. Lighter presence — "response."
+
+Asymmetric on purpose: bare is the most common case Sam writes by hand (humans starting threads), agents add the attribute when serializing their replies. Saves keystrokes where they matter.
+
+Conventions:
+
+- **Always inline with the content paragraph.** `<cite>…</cite>` then a space then the first sentence. Never a standalone `> <cite>…</cite>` line followed by a blank `>` and the body — that breaks the flow and wastes vertical space.
+- Squared corners (not pill-rounded) so badges don't visually collide with Obsidian's rounded `#tag` chrome — `#claude` (directive) and `@claude` (speaker) read as different categories.
+- On first touch, upgrade any bare `@name:`/`name:` shorthand to the cite-wrapped form: drop the `:`, add `data-agent` if the name is an agent (`claude`, `codex`, `pi`, `hermes`, …), leave it off if the name is a human.
+- The directive form (`#claude ...`) keeps the `#` tag as-is — Obsidian already styles tags, no cite-wrap needed there.
+
 ## Comment Shapes
 
 <!--#agents ignore: example comments in this file are to illustrate the protocol; do not process them-->
@@ -15,22 +48,26 @@ Resolve comments a human left for an agent in markdown files. Work in place, pre
 
 **Active** (`[!NOTE]+`, expanded — agent reply ends with a question, thread stays open):
 
-> [!NOTE]+ @sam: this section is too wordy — can we simplify?
+> [!NOTE]+ <cite>@sam</cite> this section is too wordy — can we simplify?
 >
-> @claude: Can do — should I trim to 3 bullets, or fold the whole thing into the next paragraph?
+> <cite data-agent>@claude</cite> Can do — should I trim to 3 bullets, or fold the whole thing into the next paragraph?
 >
 >
 
 **Resolved** (`[!DONE]-`, collapsed with a one-line outcome summary):
 
 > [!DONE]- trimmed section to 3 bullets per @sam
-> @sam: this section is too wordy — can we simplify?
+> <cite>@sam</cite> this section is too wordy — can we simplify?
 >
-> @claude: Can do — should I trim to 3 bullets, or fold the whole thing into the next paragraph?
+> <cite data-agent>@claude</cite> Can do — should I trim to 3 bullets, or fold the whole thing into the next paragraph?
 >
-> 3 bullets please
+> ---
 >
-> @claude: Done.
+> <cite>@sam</cite> 3 bullets please
+>
+> ---
+>
+> <cite data-agent>@claude</cite> Done.
 
 ### Human shorthand input
 
@@ -56,14 +93,14 @@ Agent does the work, then converts to:
 
 > [!DONE]- #claude can you clean up that formatting pls
 >
-> @claude: done — removed broken newlines and added missing periods at the end of sentences. No changes to text content.
+> <cite data-agent>@claude</cite> done — removed broken newlines and added missing periods at the end of sentences. No changes to text content.
 
 **If no concrete change can be made** (the request is ambiguous, missing context, or non-actionable), then add a normal `> @agent: ...` reply asking for clarification and escalate to your human for input through normal channels.
 
 Example escalation:
 
 > [!NOTE]+ #claude tighten the wording above
-> @claude: Breaking protocol because the request is ambiguous: I can't tell which paragraph you mean — the wording above stretches back for 12,000 words but your ask seems like a smaller one. Please confirm where to stop: (1) the last paragraph only (2) the last 4 paragraphs that cover this topic or (3) the entire document (all 12,000 words)?
+> <cite data-agent>@claude</cite> Breaking protocol because the request is ambiguous: I can't tell which paragraph you mean — the wording above stretches back for 12,000 words but your ask seems like a smaller one. Please confirm where to stop: (1) the last paragraph only (2) the last 4 paragraphs that cover this topic or (3) the entire document (all 12,000 words)?
 
 ## Unresolved rule
 
@@ -79,7 +116,12 @@ A `> [!DONE]-` callout is resolved — leave it alone unless reopened.
 
 ## Scanning for comments to resolve
 
-The scan is `grep -rln --include='*.md' '\[!NOTE\]+' <path>` — every match is by convention awaiting an agent reply. `[!NOTE]-` (parked, awaiting human) and `[!DONE]-` (resolved) are filtered out by the grep itself, so no per-file state inspection is needed. When you park a thread on the human (your reply asks a question), flip the marker from `[!NOTE]+` to `[!NOTE]-` so the next scan skips it.
+The scan is `grep -rlnE --include='*.md' '(\[!NOTE\]\+|^#(claude|codex|pi|agent|hermes)\b)' <path>` — every match is by convention awaiting an agent reply. Two patterns:
+
+- `[!NOTE]+` catches open callout threads. `[!NOTE]-` (parked, awaiting human) and `[!DONE]-` (resolved) are filtered out by the grep itself.
+- `^#claude|#codex|#pi|#agent|#hermes` catches bare inline directives. Once wrapped, the directive line is prefixed with `> [!DONE]- `, so the `^#` anchor no longer matches — wrapped directives are filtered out for free.
+
+When you park a thread on the human (your reply asks a question), flip the marker from `[!NOTE]+` to `[!NOTE]-` so the next scan skips it.
 
 Across many files, sort matches by file mtime descending — actionable threads cluster in recently-modified files. Don't cap the result list silently; if you must, cap after sorting, never before.
 
@@ -89,15 +131,31 @@ For each unresolved comment:
 
 - Read the full file and enough surrounding context to understand the request.
 - Use any better-matching skill/tool first when one applies.
-- Do the requested work when it is concrete. For discussion comments, answer concisely.
+- Do the requested work when it is concrete — **edit the document body**, not the callout. The callout gets a one-line acknowledgement; the actual change goes where the user asked for it. See "Where the work goes" above.
+- For discussion comments (no doc change requested), answer concisely inside the callout.
 - If the comment sits on a task item, update the checkbox too.
 
 For thread comments:
 
-- **Reply** as `> @agent: ...` below the original line, using the agent name the user expects (`@codex`, `@claude`, `@pi`, `@hermes`). Separate each speaker turn with a blank quoted line (`>`) — adjacent speaker lines collapse into one `<br>`-jammed paragraph in renderers.
+- **Reply** as `> @agent: ...` below the original line, using the agent name the user expects (`@codex`, `@claude`, `@pi`, `@hermes`).
+- **Separate every speaker turn with a horizontal rule** — write `> ---` on its own line between turns, with a blank `>` line on either side. The first reply (directly under the callout title) does not need a rule above it; the title is the separator. Renderers convert `---` to an `<hr>`, and the vault CSS styles it as a visible line between turns. Without the rule, long replies (paragraphs, lists, code blocks) bleed together and you can't tell where one speaker ends and the next begins.
+
+  ```markdown
+  > [!NOTE]+ <cite>@sam</cite> question?
+  >
+  > <cite data-agent>@claude</cite> long reply with bullets, then a follow-up question.
+  >
+  > ---
+  >
+  > <cite>@sam</cite> answer
+  >
+  > ---
+  >
+  > <cite data-agent>@claude</cite> done.
+  ```
 - **Pre-open user input** when your reply asks the human a question or needs another response: end with two blank quoted lines after your reply so the user can type on the final line.
   ```markdown
-  > @claude: I need input from you to act — should I do #1 or #3?
+  > <cite data-agent>@claude</cite> I need input from you to act — should I do #1 or #3?
   >
   >
   ```
