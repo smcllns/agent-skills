@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# tests/grep.sh — verifies the scan grep documented in SKILL.md against a
+# tests/find-unresolved.test.sh — verifies the scan grep documented in SKILL.md against a
 # fixture set.
 #
 # The regex is PARSED from SKILL.md at runtime (not hardcoded) so the test
@@ -8,7 +8,7 @@
 # dynamically from the agent-name alternation in the regex, so adding a
 # new agent there automatically extends test coverage.
 #
-# Usage: bash tests/grep.sh
+# Usage: bash tests/find-unresolved.test.sh
 
 set -euo pipefail
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
