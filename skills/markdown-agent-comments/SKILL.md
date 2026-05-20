@@ -9,36 +9,16 @@ Resolve comments a human left for an agent in markdown files. Work in place, pre
 
 ## Where the work goes
 
-The callout is the **side conversation**, not the deliverable. Treat it like a margin note: a place to acknowledge the request and summarize what changed, never the place to deliver the answer itself.
-
-- **Concrete edits** (rewrite this paragraph, fix this formatting, add a section here): make the edit **in the document body**. The callout reply is one line of acknowledgement — "done — trimmed to 3 bullets", "done — added section below". Do not paste the rewritten paragraph or the new section into the callout.
-- **Requests for content** (write a paragraph about X, draft a summary here): write the content in the doc where it belongs. The callout reply just notes it was added.
-- **Questions / discussion** (no doc change requested, e.g. "why did we pick X?"): answer inside the callout — discussion *is* the deliverable.
-
-If you find yourself writing more than ~2 lines inside the callout for a concrete-edit request, you are putting the deliverable in the wrong place — move it into the doc and shorten the callout to an acknowledgement.
+The callout is the side conversation, not the deliverable. Concrete edits go in the document body and the callout reply is a one-line acknowledgement. Discussion-only comments (e.g. "why did we pick X?") answer inside the callout — discussion *is* the deliverable.
 
 ## Speaker labels
 
-Wrap every speaker label in a `<cite>` tag. The name lives in the text content; one boolean attribute encodes the role. Drop the trailing `:` — the vault CSS adds it via `::after` so the colon sits inside the badge.
+Agents wrap speaker labels in minimal HTML so editor CSS can render them as readable badges (useful in long threads). Humans aren't expected to write this — agents upgrade bare `@name:` shorthand on first touch, dropping the `:`.
 
 ```html
 <cite>@sam</cite> human input on the same line…
 <cite data-agent>@claude</cite> agent reply on the same line…
 ```
-
-Two visual variants, so you can tell who's speaking without reading the name:
-
-- **Bare `<cite>`** → human, filled amber badge. Strong presence — "input."
-- **`<cite data-agent>`** → agent, outlined badge. Lighter presence — "response."
-
-Asymmetric on purpose: bare is the most common case Sam writes by hand (humans starting threads), agents add the attribute when serializing their replies. Saves keystrokes where they matter.
-
-Conventions:
-
-- **Always inline with the content paragraph.** `<cite>…</cite>` then a space then the first sentence. Never a standalone `> <cite>…</cite>` line followed by a blank `>` and the body — that breaks the flow and wastes vertical space.
-- Squared corners (not pill-rounded) so badges don't visually collide with Obsidian's rounded `#tag` chrome — `#claude` (directive) and `@claude` (speaker) read as different categories.
-- On first touch, upgrade any bare `@name:`/`name:` shorthand to the cite-wrapped form: drop the `:`, add `data-agent` if the name is an agent (`claude`, `codex`, `pi`, `hermes`, …), leave it off if the name is a human.
-- The directive form (`#claude ...`) keeps the `#` tag as-is — Obsidian already styles tags, no cite-wrap needed there.
 
 ## Comment Shapes
 
