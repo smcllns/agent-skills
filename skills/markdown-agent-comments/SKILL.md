@@ -9,7 +9,7 @@ Resolve comments a human left for an agent in markdown files. Work in place, pre
 
 ## Where the work goes
 
-The callout is the side conversation, not the deliverable. Concrete edits go in the document body and the callout reply is a one-line acknowledgement. Discussion-only comments (e.g. "why did we pick X?") answer inside the callout — discussion *is* the deliverable.
+Edits go in the document body; the callout is a side thread for discussion and one-line acknowledgements and confirmations of changes made in the doc. Don't paste rewritten paragraphs, drafted sections, or new code into the reply — that belongs in the body. Discussion-only comments (e.g. "why did we pick X?") have no body edit, so the answer is the reply. When in doubt: does the answer belong in the final document? If yes, edit the body.
 
 ## Speaker labels
 
