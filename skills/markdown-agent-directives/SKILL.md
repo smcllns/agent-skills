@@ -28,7 +28,7 @@ After the agent acts, the line becomes:
 > @claude: done — removed broken newlines and added missing periods at the end of sentences. No changes to text content.
 ```
 
-## Directive Shapes
+## Directive shapes
 
 | Pattern | Status | Scan | Agent behavior |
 |---|---|---|---|
@@ -36,18 +36,18 @@ After the agent acts, the line becomes:
 | `[!NOTE]+` | Active agent thread | Picks up | Read the thread. If the human spoke last, act. If the agent spoke last, leave it. |
 | `[!DONE]-` | Resolved agent thread | Skips | Will not process |
 
-The marker matters: only `+` on `[!NOTE]` and `-` on `[!DONE]` indicate an agent thread. Bare `[!NOTE]`, `[!NOTE]-`, `[!DONE]`, and `[!DONE]+` are plain markdown callouts — the scan ignores them.
-
-For the full pattern catalog (indents, edge cases, accepted false positives), see [`reference/directives-spec.md`](reference/directives-spec.md)
+The `+/-` marker matters: 
+- `[!NOTE]` followed by `+` distinguishes agent threads from regular callouts.
+- `[!DONE]` followed by `-` will collapse the callout in Obsidian and others that support this syntax.
 
 ## Unresolved rule
 
 A comment is unresolved when any of:
 
-- An open `> [!NOTE]+ ...` callout whose last line is from the user (no agent reply yet, OR an agent replied earlier and the user has since posted a follow-up the agent hasn't answered).
-- An inline `#agent` directive that has not yet been wrapped in a `[!DONE]-` callout.
+- An open `> [!NOTE]+ ...` callout whose last reply is from the user
+- A valid inline `#agent` directive not yet processed into a callout.
 
-## Resolution Contract
+## Resolution contract
 
 For each unresolved comment:
 
@@ -59,11 +59,11 @@ For each unresolved comment:
 
 **Conclude** if the work is genuinely complete, with `[!DONE]-` callout and write a one-line outcome summary as the title (past-tense action + scope, ≤~60 chars).
 
-## If further input required
+**Take a turn** if completion requires further input from the human, with `[!NOTE]+` callout so the thread stays visually open, awaiting human input.
 
-**Take a turn** if you've acted but require further input from the human, with `[!NOTE]+` callout so the thread stays visually open, awaiting human input.
+## If further human input required
 
-**If you can't act** because the request is ambiguous, missing context, or non-actionable, **don't guess**, wrap the directive in a `[!NOTE]+` callout with a clarifying question:
+**If you can't act or complete the directive** because the request is ambiguous, missing context, or non-actionable, **don't guess**, wrap the directive in a `[!NOTE]+` callout with a clarifying question:
 
 ```
 > [!NOTE]+ #claude tighten the wording above
@@ -88,6 +88,8 @@ What's filtered out:
 - **Resolved threads** — `[!DONE]-` is the canonical resolved marker. `[!DONE]+` and bare `[!DONE]` are also treated as plain markdown.
 - **Invalid directive tags** — whitespace or newline is required before `#`, so `example.com#claude` and `` `#claude` `` (inside backticks) will not trigger.
 - **Tags within callouts** — the `^[^>]` clause skips directives inside any blockquote line.
+
+For the full pattern catalog (indents, edge cases, accepted false positives), see [`reference/directives-spec.md`](reference/directives-spec.md)
 
 ## Discussion Thread Format
 
@@ -115,10 +117,12 @@ Once a `#claude` directive is wrapped, the callout is the place for further turn
 
 ## Best practices:
 
-**Don't self-reply.** If the agent's last reply is the most recent line in a `[!NOTE]+` thread, the thread is waiting on the human. Leave it. If the same thread keeps showing up across scans with no human movement, mention it to the user (e.g. "this thread's been open without follow-up for N scans, want me to close or chase it?").
-
 **Don't prematurely limit results.** Actionable threads cluster in recently-touched files, so sort matches by file mtime descending. If you must, cap after sorting.
 
 **Use callout only for discussion, not the work.** Edits go in the **document body**; the callout is a side thread for discussion and one-line acknowledgements of the changes made. Don't paste rewritten paragraphs, drafted sections, or new code into the reply — that belongs in the body. Discussion-only directives (e.g. `#claude why did we pick X?`) have no body edit, so the answer is the reply.
 
-**Reply using familiar name.** Instead of `> @agent: ...`, you can use the agent name the user expects in your context (`@claude`, `@codex`, `@pi`, `@hermes`).
+**Proactively correct formatting.** Allow the human to write shorthand imperfectly, and update the callout to use correct syntax if required, without modifying the discussion content itself.
+
+**Reply using familiar agent name.** Instead of `> @agent: ...`, you can use the agent name the user expects in your context (`@claude`, `@codex`, `@pi`, `@hermes`, etc).
+
+**Don't self-reply.** If the agent's last reply is the most recent line in a `[!NOTE]+` thread, the thread is waiting on the human. Leave it. If the same thread keeps showing up across scans with no human movement, mention it to the user (e.g. "this thread's been open without follow-up for N scans, want me to close or chase it?").
