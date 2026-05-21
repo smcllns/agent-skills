@@ -1,0 +1,10 @@
+{
+  "name": "smcllns-skills",
+  "version": "0.1.0",
+  "description": "Sam Collins's plugins and skills for Claude (Cowork, Claude Code) and Codex",
+  "owner": {
+    "name": "Sam Collins",
+    "email": "oscollins@gmail.com"
+  },
+  "plugins": []
+}
