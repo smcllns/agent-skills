@@ -14,78 +14,78 @@ The test also auto-generates one fixture per agent name in the documented
 agent list. Add a name there → the fixture set extends automatically.
 
 The scan catches **two** kinds of thing: `#agent` directives that haven't been
-wrapped yet, and `[!NOTE]` callouts (any marker — they're the discussion
-threads spawned from directives). `[!DONE]` callouts of any marker are filtered
-out as resolved. `+`/`-` markers carry no protocol meaning — they're Obsidian
-expand/collapse helpers only.
+wrapped yet, and `[!NOTE]+` callouts (active agent threads). The marker is the
+protocol signal: only `+` on `[!NOTE]` and `-` on `[!DONE]` indicate an agent
+thread. Bare `[!NOTE]`, `[!NOTE]-`, `[!DONE]`, and `[!DONE]+` are all plain
+markdown callouts — the scan ignores them. This way the agent never has to
+inspect a regular note-taking callout to figure out it's not for them.
 
 ---
 
 ## Callouts
 
-Discussion threads spawned from a `#agent` directive. The scan picks up every
-`[!NOTE]` callout regardless of marker — the agent reads the thread and decides
-whether action is needed (whoever spoke last is who's expected to act).
+Discussion threads spawned from a `#agent` directive use two markers:
+`[!NOTE]+` while open, `[!DONE]-` when resolved.
 
-### Active callout — `[!NOTE]+`
+### Active agent thread — `[!NOTE]+`
 
-`[!NOTE]+` is the expanded-by-default form.
+The only marker form that triggers the scan as an agent thread.
 
 ```md @test:match
 > [!NOTE]+ #claude tighten the intro
 ```
 
-### Active callout — bare `[!NOTE]`
+### Bare `[!NOTE]` — plain markdown, not an agent thread
 
-Bare `[!NOTE]` (no marker) is treated identically.
-
-```md @test:match
-> [!NOTE] #claude tighten the intro
-```
-
-### Collapsed callout — `[!NOTE]-`
-
-`[!NOTE]-` is the collapsed-by-default form. The `-` is just an Obsidian UI
-helper — it carries no protocol meaning, so this is **still picked up by
-the scan**. The agent reads the thread to decide whether the human's input
-is the most recent line. If the agent spoke last, leave it alone.
-
-```md @test:match
-> [!NOTE]- #claude was the last reply mine?
-```
-
-### Resolved callout — `[!DONE]-` (dash)
-
-`[!DONE]-` marks a closed, collapsed thread. Untouched by the scan.
+A `[!NOTE]` without `+` is a regular Obsidian note callout. The scan skips it
+even though it looks like a callout, because the protocol uses `+` to mark
+"agent thread, active."
 
 ```md @test:nomatch
-> [!DONE]- resolved thread
+> [!NOTE] Just a regular note callout, not for the agent
 ```
 
-### Resolved callout — bare `[!DONE]`
+### `[!NOTE]-` — plain markdown, not an agent thread
 
-`[!DONE]` without any marker is still resolved. The marker carries no protocol
-meaning.
+Same rule: only `+` indicates an agent thread.
 
 ```md @test:nomatch
-> [!DONE] resolved thread (no marker)
+> [!NOTE]- A collapsed note callout — still plain markdown
 ```
 
-### Resolved callout — `[!DONE]+` (plus)
+### Resolved agent thread — `[!DONE]-`
 
-`[!DONE]+` is also resolved — the marker is just an Obsidian helper.
+The canonical resolved marker.
 
 ```md @test:nomatch
-> [!DONE]+ resolved thread (plus marker)
+> [!DONE]- resolved agent thread
 ```
 
-### Wrapped directive inside a DONE callout
+### Bare `[!DONE]` — plain markdown
 
-Once a `#claude` directive is wrapped in `[!DONE]`, the leading `>` makes the
-inline-directive regex skip it (the regex requires a non-`>` line start).
+`[!DONE]` without `-` is a regular markdown callout. Filtered by the scan
+either way (the regex doesn't look for `[!DONE]`).
 
 ```md @test:nomatch
-> [!DONE] #claude already wrapped
+> [!DONE] Just a regular done-style callout
+```
+
+### `[!DONE]+` — plain markdown
+
+Same as above — filtered by the scan.
+
+```md @test:nomatch
+> [!DONE]+ Some other plain done callout
+```
+
+### Wrapped directive inside a `[!DONE]-` callout
+
+Once a `#claude` directive is wrapped in `[!DONE]-`, the leading `>` on its
+line makes the inline-directive regex skip it (the regex requires a non-`>`
+line start).
+
+```md @test:nomatch
+> [!DONE]- #claude already wrapped
 ```
 
 ### Directive inside an indented blockquote
