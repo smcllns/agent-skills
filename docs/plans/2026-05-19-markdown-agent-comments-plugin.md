@@ -14,7 +14,7 @@ Ship the existing `markdown-agent-comments` skill in three forms, in this order:
 ## Resolved decisions
 
 - **Plugin dir name:** `claude-cowork-plugins/markdown-agent-comments/` — **no `-claude` suffix**. Parent dir already encodes host. (Inbox-zero will be renamed to match when it ships.)
-- **Tests inside plugin:** yes, copy `tests/find-unresolved.test.sh` in. _Sam wants to improve these next — separate piece of work, not part of this plan._
+- **Tests inside plugin:** yes, copy `dev/tests/` in. (Tests have since been rewritten in bun+TS with a spec-driven format under `dev/`; internal-only assets live there.)
 - **Default schedule:** none. Plugin ships the skill only. User configures triggers per-vault/per-path in Cowork.
 - **Source of truth:** dotfiles is canonical. `skills/` and `claude-cowork-plugins/<plugin>/skills/` are one-way exports. Sync by hand when the skill changes. No sync script yet — write one if drift becomes painful (it won't for one skill).
 
@@ -30,7 +30,7 @@ Ship the existing `markdown-agent-comments` skill in three forms, in this order:
 
 - [ ] Create `claude-cowork-plugins/markdown-agent-comments/.claude-plugin/plugin.json` — name, description, author, keywords. Model on inbox-zero's, no hooks.
 - [ ] Copy `skills/markdown-agent-comments/SKILL.md` → `claude-cowork-plugins/markdown-agent-comments/skills/markdown-agent-comments/SKILL.md`
-- [ ] Copy `skills/markdown-agent-comments/tests/find-unresolved.test.sh` → mirror path under the plugin
+- [ ] Copy `skills/markdown-agent-comments/dev/` → mirror path under the plugin (tests + wishlist live here, internal-only)
 - [ ] Write `claude-cowork-plugins/markdown-agent-comments/README.md` — what the skill does + install paths (marketplace, Cowork UI, npx skills)
 - [ ] No `hooks.json` — skill is stateless, no NUX, no config
 
@@ -71,7 +71,7 @@ Ship the existing `markdown-agent-comments` skill in three forms, in this order:
 
 ## Out of scope (separate work)
 
-- Improving the tests (`tests/find-unresolved.test.sh`) — Sam wants this next, separate plan
+- (Done as pre-ship cleanup, not in current scope) Speaker-label deferral, bun+TS spec-driven test suite, SKILL.md restructure
 - Codex plugin form
 - Obsidian plugin (separate repo)
 - Inbox-zero plugin rename / suffix cleanup (lives on `inbox-zero` branch; revisit when shipping it)
