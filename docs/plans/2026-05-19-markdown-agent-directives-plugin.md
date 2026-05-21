@@ -1,19 +1,19 @@
-# Plan: markdown-agent-comments (Claude plugin)
+# Plan: markdown-agent-directives (Claude plugin)
 
-**Status: IN PROGRESS** on branch `markdown-agent-comments-plugin`. First plugin to ship from this marketplace. Picked because it's simpler than `inbox-zero-gmail` (no NUX, no state, no auth) and lets us learn the multi-form distribution pattern on easy mode before applying it to inbox-zero.
+**Status: IN PROGRESS** on branch `markdown-agent-directives-plugin`. First plugin to ship from this marketplace. Picked because it's simpler than `inbox-zero-gmail` (no NUX, no state, no auth) and lets us learn the multi-form distribution pattern on easy mode before applying it to inbox-zero.
 
 ## Goal
 
-Ship the existing `markdown-agent-comments` skill in three forms, in this order:
+Ship the existing `markdown-agent-directives` skill in three forms, in this order:
 
-1. **Bare skill** — at `skills/markdown-agent-comments/`, installable via `npx skills@latest add smcllns/skills`. Synced from dotfiles ✅
-2. **Claude plugin** — to create at `claude-cowork-plugins/markdown-agent-comments/`. Installable via `claude plugin marketplace add smcllns/skills` and through the Cowork UI. **Primary deliverable.**
-3. **Codex plugin** — at `codex-plugins/markdown-agent-comments/`. Deferred until #2 is shipped.
+1. **Bare skill** — at `skills/markdown-agent-directives/`, installable via `npx skills@latest add smcllns/skills`. Synced from dotfiles ✅
+2. **Claude plugin** — to create at `claude-cowork-plugins/markdown-agent-directives/`. Installable via `claude plugin marketplace add smcllns/skills` and through the Cowork UI. **Primary deliverable.**
+3. **Codex plugin** — at `codex-plugins/markdown-agent-directives/`. Deferred until #2 is shipped.
 4. **Obsidian plugin** — separate repo, out of scope.
 
 ## Resolved decisions
 
-- **Plugin dir name:** `claude-cowork-plugins/markdown-agent-comments/` — **no `-claude` suffix**. Parent dir already encodes host. (Inbox-zero will be renamed to match when it ships.)
+- **Plugin dir name:** `claude-cowork-plugins/markdown-agent-directives/` — **no `-claude` suffix**. Parent dir already encodes host. (Inbox-zero will be renamed to match when it ships.)
 - **Tests inside plugin:** yes, copy `reference/` in. (Tests rewritten in bun+TS with a spec-driven format; internal-only assets all live under `reference/`.)
 - **Default schedule:** none. Plugin ships the skill only. User configures triggers per-vault/per-path in Cowork.
 - **Source of truth:** dotfiles is canonical. `skills/` and `claude-cowork-plugins/<plugin>/skills/` are one-way exports. Sync by hand when the skill changes. No sync script yet — write one if drift becomes painful (it won't for one skill).
@@ -22,22 +22,22 @@ Ship the existing `markdown-agent-comments` skill in three forms, in this order:
 
 - `docs/architecture.md` — layout, decisions, terminology
 - `docs/writing-claude-plugins.md` — accumulated plugin-authoring know-how. Add findings here as you work.
-- `skills/markdown-agent-comments/SKILL.md` — the bare skill (canonical mirror of dotfiles, synced 2026-05-21)
+- `skills/markdown-agent-directives/SKILL.md` — the bare skill (canonical mirror of dotfiles, synced 2026-05-21)
 
 ## Step-by-step
 
 ### Phase 1 — Scaffold the plugin
 
-- [ ] Create `claude-cowork-plugins/markdown-agent-comments/.claude-plugin/plugin.json` — name, description, author, keywords. Model on inbox-zero's, no hooks.
-- [ ] Copy `skills/markdown-agent-comments/SKILL.md` → `claude-cowork-plugins/markdown-agent-comments/skills/markdown-agent-comments/SKILL.md`
-- [ ] Copy `skills/markdown-agent-comments/reference/` → mirror path under the plugin (tests + wishlist live here, internal-only)
-- [ ] Write `claude-cowork-plugins/markdown-agent-comments/README.md` — what the skill does + install paths (marketplace, Cowork UI, npx skills)
+- [ ] Create `claude-cowork-plugins/markdown-agent-directives/.claude-plugin/plugin.json` — name, description, author, keywords. Model on inbox-zero's, no hooks.
+- [ ] Copy `skills/markdown-agent-directives/SKILL.md` → `claude-cowork-plugins/markdown-agent-directives/skills/markdown-agent-directives/SKILL.md`
+- [ ] Copy `skills/markdown-agent-directives/reference/` → mirror path under the plugin (tests + wishlist live here, internal-only)
+- [ ] Write `claude-cowork-plugins/markdown-agent-directives/README.md` — what the skill does + install paths (marketplace, Cowork UI, npx skills)
 - [ ] No `hooks.json` — skill is stateless, no NUX, no config
 
 ### Phase 2 — Wire into the marketplace
 
 - [ ] Add a plugin entry to root `.claude-plugin/marketplace.json` (currently `"plugins": []`)
-- [ ] Update root `README.md` Plugins section — replace "none published yet" line with a row for `markdown-agent-comments`
+- [ ] Update root `README.md` Plugins section — replace "none published yet" line with a row for `markdown-agent-directives`
 - [ ] Document the resolved source-of-truth strategy in `docs/architecture.md` (dotfiles canonical, manual sync)
 
 ### Phase 3 — Verify locally
@@ -56,7 +56,7 @@ Ship the existing `markdown-agent-comments` skill in three forms, in this order:
 ### Phase 5 — Ship
 
 - [ ] Small clean commits along the way (one per phase ideally)
-- [ ] Open PR `markdown-agent-comments-plugin → main`
+- [ ] Open PR `markdown-agent-directives-plugin → main`
 - [ ] Self-review for over-engineering, then merge
 - [ ] Check off this plan, capture any remaining notes in `docs/writing-claude-plugins.md`
 
@@ -71,7 +71,7 @@ Ship the existing `markdown-agent-comments` skill in three forms, in this order:
 
 ## Out of scope (separate work)
 
-- (Done as pre-ship cleanup, not in current scope) Speaker-label deferral, bun+TS spec-driven test suite, SKILL.md restructure
+- (Done as pre-ship cleanup, not in current scope) Speaker-label deferral, bun+TS spec-driven test suite, SKILL.md restructure, scope narrowing to directives-only (renamed from `markdown-agent-comments`)
 - Codex plugin form
 - Obsidian plugin (separate repo)
 - Inbox-zero plugin rename / suffix cleanup (lives on `inbox-zero` branch; revisit when shipping it)

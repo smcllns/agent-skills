@@ -13,7 +13,7 @@ A `codex-plugins/` sibling is reserved for future Codex wrappers of the same und
 smcllns/skills/                        ← repo root
 ├── .claude-plugin/marketplace.json    ← marketplace manifest, lists Claude plugins
 ├── skills/                            ← bare skills (portable; `npx skills add ...`)
-│   ├── markdown-agent-comments/
+│   ├── markdown-agent-directives/
 │   ├── obsidian-html-docs/
 │   └── token-count/
 ├── claude-cowork-plugins/             ← Claude plugins (work in Cowork + Code CLI)
@@ -63,5 +63,4 @@ Don't pre-build cross-host machinery (shared SKILL.md sources, generated wrapper
 
 - `docs/writing-claude-plugins.md` — accumulated how-to knowledge for authoring plugins (gotchas, schema, hooks, persistence, install/uninstall). Grows as we ship.
 - `~/Projects/obsidian/scratch/Figured out single repo architecture for public skills and plugins - v3.md` — decision history (Sam's Obsidian vault). The *why* behind the current shape; this file documents the *what*.
-- `docs/plans/2026-05-19-inbox-zero-gmail.md` — parked work
-- `docs/plans/2026-05-19-markdown-agent-comments-plugin.md` — next up
+- `docs/plans/2026-05-19-markdown-agent-directives-plugin.md` — current plan (was originally `markdown-agent-comments`; renamed after narrowing scope to directives only)

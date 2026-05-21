@@ -162,7 +162,7 @@ Flagging gaps honestly so the next agent doesn't take this as gospel:
 - [ ] **End-to-end install via the marketplace path.** We've drafted plugins but not yet run `claude plugin marketplace add smcllns/skills` against a published repo.
 - [ ] **SessionStart hook in a real run.** We dry-ran the command in a sandbox; haven't observed Cowork firing it.
 - [ ] **Cowork UI install of a local folder.** Sam uninstalled the prior `inbox-zero-plugin` via the UI but we haven't installed the new layout yet.
-- [ ] **Scheduled invocation through `mcp__scheduled-tasks__create_scheduled_task`.** Listed as a goal in the markdown-agent-comments plan; will verify there.
+- [ ] **Scheduled invocation through `mcp__scheduled-tasks__create_scheduled_task`.** Listed as a goal in the markdown-agent-directives plan; will verify there.
 - [ ] **Whether `npx skills@latest add smcllns/skills` finds the bare skills under `skills/`.** The vercel-labs/skills CLI may or may not scan the standard `skills/` subdir. Check before committing.
 - [ ] **marketplace.json schema validation.** We've parsed it as JSON but haven't validated against the actual runtime schema.
 
