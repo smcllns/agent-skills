@@ -14,7 +14,7 @@ Ship the existing `markdown-agent-comments` skill in three forms, in this order:
 ## Resolved decisions
 
 - **Plugin dir name:** `claude-cowork-plugins/markdown-agent-comments/` — **no `-claude` suffix**. Parent dir already encodes host. (Inbox-zero will be renamed to match when it ships.)
-- **Tests inside plugin:** yes, copy `dev/tests/` in. (Tests have since been rewritten in bun+TS with a spec-driven format under `dev/`; internal-only assets live there.)
+- **Tests inside plugin:** yes, copy `dev/` in. (Tests rewritten in bun+TS with a spec-driven format; internal-only assets all live under `dev/`.)
 - **Default schedule:** none. Plugin ships the skill only. User configures triggers per-vault/per-path in Cowork.
 - **Source of truth:** dotfiles is canonical. `skills/` and `claude-cowork-plugins/<plugin>/skills/` are one-way exports. Sync by hand when the skill changes. No sync script yet — write one if drift becomes painful (it won't for one skill).
 

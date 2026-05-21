@@ -1,7 +1,7 @@
 // Verifies the scan regex documented in `SKILL.md` against the fixtures in
 // `comments-spec.md`.
 //
-// Run: `bun test` from this directory, or `bun test dev/tests/comments-spec.test.ts`
+// Run: `bun test` from this directory, or `bun test dev/comments-spec.test.ts`
 // from the skill root. Requires bun >= 1.3. No package.json needed — bun ships
 // with `bun:test` built in. For editor types, install `@types/bun` globally
 // (optional; the test runs fine without it).
@@ -26,7 +26,7 @@ import { join } from "node:path";
 const SCAN_REGEX = String.raw`(\[!NOTE\]\+|^([^>]*[[:space:]])?#(claude|codex|pi|agent|hermes)\b)`;
 const AGENTS = ["claude", "codex", "pi", "agent", "hermes"] as const;
 
-const SKILL_PATH = new URL("../../SKILL.md", import.meta.url);
+const SKILL_PATH = new URL("../SKILL.md", import.meta.url);
 const SPEC_PATH = new URL("./comments-spec.md", import.meta.url);
 const SKILL = readFileSync(SKILL_PATH, "utf8");
 const SPEC = readFileSync(SPEC_PATH, "utf8");
