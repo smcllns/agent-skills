@@ -43,8 +43,8 @@ Ship the existing `markdown-agent-directives` skill in three forms, in this orde
 ### Phase 3 — Verify locally
 
 - [ ] Install plugin into Sam's Cowork via local-folder install
-- [ ] Open a real markdown file with a `@human:` or `[!NOTE]+` agent comment
-- [ ] Invoke the skill, confirm it lands a callout reply in place and behaves per SKILL.md
+- [ ] Open a real markdown file with a `#claude` (or `#agent`) directive
+- [ ] Invoke the skill, confirm it actions the directive and wraps it in a callout per SKILL.md
 - [ ] Confirm `npx skills@latest add smcllns/skills` still installs the bare skill at the unchanged path
 
 ### Phase 4 — Verify scheduled execution (the WHY of the plugin)

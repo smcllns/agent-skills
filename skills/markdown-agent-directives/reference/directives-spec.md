@@ -43,11 +43,12 @@ Bare `[!NOTE]` (no marker) is treated identically.
 > [!NOTE] #claude tighten the intro
 ```
 
-### Parked callout — `[!NOTE]-`
+### Collapsed callout — `[!NOTE]-`
 
-`[!NOTE]-` is the collapsed-by-default form. **Still picked up by the scan** —
-the agent reads the thread to decide whether the human's input is the most
-recent line. If the agent spoke last, leave it alone.
+`[!NOTE]-` is the collapsed-by-default form. The `-` is just an Obsidian UI
+helper — it carries no protocol meaning, so this is **still picked up by
+the scan**. The agent reads the thread to decide whether the human's input
+is the most recent line. If the agent spoke last, leave it alone.
 
 ```md @test:match
 > [!NOTE]- #claude was the last reply mine?

@@ -29,35 +29,6 @@ The agent edits the document body (the formatting fix) and records the request +
 
 For the full pattern catalog (indents, edge cases, accepted false positives), see [`reference/directives-spec.md`](reference/directives-spec.md).
 
-## Finding work
-
-Scan a path with:
-
-```
-grep -rlnE --include='*.md' '(\[!NOTE\]|^([^>]*[[:space:]])?#(claude|codex|pi|agent|hermes)([^[:alnum:]_]|$))' <path>
-```
-
-The grep catches two patterns:
-
-- **Inline directive** — `#claude`, `#codex`, etc. at line-start, indented, or mid-prose. The pattern requires whitespace before `#`, so prose like `obsidian#claude` doesn't trigger — **and writing `` `#claude` `` in inline code is the canonical escape hatch when you want to mention the syntax without firing the scan.** The `^[^>]` clause rejects blockquote lines, so directives wrapped in `[!DONE]` or any other callout are filtered for free.
-- **Open callout** — any `[!NOTE]` (regardless of `+`/`-` marker). The agent reads the thread to decide whether action is needed (see "Marker convention" below). `[!DONE]` callouts are filtered — the script doesn't look for them.
-
-Across many files, sort matches by file mtime descending — actionable threads cluster in recently-touched files. Don't cap the result list silently; if you must, cap after sorting.
-
-## Marker convention
-
-The `+` and `-` markers on `[!NOTE]` and `[!DONE]` are Obsidian-specific ergonomic helpers (expand/collapse). For this skill they carry **no protocol meaning** — the scan picks up `[!NOTE]` regardless, and `[!DONE]` regardless of marker is filtered.
-
-| Callout | Scan | Agent behavior |
-|---|---|---|
-| `[!NOTE]+` or bare `[!NOTE]` | Picks up | Read the thread. If the human spoke last, act. If the agent spoke last (parked), don't self-reply. |
-| `[!NOTE]-` | Picks up | Same — read and decide. The `-` just means "collapsed in Obsidian" for the human's UI. |
-| `[!DONE]`, `[!DONE]+`, `[!DONE]-` | Skips | Resolved. Untouched until reopened. |
-
-**Don't self-reply.** If the agent's last reply is the most recent line in a `[!NOTE]` thread, the thread is waiting on the human — leave it. If the same thread keeps appearing across scans with no human follow-up, mention this to the user (e.g. "this thread has been open without movement for N scans, want me to close it or chase it up?").
-
-A match is actionable when **the human's input is the most recent line** in the thread, or when a top-level `#agent` directive hasn't been wrapped in `[!DONE]` yet.
-
 ## Where the work goes
 
 Edits go in the **document body**; the callout is a side thread for discussion and one-line acknowledgements of the changes made. Don't paste rewritten paragraphs, drafted sections, or new code into the reply — that belongs in the body. Discussion-only directives (e.g. `#claude why did we pick X?`) have no body edit, so the answer is the reply. When in doubt: does the answer belong in the final document? If yes, edit the body.
@@ -114,3 +85,29 @@ The thread stays open until the human responds.
 
 - **Task items** (`- [ ]`) referenced by a directive — update the checkbox alongside the body edit.
 - **Better-matching skill or tool** — use it first when one applies.
+
+---
+
+## How the scan works
+
+Find files with directives or open threads via:
+
+```
+grep -rlnE --include='*.md' '(\[!NOTE\]|^([^>]*[[:space:]])?#(claude|codex|pi|agent|hermes)([^[:alnum:]_]|$))' <path>
+```
+
+Two patterns are matched:
+
+- **Inline directive** — `#claude`, `#codex`, etc. at line-start, indented, or mid-prose. The pattern requires whitespace before `#`, so `obsidian#claude` doesn't trigger — and writing `` `#claude` `` in inline code is the canonical escape hatch for mentioning the syntax in prose. The `^[^>]` clause rejects blockquote lines, so directives wrapped in `[!DONE]` or any other callout are filtered automatically.
+- **Open callout** — any `[!NOTE]`, regardless of `+`/`-` marker. `[!DONE]` (any marker) is filtered.
+
+The `+` and `-` markers on callouts are Obsidian's expand/collapse helpers — **no protocol meaning here**. The agent decides what to do by reading the thread's last speaker, not the marker.
+
+| Callout | Scan | Agent behavior |
+|---|---|---|
+| `[!NOTE]` (any marker) | Picks up | Read the thread. If the human spoke last, act. If the agent spoke last, leave it — see below. |
+| `[!DONE]` (any marker) | Skips | Resolved, untouched until reopened. |
+
+**Don't self-reply.** If the agent's last reply is the most recent line in a `[!NOTE]` thread, the thread is waiting on the human. Leave it. If the same thread keeps showing up across scans with no human movement, mention it to the user (e.g. "this thread's been open without follow-up for N scans, want me to close or chase it?").
+
+Across many files, sort matches by file mtime descending — actionable threads cluster in recently-touched files. Don't cap the result list silently; if you must, cap after sorting.
