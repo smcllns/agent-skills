@@ -6,7 +6,9 @@ This repo serves as a **Claude plugin marketplace** ([docs](https://code.claude.
 
 ## Plugins
 
-_None published yet — first plugin (`markdown-agent-directives`) in progress._
+| Plugin | Purpose |
+| --- | --- |
+| `markdown-agent-directives` | Picks up `#claude`/`#codex`/`#agent` directives in any markdown file, does the requested work, and records the exchange in a callout that can be continued. |
 
 ### Install as a marketplace
 

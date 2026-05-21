@@ -17,7 +17,7 @@ smcllns/skills/                        ← repo root
 │   ├── obsidian-html-docs/
 │   └── token-count/
 ├── claude-cowork-plugins/             ← Claude plugins (work in Cowork + Code CLI)
-│   └── inbox-zero-gmail-claude/       ← per-plugin dir; contains its own skills/, hooks/, etc.
+│   └── markdown-agent-directives/     ← per-plugin dir; contains its own skills/, hooks/, etc.
 ├── codex-plugins/                     ← Codex plugins (format TBD, empty for now)
 ├── docs/                              ← plans, notes
 ├── .gitignore
@@ -43,7 +43,7 @@ A given skill can ship in three forms:
 
 ## Plugin naming
 
-Plugins inside `claude-cowork-plugins/` are named `<skill>-claude` (e.g. `inbox-zero-gmail-claude`). The `-claude` suffix is currently redundant since the parent dir already encodes the host. Carryover from an earlier layout iteration. **Open question:** drop the suffix on next pass (`claude-cowork-plugins/inbox-zero-gmail/`) for cleaner naming.
+Plugins inside `claude-cowork-plugins/` use the bare skill name — no `-claude` suffix. The parent dir already encodes the host, so the suffix was redundant. The `inbox-zero-gmail-claude` directory on the `inbox-zero` branch is the older naming and will be renamed to `inbox-zero-gmail` when that branch ships.
 
 ## Persistence
 
