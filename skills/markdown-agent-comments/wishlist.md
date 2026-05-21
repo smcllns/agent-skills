@@ -1,12 +1,17 @@
 # Wishlist
 
-Future ideas for `markdown-agent-comments` — designed but intentionally not in v1 to keep the skill simple.
+Future ideas for `markdown-agent-comments`:
 
-## Speaker labels (HTML `<cite>` badges)
+* **[Speaker labels](#speaker-labels)**: enable styling on speaker names to make it easier to scan bigger threads
 
-**Idea:** in long, multi-turn threads, the eye loses track of who said what when every turn opens with `@sam:` or `@claude:` in plain text. Wrap the speaker name in a minimal HTML tag so editor CSS can render it as a visual badge.
 
-**Form:**
+---
+
+## Speaker labels
+
+**Problem to solve:** in long, multi-turn threads, the eye loses track of who said what when every turn opens with `@sam:` or `@claude:` in plain text. Cannot style them as-is because it's all text within a callout.
+
+**Proposal:** The agent when it processes the comments, adds minimal markup to enable styling without making the raw markdown too noisy. No change to how humans write.
 
 ```html
 <cite>@sam</cite> human input on the same line…
@@ -45,10 +50,3 @@ Future ideas for `markdown-agent-comments` — designed but intentionally not in
 - If thread length grows (multi-page conversations become common)
 - If multiple agents enter the same thread (`@claude` + `@codex` + `@hermes`) and human readers struggle to follow who said what
 - If we ship vault CSS that styles `<cite>` and `<cite data-agent>` distinctively — at that point the cost-benefit flips
-
-**Implementation when revisited:**
-
-- Agents upgrade bare `@name:` to `<cite>@name</cite>` (or `<cite data-agent>` if the name is themselves) on first touch, dropping the `:`
-- The unresolved-scan regex doesn't need to change — `[!NOTE]+` and `#agent` patterns are independent of the speaker syntax
-- Update the SKILL.md examples to use cite tags
-- Update `tests/comments-spec.md` to cover both bare and badge forms
