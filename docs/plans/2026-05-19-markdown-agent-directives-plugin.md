@@ -71,7 +71,7 @@ Ship the existing `markdown-agent-directives` skill in three forms, in this orde
 
 ## Out of scope (separate work)
 
-- (Done as pre-ship cleanup, not in current scope) Speaker-label deferral, bun+TS spec-driven test suite, SKILL.md restructure, scope narrowing to directives-only (renamed from `markdown-agent-comments`)
+- (Done as pre-ship cleanup, not in current scope) Speaker-label deferral, bun+TS spec-driven test suite, SKILL.md restructure (Sam-authored), scope narrowing to directives-only (renamed from `markdown-agent-comments`), marker-as-protocol simplification (`[!NOTE]+` and `[!DONE]-` are the only protocol states; bare/other-marker callouts are plain markdown)
 - Codex plugin form
 - Obsidian plugin (separate repo)
 - Inbox-zero plugin rename / suffix cleanup (lives on `inbox-zero` branch; revisit when shipping it)
