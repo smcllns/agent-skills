@@ -1,0 +1,6 @@
+{
+  "name": "inbox-zero-gmail",
+  "description": "Triage Gmail to inbox zero per the user's policy. Categorize, label, archive. Drafts replies on request; never sends or deletes.",
+  "author": { "name": "Sam Collins" },
+  "keywords": ["email", "gmail", "inbox-zero", "triage", "productivity"]
+}

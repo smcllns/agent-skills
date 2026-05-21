@@ -1,0 +1,14 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "mkdir -p \"${CLAUDE_PLUGIN_DATA}\" && [ -f \"${CLAUDE_PLUGIN_DATA}/policy.md\" ] || cp \"${CLAUDE_PLUGIN_ROOT}/skills/inbox-zero-gmail/references/policy.example.md\" \"${CLAUDE_PLUGIN_DATA}/policy.md\""
+          }
+        ]
+      }
+    ]
+  }
+}

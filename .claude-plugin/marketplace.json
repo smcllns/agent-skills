@@ -1,0 +1,17 @@
+{
+  "name": "smcllns-skills",
+  "version": "0.1.0",
+  "description": "Sam Collins's plugins and skills for Claude (Cowork, Claude Code) and Codex",
+  "owner": {
+    "name": "Sam Collins",
+    "email": "oscollins@gmail.com"
+  },
+  "plugins": [
+    {
+      "name": "inbox-zero-gmail-claude",
+      "source": "./claude-cowork-plugins/inbox-zero-gmail-claude",
+      "description": "Triage Gmail to inbox zero per the user's policy. Categorize, label, archive. Drafts replies on request; never sends or deletes.",
+      "category": "productivity"
+    }
+  ]
+}
