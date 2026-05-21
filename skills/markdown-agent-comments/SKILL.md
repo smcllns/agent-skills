@@ -5,116 +5,70 @@ description: "Use when an Obsidian note or other markdown file contains inline c
 
 # Markdown Comments
 
-Resolve comments a human left for an agent in markdown files. Work in place, preserve the thread, and reply as the current agent.
+Resolve comments a human left for an agent in markdown files. Scan a path for unresolved comments, do the work the human asked for, reply in place, and mark threads done.
 
-## Where the work goes
-
-Edits go in the document body; the callout is a side thread for discussion and one-line acknowledgements and confirmations of changes made in the doc. Don't paste rewritten paragraphs, drafted sections, or new code into the reply — that belongs in the body. Discussion-only comments (e.g. "why did we pick X?") have no body edit, so the answer is the reply. When in doubt: does the answer belong in the final document? If yes, edit the body.
-
-## Comment Shapes
+## The two comment shapes
 
 <!--#agents ignore: example comments in this file are to illustrate the protocol; do not process them-->
 
-### Callout thread
+**Callout thread** — a discussion in a Markdown callout. Open with `[!NOTE]+`, resolved with `[!DONE]-`.
 
-**Active** (`[!NOTE]+`, expanded — agent reply ends with a question, thread stays open):
-
+```
 > [!NOTE]+ @sam: this section is too wordy — can we simplify?
->
-> @claude: Can do — should I trim to 3 bullets, or fold the whole thing into the next paragraph?
->
->
+```
 
-**Resolved** (`[!DONE]-`, collapsed with a one-line outcome summary):
+**Inline directive** — a one-shot ask, no thread. Wrapped in `[!DONE]-` once actioned.
 
-> [!DONE]- trimmed section to 3 bullets per @sam
-> @sam: this section is too wordy — can we simplify?
->
-> @claude: Can do — should I trim to 3 bullets, or fold the whole thing into the next paragraph?
->
-> ---
->
-> @sam: 3 bullets please
->
-> ---
->
-> @claude: Done.
+```
+#claude clean up the formatting in the paragraph above
+```
 
-### Human shorthand input
+For the full pattern catalog (indents, edge cases, accepted false positives), see [`tests/comments-spec.md`](tests/comments-spec.md).
 
-Human friendly shorthands, such as: 
+## Finding work
 
-- `> @sam: ...`,
-- `> sam: ...`,
-- `@sam: ...` 
+Scan with:
 
-should **upgrade to `> [!NOTE]+ @sam: ...` on first touch**. 
+```
+grep -rlnE --include='*.md' '(\[!NOTE\]\+|^([^>]*[[:space:]])?#(claude|codex|pi|agent|hermes)\b)' <path>
+```
 
-Bare `sam: ...` (no `@`, no `>`) is **not** a comment — ignore.
+- `[!NOTE]+` catches open threads. `[!NOTE]-` (parked, awaiting human) and `[!DONE]-` (resolved) are filtered by the grep itself.
+- `^([^>]*[[:space:]])?#(claude|codex|pi|agent|hermes)\b` catches inline directives at line-start, indented, or mid-prose. `^[^>]` rejects blockquote lines, so wrapped directives are filtered for free. Whitespace before `#` (or line-start) is required so prose like `obsidian#claude` doesn't trigger.
 
-### Inline directive (non-interactive)
+Across many files, sort matches by file mtime descending — actionable threads cluster in recently-touched files. Don't cap the result list silently; if you must, cap after sorting.
 
-One-shot imperative addressed to a specific agent — no conversation thread expected. The agent actions the request, then wraps the directive directly in a `[!DONE]-` callout with its reply inside. There is no `[!NOTE]+` stage.
+## Marker convention
 
-User writes:
+The callout marker tells the scan whose turn it is:
 
-#claude can you clean up that formatting pls
+| Marker | Meaning | Scan |
+|---|---|---|
+| `[!NOTE]+` | Waiting for **agent** — last line is the human's | Picks up |
+| `[!NOTE]-` | Parked — waiting for **human** (agent's last reply may be a question) | Skips |
+| `[!DONE]-` | Resolved | Skips |
 
-Agent does the work, then converts to:
+A match is actionable when:
 
-> [!DONE]- #claude can you clean up that formatting pls
->
-> @claude: done — removed broken newlines and added missing periods at the end of sentences. No changes to text content.
+- An open `[!NOTE]+` callout's last line is from the human, **or**
+- A shorthand form (`> @sam:`, `> sam:`, `@sam:`) hasn't been upgraded yet, **or**
+- An inline `#agent` directive hasn't been wrapped in `[!DONE]-` yet.
 
-**If no concrete change can be made** (the request is ambiguous, missing context, or non-actionable), then add a normal `> @agent: ...` reply asking for clarification and escalate to your human for input through normal channels.
+**Safety net:** if the scan picks up a `[!NOTE]+` whose last non-blank line is from the agent (someone forgot to flip to `-`), treat it as parked anyway — don't self-reply.
 
-Example escalation:
+## Where the work goes
 
-> [!NOTE]+ #claude tighten the wording above
-> @claude: Breaking protocol because the request is ambiguous: I can't tell which paragraph you mean — the wording above stretches back for 12,000 words but your ask seems like a smaller one. Please confirm where to stop: (1) the last paragraph only (2) the last 4 paragraphs that cover this topic or (3) the entire document (all 12,000 words)?
+Edits go in the document body; the callout is a side thread for discussion and one-line acknowledgements of changes made in the doc. Don't paste rewritten paragraphs, drafted sections, or new code into the reply — that belongs in the body. Discussion-only comments (e.g. "why did we pick X?") have no body edit, so the answer is the reply. When in doubt: does the answer belong in the final document? If yes, edit the body.
 
-## Unresolved rule
+## Resolving a callout thread
 
-A comment is unresolved when any of:
-
-- An open callout `> [!NOTE]+ ...` whose **last line is from the user** (no agent reply yet, OR an agent replied earlier and the user has since posted a follow-up the agent hasn't answered).
-- A shorthand form (`> @sam:`, `> sam:`, `@sam:`) that has not yet been upgraded.
-- An inline `#agent` directive that has not yet been wrapped in a `[!DONE]-` callout.
-
-If the **last non-blank speaker line is from the agent** — even when the agent's reply ends with a question back to the user — the thread is **parked**, waiting on the user. Don't self-reply.
-
-A `> [!DONE]-` callout is resolved — leave it alone unless reopened.
-
-## Scanning for comments to resolve
-
-The scan is `grep -rlnE --include='*.md' '(\[!NOTE\]\+|^([^>]*[[:space:]])?#(claude|codex|pi|agent|hermes)\b)' <path>` — every match is by convention awaiting an agent reply. Two patterns:
-
-- `[!NOTE]+` catches open callout threads. `[!NOTE]-` (parked, awaiting human) and `[!DONE]-` (resolved) are filtered out by the grep itself.
-- `^([^>]*[[:space:]])?#(claude|codex|pi|agent|hermes)\b` catches bare inline directives **anywhere on a non-blockquote line** — at line-start (`#claude do X`), indented (`  #claude do X`), or trailing prose (`do X please #claude`). The `^[^>]` requirement rejects lines that start with `>`, so wrapped directives (`> [!DONE]- #claude ...`) and callout-internal mentions are filtered out for free. Whitespace before `#` (or line-start) is required so prose like `obsidian#claude` doesn't trigger.
-
-When you park a thread on the human (your reply asks a question), flip the marker from `[!NOTE]+` to `[!NOTE]-` so the next scan skips it.
-
-Across many files, sort matches by file mtime descending — actionable threads cluster in recently-modified files. Don't cap the result list silently; if you must, cap after sorting, never before.
-
-## Resolution Contract
-
-For each unresolved comment:
-
-- Read the full file and enough surrounding context to understand the request.
-- Use any better-matching skill/tool first when one applies.
-- Do the requested work when it is concrete — **edit the document body**, not the callout. The callout gets a one-line acknowledgement; the actual change goes where the user asked for it. See "Where the work goes" above.
-- For discussion comments (no doc change requested), answer concisely inside the callout.
-- If the comment sits on a task item, update the checkbox too.
-
-For thread comments:
-
-- **Reply** as `> @agent: ...` below the original line, using the agent name the user expects (`@codex`, `@claude`, `@pi`, `@hermes`).
-- **Separate every speaker turn with a horizontal rule** — write `> ---` on its own line between turns, with a blank `>` line on either side. The first reply (directly under the callout title) does not need a rule above it; the title is the separator. Renderers convert `---` to an `<hr>`, and the vault CSS styles it as a visible line between turns. Without the rule, long replies (paragraphs, lists, code blocks) bleed together and you can't tell where one speaker ends and the next begins.
+- **Reply** as `> @agent: ...` below the human's latest line, using the agent name the user expects (`@claude`, `@codex`, `@pi`, `@hermes`).
+- **Separate every speaker turn** with `> ---` on its own line, blank `>` lines on either side. The callout title acts as the separator before the first reply. Without the rule, long replies bleed together visually.
 
   ```markdown
   > [!NOTE]+ @sam: question?
   >
-  > @claude: long reply with bullets, then a follow-up question.
+  > @claude: long reply, then a follow-up question.
   >
   > ---
   >
@@ -124,13 +78,47 @@ For thread comments:
   >
   > @claude: done.
   ```
-- **Pre-open user input** when your reply asks the human a question or needs another response: end with two blank quoted lines after your reply so the user can type on the final line.
+- **Park on the human** when your reply asks a question or needs another response: flip the marker `[!NOTE]+` → `[!NOTE]-`, then end with two blank quoted lines so the human can type on the final line.
+
   ```markdown
-  > @claude: I need input from you to act — should I do #1 or #3?
+  > [!NOTE]- @sam: which heading should I split this under?
+  >
+  > @claude: I see two options — "Setup" or "Configuration". Which fits?
   >
   >
   ```
-- **Resolve** when the thread is done: change `[!NOTE]+` → `[!DONE]-` and write a one-line outcome summary as the callout title. Preserve the thread inside. **Title convention:** past-tense action + scope, ≤ ~60 chars. Examples:
+- **Resolve** when the thread is done: flip `[!NOTE]+` → `[!DONE]-` and write a one-line outcome summary as the title (past-tense action + scope, ≤~60 chars):
+
     - `[!DONE]- trimmed intro to 3 bullets per @sam`
     - `[!DONE]- agreed on Tuesday migration kickoff`
 
+## Resolving an inline directive
+
+A `#claude` directive (no callout, no thread) is one-shot. Do the work, then wrap the original line in a `[!DONE]-` callout with a one-line reply:
+
+```
+> [!DONE]- #claude can you clean up that formatting pls
+>
+> @claude: done — removed broken newlines and added missing periods at the end of sentences. No changes to text content.
+```
+
+## When you can't act
+
+If the request is ambiguous, missing context, or non-actionable, **don't guess**. Upgrade the directive to a `[!NOTE]-` callout, reply asking for clarification, and surface the question through normal channels:
+
+```
+> [!NOTE]- #claude tighten the wording above
+> @claude: Breaking protocol — the request is ambiguous. The wording above stretches back 12,000 words but your ask sounds smaller. Please confirm: (1) the last paragraph, (2) the last 4 paragraphs on this topic, or (3) the full doc.
+```
+
+## Upgrading shorthand input
+
+Humans use whatever's quickest. On first touch, upgrade to the canonical callout form:
+
+- `> @sam: ...` / `> sam: ...` / `@sam: ...` → `> [!NOTE]+ @sam: ...`
+- Bare `sam: ...` (no `@`, no `>`) is **not** a comment — leave it as prose.
+
+## Other surfaces
+
+- **Task items** (`- [ ]`) referenced by a comment — update the checkbox alongside the body edit.
+- **Better-matching skill or tool** — use it first when one applies.
