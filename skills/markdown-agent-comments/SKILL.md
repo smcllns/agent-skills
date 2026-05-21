@@ -23,7 +23,7 @@ Resolve comments a human left for an agent in markdown files. Scan a path for un
 #claude clean up the formatting in the paragraph above
 ```
 
-For the full pattern catalog (indents, edge cases, accepted false positives), see [`dev/comments-spec.md`](dev/comments-spec.md).
+For the full pattern catalog (indents, edge cases, accepted false positives), see [`reference/comments-spec.md`](reference/comments-spec.md).
 
 ## Finding work
 

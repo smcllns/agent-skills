@@ -1,7 +1,7 @@
 // Verifies the scan regex documented in `SKILL.md` against the fixtures in
 // `comments-spec.md`.
 //
-// Run: `bun test` from this directory, or `bun test dev/comments-spec.test.ts`
+// Run: `bun test` from this directory, or `bun test reference/comments-spec.test.ts`
 // from the skill root. Requires bun >= 1.3. No package.json needed — bun ships
 // with `bun:test` built in. For editor types, install `@types/bun` globally
 // (optional; the test runs fine without it).
