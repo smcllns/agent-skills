@@ -21,8 +21,8 @@ SKILL=$SCRIPT_DIR/../SKILL.md
 REGEX=$(sed -nE "s/.*grep -rlnE --include='\*\.md' '([^']+)'.*/\1/p" "$SKILL" | head -1)
 [ -n "$REGEX" ] || { printf 'FAIL: could not extract regex from SKILL.md — has the doc command changed shape?\n' >&2; exit 1; }
 
-# Extract agent names from the `^#(name1|name2|…)` alternation inside the regex.
-AGENTS=$(printf '%s' "$REGEX" | sed -nE 's/.*\^#\(([^)]+)\).*/\1/p' | tr '|' ' ')
+# Extract agent names from the `#(name1|name2|…)\b` alternation inside the regex.
+AGENTS=$(printf '%s' "$REGEX" | sed -nE 's/.*#\(([^)]+)\)\\b.*/\1/p' | tr '|' ' ')
 [ -n "$AGENTS" ] || { printf 'FAIL: could not extract agent names from regex: %s\n' "$REGEX" >&2; exit 1; }
 
 printf 'Regex:  %s\n' "$REGEX"
@@ -42,7 +42,12 @@ printf '  #claude indented (not at line start)\n'                    > "$DIR/h-i
 printf '```text\n#claude inside a code block\n```\n'                 > "$DIR/i-in-codeblock.md"
 printf '#piling false-positive risk for `pi`\n'                      > "$DIR/l-piling.md"
 printf 'just regular markdown, nothing to find\n'                    > "$DIR/m-no-trigger.md"
-printf 'see #claude for the rule (mid-line, not at start)\n'         > "$DIR/n-midline.md"
+printf 'see #claude for the rule (mid-line)\n'                       > "$DIR/n-midline.md"
+printf 'tell me my options please #claude\n'                         > "$DIR/o-trailing-directive.md"
+printf 'mention obsidian#claude with no separator\n'                 > "$DIR/p-no-separator.md"
+printf ' #claude single-space indent\n'                              > "$DIR/q-single-space-indent.md"
+printf '\t#claude tab-indented\n'                                    > "$DIR/r-tab-indent.md"
+printf '   > [!DONE]- #claude inside indented blockquote\n'          > "$DIR/s-indented-blockquote.md"
 
 # ─── Per-agent fixtures: one bare directive per name in the regex ──────
 for agent in $AGENTS; do
@@ -51,12 +56,20 @@ done
 
 # ─── Expected matches ──────────────────────────────────────────────────
 # Static matches: `a` (open NOTE+), `f` (hyphen triggers \b — accepted FP),
-# `i` (in fenced block — grep doesn't parse fences, accepted FP). Plus one
-# per agent name in the regex.
+# `h` (two-space indent), `i` (in fenced block — grep doesn't parse fences,
+# accepted FP), `n` (mid-line), `o` (trailing — Sam's case from 2026-05-19),
+# `q` (single-space indent — caught in PR #94 round-2), `r` (tab indent).
+# `s` (whitespace-indented blockquote) is correctly rejected.
+# Plus one per agent name in the regex.
 EXPECTED=$( {
   printf 'a-active-note.md\n'
   printf 'f-hyphenated-directive.md\n'
+  printf 'h-indented.md\n'
   printf 'i-in-codeblock.md\n'
+  printf 'n-midline.md\n'
+  printf 'o-trailing-directive.md\n'
+  printf 'q-single-space-indent.md\n'
+  printf 'r-tab-indent.md\n'
   for a in $AGENTS; do printf 'agent-%s-bare.md\n' "$a"; done
 } | sort )
 

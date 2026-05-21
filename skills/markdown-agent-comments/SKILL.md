@@ -96,10 +96,10 @@ A `> [!DONE]-` callout is resolved — leave it alone unless reopened.
 
 ## Scanning for comments to resolve
 
-The scan is `grep -rlnE --include='*.md' '(\[!NOTE\]\+|^#(claude|codex|pi|agent|hermes)\b)' <path>` — every match is by convention awaiting an agent reply. Two patterns:
+The scan is `grep -rlnE --include='*.md' '(\[!NOTE\]\+|^([^>]*[[:space:]])?#(claude|codex|pi|agent|hermes)\b)' <path>` — every match is by convention awaiting an agent reply. Two patterns:
 
 - `[!NOTE]+` catches open callout threads. `[!NOTE]-` (parked, awaiting human) and `[!DONE]-` (resolved) are filtered out by the grep itself.
-- `^#claude|#codex|#pi|#agent|#hermes` catches bare inline directives. Once wrapped, the directive line is prefixed with `> [!DONE]- `, so the `^#` anchor no longer matches — wrapped directives are filtered out for free.
+- `^([^>]*[[:space:]])?#(claude|codex|pi|agent|hermes)\b` catches bare inline directives **anywhere on a non-blockquote line** — at line-start (`#claude do X`), indented (`  #claude do X`), or trailing prose (`do X please #claude`). The `^[^>]` requirement rejects lines that start with `>`, so wrapped directives (`> [!DONE]- #claude ...`) and callout-internal mentions are filtered out for free. Whitespace before `#` (or line-start) is required so prose like `obsidian#claude` doesn't trigger.
 
 When you park a thread on the human (your reply asks a question), flip the marker from `[!NOTE]+` to `[!NOTE]-` so the next scan skips it.
 
