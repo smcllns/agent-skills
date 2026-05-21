@@ -30,12 +30,14 @@ For the full pattern catalog (indents, edge cases, accepted false positives), se
 Scan with:
 
 ```
-grep -rlnE --include='*.md' '(\[!NOTE\]([^-]|$)|^>?[[:space:]]*@[[:alnum:]_-]+:|^([^>]*[[:space:]])?#(claude|codex|pi|agent|hermes)\b)' <path>
+find <path> -name '*.md' -exec awk -f reference/scan.awk {} +
 ```
 
-- `\[!NOTE\]([^-]|$)` catches active callout threads — `[!NOTE]+`, bare `[!NOTE]`, or any other marker variant. Only `[!NOTE]-` (parked) is excluded. `[!DONE]` (any marker) isn't mentioned at all, so it's naturally filtered.
-- `^>?[[:space:]]*@[[:alnum:]_-]+:` catches unprocessed human shorthand — `> @sam:`, `@sam:`, or `>@sam:` at the start of a line. Indented blockquotes (≥1 leading space before `>`) and mid-line `@name:` mentions are filtered.
-- `^([^>]*[[:space:]])?#(claude|codex|pi|agent|hermes)\b` catches inline directives at line-start, indented, or mid-prose. `^[^>]` rejects blockquote lines, so wrapped directives are filtered for free. Whitespace before `#` is required so prose like `obsidian#claude` doesn't trigger — **and so writing `` `#claude` `` in inline code is a reliable escape hatch when you want to mention the syntax without firing the scan.**
+The awk script (kept alongside this skill for review and test coverage) catches three patterns and prints the file path on the first hit per file:
+
+- **Active callout** — `[!NOTE]+`, bare `[!NOTE]`, or any marker except `-`. Only `[!NOTE]-` (parked) suppresses; `[!DONE]` (any marker) is naturally filtered since the script doesn't look for it.
+- **Inline directive** — `#claude`, `#codex`, etc — at line-start, indented, or mid-prose. The script requires whitespace before `#`, so prose like `obsidian#claude` doesn't trigger — **and writing `` `#claude` `` in inline code is the canonical escape hatch when you want to mention the syntax without firing the scan.**
+- **Human shorthand** — `> @sam:` or `@sam:` at the start of a line, **only when the previous line is not a blockquote line**. This means agent reply lines inside existing callouts (`> @claude: ...`) don't trigger the scan, but a top-level `> @sam: ...` does. To re-open a parked thread, flip the marker (`[!NOTE]-` → `[!NOTE]+`) — a follow-up posted inside the parked callout alone won't be picked up.
 
 Across many files, sort matches by file mtime descending — actionable threads cluster in recently-touched files. Don't cap the result list silently; if you must, cap after sorting.
 

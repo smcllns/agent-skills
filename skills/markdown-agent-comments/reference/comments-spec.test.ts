@@ -1,15 +1,15 @@
-// Verifies the scan regex documented in `SKILL.md` against the fixtures in
+// Verifies the scan documented in `SKILL.md` against the fixtures in
 // `comments-spec.md`.
 //
 // Run: `bun test` from this directory, or `bun test reference/comments-spec.test.ts`
-// from the skill root. Requires bun >= 1.3. No package.json needed — bun ships
-// with `bun:test` built in. For editor types, install `@types/bun` globally
-// (optional; the test runs fine without it).
+// from the skill root. Requires bun >= 1.3 and `awk` (standard on macOS/Linux).
 //
 // Source-of-truth design:
-//   - The scan regex and agent list are HARDCODED here (SCAN_REGEX, AGENTS).
-//   - A consistency test asserts SKILL.md contains both verbatim, so editing
-//     SKILL.md without updating the test (or vice versa) fails loud.
+//   - `reference/scan.awk` is the canonical scan implementation. The test
+//     invokes it via `find ... -exec awk -f scan.awk` — the docs and the
+//     test can't drift since both reference the same file.
+//   - A consistency test asserts SKILL.md documents the find+awk command
+//     and that scan.awk mentions every agent name in AGENTS.
 //   - Fixtures live in `comments-spec.md`. Each section's fenced block whose
 //     info string is `md @test:match` or `md @test:nomatch` is one fixture;
 //     other fences are ignored.
@@ -21,15 +21,17 @@ import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 
-// ─── single source of truth (TS side) ─────────────────────────────────────
-const SCAN_REGEX = String.raw`(\[!NOTE\]([^-]|$)|^>?[[:space:]]*@[[:alnum:]_-]+:|^([^>]*[[:space:]])?#(claude|codex|pi|agent|hermes)\b)`;
+// ─── agent list (TS side) ─────────────────────────────────────────────────
 const AGENTS = ["claude", "codex", "pi", "agent", "hermes"] as const;
 
 const SKILL_PATH = new URL("../SKILL.md", import.meta.url);
 const SPEC_PATH = new URL("./comments-spec.md", import.meta.url);
+const SCAN_AWK_PATH = fileURLToPath(new URL("./scan.awk", import.meta.url));
 const SKILL = readFileSync(SKILL_PATH, "utf8");
 const SPEC = readFileSync(SPEC_PATH, "utf8");
+const SCAN_AWK = readFileSync(SCAN_AWK_PATH, "utf8");
 
 // ─── parse fixtures from spec.md ──────────────────────────────────────────
 // A fixture is any fenced block (3+ backticks) whose info string is
@@ -81,13 +83,12 @@ beforeAll(async () => {
   }
 
   const proc = Bun.spawnSync({
-    cmd: ["grep", "-rlnE", "--include=*.md", SCAN_REGEX, tempDir],
+    cmd: ["find", tempDir, "-name", "*.md", "-exec", "awk", "-f", SCAN_AWK_PATH, "{}", "+"],
     stdout: "pipe",
     stderr: "pipe",
   });
-  // grep exits 1 when no matches — not an error for us.
-  if (proc.exitCode !== 0 && proc.exitCode !== 1) {
-    throw new Error(`grep failed (exit ${proc.exitCode}): ${new TextDecoder().decode(proc.stderr)}`);
+  if (proc.exitCode !== 0) {
+    throw new Error(`scan failed (exit ${proc.exitCode}): ${new TextDecoder().decode(proc.stderr)}`);
   }
   matched = new Set(
     new TextDecoder().decode(proc.stdout)
@@ -95,7 +96,7 @@ beforeAll(async () => {
       .map((p) => p.replace(`${tempDir}/`, "").replace(/\.md$/, "")),
   );
 
-  console.log(`Regex:    ${SCAN_REGEX}`);
+  console.log(`Scan:     find <path> -name '*.md' -exec awk -f reference/scan.awk {} +`);
   console.log(`Agents:   ${AGENTS.join(" ")}`);
   console.log(`Fixtures: ${SPEC_FIXTURES.length} from spec + ${AGENT_FIXTURES.length} generated = ${ALL_FIXTURES.length}`);
 });
@@ -105,12 +106,15 @@ afterAll(async () => {
 });
 
 // ─── tests ────────────────────────────────────────────────────────────────
-describe("SKILL.md ⇄ test constants are in sync", () => {
-  it("SKILL.md contains the scan regex verbatim", () => {
-    expect(SKILL).toContain(SCAN_REGEX);
+describe("SKILL.md ⇄ scan.awk are in sync", () => {
+  it("SKILL.md documents the find+awk command", () => {
+    expect(SKILL).toContain("awk -f reference/scan.awk");
   });
   it("SKILL.md mentions every agent name", () => {
     for (const agent of AGENTS) expect(SKILL).toContain(agent);
+  });
+  it("scan.awk includes every documented agent name", () => {
+    for (const agent of AGENTS) expect(SCAN_AWK).toContain(agent);
   });
 });
 

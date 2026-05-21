@@ -192,6 +192,63 @@ email me at @sam: my-handle for follow-ups
 
 ---
 
+## Context-aware shorthand
+
+Shorthand only fires when the previous line is **not** a blockquote line.
+This keeps agent reply lines inside existing callouts (which all start with
+`>`) from spuriously triggering the scan.
+
+### Top-level shorthand after prose
+
+A `> @sam:` preceded by a non-blockquote line is a new comment.
+
+```md @test:match
+some prose introducing context
+
+> @sam: hey, can we revisit this?
+```
+
+### Active callout with agent reply
+
+The active `[!NOTE]+` marker is what pulls this in — not the `> @claude:`
+reply line, which would otherwise also be a shorthand match candidate.
+
+```md @test:match
+> [!NOTE]+ @sam: question
+>
+> @claude: my reply
+```
+
+### Agent reply inside a parked callout — NOT a comment
+
+The key case for the context check: the agent's reply line (`> @claude: ...`)
+sits inside a parked callout (`[!NOTE]-`). Without the context check this
+would spuriously match shorthand and the scan would re-find every past
+thread the agent ever touched.
+
+```md @test:nomatch
+> [!NOTE]- @sam: parked thread
+>
+> @claude: my agent reply line
+```
+
+### Human follow-up inside a parked callout — NOT a comment
+
+Same logic: a shorthand line inside a blockquote is treated as continuation
+of the callout, not as new input. **To re-open a parked thread, flip the
+marker (`[!NOTE]-` → `[!NOTE]+`)** — a shorthand line posted inside the
+parked callout alone won't be picked up by the scan.
+
+```md @test:nomatch
+> [!NOTE]- @sam: was parked
+>
+> @claude: my reply
+>
+> @sam: actually wait, follow-up
+```
+
+---
+
 ## Inline code spans (escape hatch)
 
 Wrapping a directive or shorthand in inline backticks is the canonical way to
