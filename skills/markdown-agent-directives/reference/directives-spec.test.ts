@@ -23,8 +23,8 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 // ─── single source of truth (TS side) ─────────────────────────────────────
-const SCAN_REGEX = String.raw`(\[!NOTE\]|^([^>]*[[:space:]])?#(claude|codex|pi|agent|hermes)([^[:alnum:]_]|$))`;
-const AGENTS = ["claude", "codex", "pi", "agent", "hermes"] as const;
+const SCAN_REGEX = String.raw`(\[!NOTE\]|^([^>]*[[:space:]])?#(agent|claude|codex)([^[:alnum:]_]|$))`;
+const AGENTS = ["agent", "claude", "codex"] as const;
 
 const SKILL_PATH = new URL("../SKILL.md", import.meta.url);
 const SPEC_PATH = new URL("./directives-spec.md", import.meta.url);

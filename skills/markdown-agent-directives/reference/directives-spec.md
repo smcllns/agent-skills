@@ -191,11 +191,11 @@ name. `#claudewhatever` doesn't have one — it's a different tag.
 
 ### Word starting with an agent prefix
 
-False-positive risk for short agent names like `pi`. `#piling` doesn't match
-because there's no word boundary after `pi`.
+False-positive risk for short agent names. `#agency` doesn't match `#agent`
+because there's no word boundary after `agent` (the `c` is a word char).
 
 ```md @test:nomatch
-#piling false-positive risk for pi
+#agency false-positive risk for agent
 ```
 
 ### No whitespace before `#`
