@@ -19,7 +19,7 @@ agent list. Add a name there → the fixture set extends automatically.
 
 The primary comment shape — a callout wrapping a discussion between human and agent.
 
-### Active callout awaiting agent reply
+### Active callout — `[!NOTE]+`
 
 `[!NOTE]+` is the open / unresolved state. The trailing `+` keeps the callout
 expanded in Obsidian. Scan picks these up.
@@ -28,7 +28,16 @@ expanded in Obsidian. Scan picks these up.
 > [!NOTE]+ @sam: active thread awaiting reply
 ```
 
-### Parked callout awaiting human
+### Active callout — bare `[!NOTE]`
+
+Bare `[!NOTE]` (no marker) is treated as active. The `+`/`-` markers are
+Obsidian ergonomic helpers; only `-` is decisive for the protocol (parked).
+
+```md @test:match
+> [!NOTE] @sam: bare marker, still active
+```
+
+### Parked callout — `[!NOTE]-`
 
 `[!NOTE]-` (collapsed) is the convention for "agent has replied, waiting on the
 human." The scan skips these so the agent doesn't self-reply.
@@ -37,12 +46,30 @@ human." The scan skips these so the agent doesn't self-reply.
 > [!NOTE]- @sam: parked, awaiting human
 ```
 
-### Resolved callout
+### Resolved callout — `[!DONE]-` (dash)
 
-`[!DONE]-` marks a closed thread. Untouched by the scan.
+`[!DONE]-` marks a closed, collapsed thread. Untouched by the scan.
 
 ```md @test:nomatch
 > [!DONE]- resolved thread
+```
+
+### Resolved callout — bare `[!DONE]`
+
+`[!DONE]` without any marker is still resolved. The marker carries no protocol
+meaning for `[!DONE]` (unlike `[!NOTE]`, where `-` means parked).
+
+```md @test:nomatch
+> [!DONE] resolved thread (no marker)
+```
+
+### Resolved callout — `[!DONE]+` (plus)
+
+`[!DONE]+` is also resolved — the marker is just the Obsidian expand-by-default
+helper, no scan meaning.
+
+```md @test:nomatch
+> [!DONE]+ resolved thread (plus marker)
 ```
 
 ### Wrapped directive inside a DONE callout
@@ -112,13 +139,86 @@ tell me my options please #claude
 
 ---
 
+## Human shorthand input
+
+Humans often write the simpler form rather than the full callout. The scan
+picks these up; the agent upgrades them to the canonical `[!NOTE]+` callout
+on first touch.
+
+### Blockquote shorthand — `> @sam:`
+
+```md @test:match
+> @sam: can we shorten this paragraph?
+```
+
+### Bare line shorthand — `@sam:`
+
+```md @test:match
+@sam: any reason we're using react vs vue here?
+```
+
+### Bare prose `sam:` — NOT a comment
+
+No `@` and no `>` — just looks like a sentence that starts with a name.
+
+```md @test:nomatch
+sam: this is just a sentence that happens to start with a name
+```
+
+### Blockquote without `@` — NOT a comment
+
+We require `@` to distinguish shorthand from regular blockquotes (`> Note: ...`,
+`> Definition: ...`, etc.).
+
+```md @test:nomatch
+> sam: missing @ makes this look like a regular blockquote
+```
+
+### Shorthand with no colon — NOT a comment
+
+Without `:`, it's a mention, not an utterance.
+
+```md @test:nomatch
+> @sam said hi yesterday
+```
+
+### Mid-line `@name:` — NOT a comment
+
+The shorthand pattern anchors at line-start (optionally preceded by `>`).
+
+```md @test:nomatch
+email me at @sam: my-handle for follow-ups
+```
+
+---
+
+## Inline code spans (escape hatch)
+
+Wrapping a directive or shorthand in inline backticks is the canonical way to
+write the syntax in prose without firing the scan. The regex requires
+whitespace before `#` and at the start of `@`, and a backtick is not whitespace.
+
+### Code-span directive
+
+```md @test:nomatch
+The scan should not fire on `#claude` references inside backticks.
+```
+
+### Code-span shorthand
+
+```md @test:nomatch
+You can write `> @sam:` in docs without it triggering.
+```
+
+---
+
 ## Negative cases
 
 Things that look like directives but shouldn't trigger the scan.
 
 ### Plain prose
 
-No callout, no `#agent` — nothing to do.
+No callout, no `#agent`, no `@name:` — nothing to do.
 
 ```md @test:nomatch
 just regular markdown, nothing to find
@@ -170,8 +270,9 @@ exceeds the value.
 ### Directive inside a fenced code block
 
 `grep` doesn't parse code fences, so a `#claude` inside ` ``` ` triple-backticks
-will still match. We could fix this with a real parser but it's not worth the
-weight today.
+will still match. Use **inline code spans** (single backticks) to escape — see
+above. Fenced blocks are accepted FPs because filtering them needs a real
+markdown parser.
 
 ````md @test:match
 ```text

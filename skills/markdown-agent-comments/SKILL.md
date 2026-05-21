@@ -30,31 +30,32 @@ For the full pattern catalog (indents, edge cases, accepted false positives), se
 Scan with:
 
 ```
-grep -rlnE --include='*.md' '(\[!NOTE\]\+|^([^>]*[[:space:]])?#(claude|codex|pi|agent|hermes)\b)' <path>
+grep -rlnE --include='*.md' '(\[!NOTE\]([^-]|$)|^>?[[:space:]]*@[[:alnum:]_-]+:|^([^>]*[[:space:]])?#(claude|codex|pi|agent|hermes)\b)' <path>
 ```
 
-- `[!NOTE]+` catches open threads. `[!NOTE]-` (parked, awaiting human) and `[!DONE]-` (resolved) are filtered by the grep itself.
-- `^([^>]*[[:space:]])?#(claude|codex|pi|agent|hermes)\b` catches inline directives at line-start, indented, or mid-prose. `^[^>]` rejects blockquote lines, so wrapped directives are filtered for free. Whitespace before `#` (or line-start) is required so prose like `obsidian#claude` doesn't trigger.
+- `\[!NOTE\]([^-]|$)` catches active callout threads — `[!NOTE]+`, bare `[!NOTE]`, or any other marker variant. Only `[!NOTE]-` (parked) is excluded. `[!DONE]` (any marker) isn't mentioned at all, so it's naturally filtered.
+- `^>?[[:space:]]*@[[:alnum:]_-]+:` catches unprocessed human shorthand — `> @sam:`, `@sam:`, or `>@sam:` at the start of a line. Indented blockquotes (≥1 leading space before `>`) and mid-line `@name:` mentions are filtered.
+- `^([^>]*[[:space:]])?#(claude|codex|pi|agent|hermes)\b` catches inline directives at line-start, indented, or mid-prose. `^[^>]` rejects blockquote lines, so wrapped directives are filtered for free. Whitespace before `#` is required so prose like `obsidian#claude` doesn't trigger — **and so writing `` `#claude` `` in inline code is a reliable escape hatch when you want to mention the syntax without firing the scan.**
 
 Across many files, sort matches by file mtime descending — actionable threads cluster in recently-touched files. Don't cap the result list silently; if you must, cap after sorting.
 
 ## Marker convention
 
-The callout marker tells the scan whose turn it is:
+The `+` and `-` markers are Obsidian-specific ergonomic helpers (expand/collapse). For `[!DONE]` they carry **no protocol meaning** — bare `[!DONE]` is just as final as `[!DONE]-`. For `[!NOTE]`, only `-` is meaningful (it means parked).
 
 | Marker | Meaning | Scan |
 |---|---|---|
-| `[!NOTE]+` | Waiting for **agent** — last line is the human's | Picks up |
+| `[!NOTE]+` or `[!NOTE]` (bare) | Waiting for **agent** — last line is the human's | Picks up |
 | `[!NOTE]-` | Parked — waiting for **human** (agent's last reply may be a question) | Skips |
-| `[!DONE]-` | Resolved | Skips |
+| `[!DONE]`, `[!DONE]+`, `[!DONE]-` | Resolved (marker doesn't matter) | Skips |
 
 A match is actionable when:
 
-- An open `[!NOTE]+` callout's last line is from the human, **or**
-- A shorthand form (`> @sam:`, `> sam:`, `@sam:`) hasn't been upgraded yet, **or**
-- An inline `#agent` directive hasn't been wrapped in `[!DONE]-` yet.
+- An open `[!NOTE]` (any marker except `-`) callout's last line is from the human, **or**
+- A shorthand form (`> @sam:`, `@sam:`) hasn't been upgraded yet, **or**
+- An inline `#agent` directive hasn't been wrapped in `[!DONE]` yet.
 
-**Safety net:** if the scan picks up a `[!NOTE]+` whose last non-blank line is from the agent (someone forgot to flip to `-`), treat it as parked anyway — don't self-reply.
+**Safety net:** if the scan picks up an active `[!NOTE]` callout whose last non-blank line is from the agent (someone forgot to flip to `-`), treat it as parked anyway — don't self-reply.
 
 ## Where the work goes
 
@@ -115,8 +116,9 @@ If the request is ambiguous, missing context, or non-actionable, **don't guess**
 
 Humans use whatever's quickest. On first touch, upgrade to the canonical callout form:
 
-- `> @sam: ...` / `> sam: ...` / `@sam: ...` → `> [!NOTE]+ @sam: ...`
-- Bare `sam: ...` (no `@`, no `>`) is **not** a comment — leave it as prose.
+- `> @sam: ...` / `@sam: ...` → `> [!NOTE]+ @sam: ...`
+- Bare `sam: ...` (no `@`) is **not** a comment — just prose. We require the `@` to distinguish shorthand from regular blockquotes like `> Note: ...`.
+- Wrap directives in inline code (`` `#claude` ``, `` `@sam:` ``) to write the syntax in prose without triggering the scan.
 
 ## Other surfaces
 
