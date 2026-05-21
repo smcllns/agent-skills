@@ -20,8 +20,8 @@ After the agent acts, the line becomes:
 
 ```
 > [!DONE]- cleaned up broken formatting
-> 
->  #claude can you clean up that formatting pls
+>
+> #claude can you clean up that formatting pls
 >
 > ---
 >
@@ -43,7 +43,7 @@ For the full pattern catalog (indents, edge cases, accepted false positives), se
 A comment is unresolved when any of:
 
 - An open callout > [!NOTE] ... whose last line is from the user (no agent reply yet, OR an agent replied earlier and the user has since posted a follow-up the agent hasn't answered).
-- A shorthand inline #agent directive that has not yet been wrapped in a [!DONE]- callout.
+- An inline #agent directive that has not yet been wrapped in a [!DONE]- callout.
 
 ## Resolution Contract
 
@@ -97,7 +97,7 @@ Once a `#claude` directive is wrapped, the callout is the place for further turn
   > [!NOTE]+ tightened introduction
   >
   > #claude tighten the intro
-  > 
+  >
   > ---
   >
   > @claude: trimmed to 3 sentences — does that read OK or want to go shorter?
