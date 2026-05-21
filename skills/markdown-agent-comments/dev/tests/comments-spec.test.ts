@@ -1,6 +1,11 @@
 // Verifies the scan regex documented in `SKILL.md` against the fixtures in
 // `comments-spec.md`.
 //
+// Run: `bun test` from this directory, or `bun test dev/tests/comments-spec.test.ts`
+// from the skill root. Requires bun >= 1.3. No package.json needed — bun ships
+// with `bun:test` built in. For editor types, install `@types/bun` globally
+// (optional; the test runs fine without it).
+//
 // Source-of-truth design:
 //   - The scan regex and agent list are HARDCODED here (SCAN_REGEX, AGENTS).
 //   - A consistency test asserts SKILL.md contains both verbatim, so editing
@@ -10,8 +15,6 @@
 //     other fences are ignored.
 //   - Per-agent fixtures (one bare `#<agent>` directive per name) are
 //     generated programmatically from AGENTS.
-//
-// Run: `bun test` from this directory.
 
 import { afterAll, beforeAll, describe, expect, it } from "bun:test";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
