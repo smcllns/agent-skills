@@ -6,7 +6,7 @@
 
 Ship the existing `markdown-agent-directives` skill in three forms, in this order:
 
-1. **Bare skill** — at `skills/markdown-agent-directives/`, installable via `npx skills@latest add smcllns/skills`. Synced from dotfiles ✅
+1. **Bare skill** — at `skills/markdown-agent-directives/`, installable via `bunx skills@latest add smcllns/skills`. Synced from dotfiles ✅
 2. **Claude plugin** — to create at `claude-plugins/markdown-agent-directives/`. Installable via `claude plugin marketplace add smcllns/skills` and through the Cowork UI. **Primary deliverable.**
 3. **Codex plugin** — at `codex-plugins/markdown-agent-directives/`. Deferred until #2 is shipped.
 4. **Obsidian plugin** — separate repo, out of scope.
@@ -31,7 +31,7 @@ Ship the existing `markdown-agent-directives` skill in three forms, in this orde
 - [x] Create `claude-plugins/markdown-agent-directives/.claude-plugin/plugin.json` — name, description, author, keywords. Model on inbox-zero's, no hooks.
 - [x] Copy `skills/markdown-agent-directives/SKILL.md` → `claude-plugins/markdown-agent-directives/skills/markdown-agent-directives/SKILL.md`
 - [x] Copy `skills/markdown-agent-directives/reference/` → mirror path under the plugin (tests + wishlist live here, internal-only)
-- [x] Write `claude-plugins/markdown-agent-directives/README.md` — what the skill does + install paths (marketplace, Cowork UI, npx skills)
+- [x] Write `claude-plugins/markdown-agent-directives/README.md` — what the skill does + install paths (marketplace, Cowork UI, bunx skills)
 - [x] No `hooks.json` — skill is stateless, no NUX, no config
 
 ### Phase 2 — Wire into the marketplace
@@ -45,7 +45,7 @@ Ship the existing `markdown-agent-directives` skill in three forms, in this orde
 - [x] Install plugin into Sam's Cowork via local-folder install
 - [x] Open a real markdown file with a `#claude` (or `#agent`) directive
 - [x] Invoke the skill, confirm it actions the directive and wraps it in a callout per SKILL.md
-- [x] Confirm `npx skills@latest add smcllns/skills` still installs the bare skill at the unchanged path
+- [x] Confirm `bunx skills@latest add smcllns/skills` still installs the bare skill at the unchanged path
 
 ### Phase 4 — Verify scheduled execution (the WHY of the plugin)
 
@@ -65,7 +65,7 @@ Ship the existing `markdown-agent-directives` skill in three forms, in this orde
 - Plugin installed in Sam's Cowork
 - Sam can invoke it on a real markdown file and it processes comments correctly
 - Sam can drive it from a Cowork scheduled task
-- Bare-skill install path (`npx skills add smcllns/skills`) still works
+- Bare-skill install path (`bunx skills add smcllns/skills`) still works
 - Plugin listed in root README and marketplace.json
 - Merged to main
 

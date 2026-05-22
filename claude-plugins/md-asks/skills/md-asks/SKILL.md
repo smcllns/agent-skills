@@ -1,18 +1,18 @@
 ---
 name: md-asks
-description: "Use when markdown files (Obsidian notes or regular .md) contain one or more `@claude`, `@codex` or `@agent` asks requesting input or changes on the document."
+description: "Use when markdown files (Obsidian notes or regular .md) contain `@claude`, `@codex`, or `@agent` asks; also use when asked to resolve md asks, scan markdown for agent asks, or process open `[!NOTE]+` threads."
 ---
 
 # md-asks
 
-A human writes `@claude do X` in a markdown file. This skill finds those asks, does the work, and wraps the exchange in a callout containing the discussion thread.
+A human writes `@codex do X` or `@claude do X` in a markdown file. This skill finds those asks, does the work, and wraps the exchange in a callout containing the discussion thread.
 
 ## Example
 
 User writes:
 
 ```
-@claude can you clean up that formatting pls
+@codex can you clean up that formatting pls
 ```
 
 After the agent acts:
@@ -20,9 +20,9 @@ After the agent acts:
 ```
 > [!DONE]- cleaned up broken formatting
 >
-> @claude can you clean up that formatting pls
+> @codex can you clean up that formatting pls
 >
-> @claude: done — removed broken newlines and added missing periods. No changes to text content.
+> @codex: done — removed broken newlines and added missing periods. No changes to text content.
 ```
 
 The original ask is preserved verbatim as the first body line. The title is the outcome summary.
@@ -114,9 +114,9 @@ Inside a callout, separate every turn with a **single blank `>` line** — one p
 
 For a soft line break inside a single turn, use two trailing spaces.
 
-## Final message (scheduled-run summary)
+## Final message
 
-Your last assistant message becomes the Cowork task-card body. Keep it to one of these one-liners — Cowork already shows tool/file counts, so don't repeat them:
+For scheduled/background runs, keep the last assistant message to one of these one-liners:
 
 ```
 No asks. Scanned N files.
@@ -124,7 +124,7 @@ Resolved K of N. Open: <file:line>, <file:line>.
 Blocked: <one-sentence reason>. See <report-path>.
 ```
 
-No preamble. If a verbose report exists, link to it from the one-liner.
+For interactive runs, summarize what changed and mention any open/blocked threads. No preamble. If a verbose report exists, link to it from the summary.
 
 ## Best practices
 

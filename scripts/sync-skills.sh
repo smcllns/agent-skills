@@ -9,7 +9,7 @@
 # copied into its skills/<skill-name>/ subdir. To ship one skill under
 # multiple plugins (or with renames), extend this script.
 #
-# No symlinks: marketplace tarballs, npm pack, and some installers strip or
+# No symlinks: marketplace tarballs and some installers strip or
 # choke on symlinks. Real files copy cleanly across all hosts.
 #
 # Usage:

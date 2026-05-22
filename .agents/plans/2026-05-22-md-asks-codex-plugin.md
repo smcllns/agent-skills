@@ -1,27 +1,27 @@
 # Plan: md-asks Codex plugin
 
-Status: in progress
+Status: complete
 Branch: `codex/md-asks-codex-plugin`
 Base reviewed: `main` at `a55825a` (`feat: Skills sync workflow — canonical bare skill, derived plugin copies (#11)`)
 
 ## Current read
 
 - PR #11 merged the canonical `skills/md-asks/` source and derived Claude plugin copy.
-- `scripts/sync-skills.sh` already syncs into both the current Claude plugin directory and future `codex-plugins`.
-- Sync is clean: running `scripts/sync-skills.sh` produced no repo diff.
-- The spec harness is red: `markdown-agent-directives.spec.test.ts` still scans `#agent/#claude/#codex`, while `SKILL.md` and fixtures now use `@agent/@claude/@codex`.
-- Root README and architecture docs still have some stale `markdown-agent-directives` / `#claude` wording.
+- `scripts/sync-skills.sh` syncs into both `claude-plugins` and `codex-plugins`.
+- Sync is clean after adding `codex-plugins/md-asks/`.
+- The spec harness now scans `@agent/@claude/@codex` and passes across canonical, Claude, and Codex copies.
+- Root README and architecture docs now describe the bare skill, Claude plugin, and Codex plugin forms.
 
 ## Scope
 
 - [x] Fix the `@` trigger test contract in canonical `skills/md-asks/`.
 - [x] Rename Claude plugin root to `claude-plugins/` and update references.
 - [x] Sync derived Claude copy and confirm no drift.
-- [ ] Add `codex-plugins/md-asks/` with `.codex-plugin/plugin.json`, README, and derived skill copy.
-- [ ] Add repo Codex marketplace at `.agents/plugins/marketplace.json`.
-- [ ] Polish Codex-facing skill/plugin UX copy without changing the protocol.
-- [ ] Update root docs for the three forms: bare skill, Claude plugin, Codex plugin.
-- [ ] Verify tests, sync drift, JSON validity, and install-facing file shape.
+- [x] Add `codex-plugins/md-asks/` with `.codex-plugin/plugin.json`, README, and derived skill copy.
+- [x] Add repo Codex marketplace at `.agents/plugins/marketplace.json`.
+- [x] Polish Codex-facing skill/plugin UX copy without changing the protocol.
+- [x] Update root docs for the three forms: bare skill, Claude plugin, Codex plugin.
+- [x] Verify tests, sync drift, JSON validity, and install-facing file shape.
 
 ## Non-scope
 
@@ -44,7 +44,7 @@ codex-plugins/md-asks/
 
 - `bun test skills/md-asks/reference/markdown-agent-directives.spec.test.ts`
 - `scripts/sync-skills.sh`
-- `git diff --exit-code`
+- `git diff --exit-code` after staging intended changes
 - JSON parse for `.agents/plugins/marketplace.json` and `codex-plugins/md-asks/.codex-plugin/plugin.json`
 - Manual file-shape inspection against Codex plugin docs: manifest path, relative `./skills/`, marketplace source path.
 

@@ -12,7 +12,7 @@ Accumulated knowledge about authoring Claude plugins that work in both Cowork an
 > - Plugin marketplaces: <https://code.claude.com/docs/en/plugin-marketplaces>
 > - Persistent data directory: <https://code.claude.com/docs/en/plugins-reference#persistent-data-directory>
 > - Symlinks within a marketplace: <https://code.claude.com/docs/en/plugins-reference#share-files-within-a-marketplace-with-symlinks>
-> - Vercel skills CLI (for the `npx skills add` install path): <https://github.com/vercel-labs/skills>
+> - Vercel skills CLI (for the `bunx skills add` install path): <https://github.com/vercel-labs/skills>
 >
 > **Encouraged workflow:** as you verify a claim here, append a note in the *Verified findings* section at the bottom (e.g. "marketplace.json `skills` field — confirmed against docs 2026-05-22, behaves as documented"). When you find a claim is wrong, correct it inline and note the correction at the bottom.
 
@@ -170,7 +170,7 @@ Flagging gaps honestly so the next agent doesn't take this as gospel:
 - [ ] **SessionStart hook in a real run.** We dry-ran the command in a sandbox; haven't observed Cowork firing it.
 - [x] **Cowork UI install of a local folder.** Verified 2026-05-21 with `markdown-agent-directives`: Cowork requires a **zip of the plugin dir**, not a folder pick. See *Verified findings* below for the exact flow.
 - [ ] **Scheduled invocation through `mcp__scheduled-tasks__create_scheduled_task`.** Listed as a goal in the markdown-agent-directives plan; will verify there.
-- [ ] **Whether `npx skills@latest add smcllns/skills` finds the bare skills under `skills/`.** The vercel-labs/skills CLI may or may not scan the standard `skills/` subdir. Check before committing.
+- [ ] **Whether `bunx skills@latest add smcllns/skills` finds the bare skills under `skills/`.** The vercel-labs/skills CLI may or may not scan the standard `skills/` subdir. Check before committing.
 - [ ] **marketplace.json schema validation.** We've parsed it as JSON but haven't validated against the actual runtime schema.
 
 When you verify any of these, **tick the box and write what you found** below. This is a growing doc.
