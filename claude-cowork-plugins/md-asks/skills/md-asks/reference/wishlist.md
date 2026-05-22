@@ -1,6 +1,6 @@
 # Wishlist
 
-Future ideas for `markdown-agent-directives`:
+Future ideas for `md-asks`:
 
 * **[Speaker labels](#speaker-labels)**: enable styling on speaker names to make it easier to scan bigger threads
 
