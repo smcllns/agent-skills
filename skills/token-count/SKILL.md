@@ -1,16 +1,27 @@
 ---
 name: token-count
-description: "Use when you need a free, accurate token count for prompt budgeting, skill sizing, or annotating file references (e.g. '[SKILL.md](url) (~625 tokens)') without local tokenizer deps."
+description: "Use when you need a free, accurate token count across Anthropic/Gemini/OpenAI for prompt budgeting, skill sizing, or annotating file references. Returns per-vendor counts and a range string."
 ---
 
 # Token count
 
-Server-side token counting endpoints:
+Call all three server-side count endpoints (no inference, free), then return a structured result.
 
-- **Anthropic** — `POST https://api.anthropic.com/v1/messages/count_tokens` (`x-api-key`, free)
-- **Gemini** — `POST https://generativelanguage.googleapis.com/v1beta/models/{model}:countTokens` (API key, free)
-- **OpenAI** — `POST https://api.openai.com/v1/responses/input_tokens` (`Bearer`, free)
+- **Anthropic** — `POST https://api.anthropic.com/v1/messages/count_tokens` (`x-api-key`)
+- **Gemini** — `POST https://generativelanguage.googleapis.com/v1beta/models/{model}:countTokens` (API key)
+- **OpenAI** — `POST https://api.openai.com/v1/responses/input_tokens` (`Bearer`)
 
-These endpoints don't trigger model inference — they just tokenize. Match the tokenizer to the target model (counts differ across vendors). No local tokenizer deps needed.
+Tokenizer is vendor-fixed; model only selects family. Use any current model per vendor (e.g. `claude-sonnet-4-6`, `gemini-2.5-flash`, `gpt-5`).
 
-Why not tiktoken? It's OpenAI-only — counts differently to Claude/Gemini (15–20% count differences). Use it locally if your target is GPT; use these endpoints for cross-vendor accuracy or to avoid local tokenizer deps.
+## Output
+
+Return a JSON object:
+
+```json
+{
+  "counts": { "anthropic": 1234, "gemini": 1200, "openai": 1300 },
+  "range": "1,200–1,300 tokens"
+}
+```
+
+- `range` — smallest–largest, comma-formatted, suffixed ` tokens`
