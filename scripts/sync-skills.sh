@@ -21,7 +21,7 @@ set -euo pipefail
 repo_root="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$repo_root"
 
-plugin_roots=(claude-cowork-plugins codex-plugins)
+plugin_roots=(claude-plugins codex-plugins)
 
 shopt -s nullglob
 synced=0

@@ -3,7 +3,7 @@
 This repo serves two purposes from one source of truth:
 
 1. **A registry of standalone skills** (under `skills/`) — installable via `npx skills@latest add smcllns/skills` into any agent that loads `SKILL.md` from a directory.
-2. **A Claude plugin marketplace** (under `claude-cowork-plugins/`, via root `.claude-plugin/marketplace.json`) — installable via `claude plugin marketplace add smcllns/skills` and through the Cowork UI.
+2. **A Claude plugin marketplace** (under `claude-plugins/`, via root `.claude-plugin/marketplace.json`) — installable via `claude plugin marketplace add smcllns/skills` and through the Cowork UI.
 
 A `codex-plugins/` sibling is reserved for future Codex wrappers of the same underlying skills.
 
@@ -16,7 +16,7 @@ smcllns/skills/                        ← repo root
 │   ├── markdown-agent-directives/
 │   ├── obsidian-html-docs/
 │   └── token-count/
-├── claude-cowork-plugins/             ← Claude plugins (work in Cowork + Code CLI)
+├── claude-plugins/                    ← Claude plugins (work in Cowork + Code CLI)
 │   └── md-asks/                       ← per-plugin dir; contains its own skills/, hooks/, etc.
 ├── codex-plugins/                     ← Codex plugins (format TBD, empty for now)
 ├── docs/                              ← plans, notes
@@ -36,7 +36,7 @@ A given skill can ship in three forms:
 | Form | Where it lives | Who installs it how |
 |---|---|---|
 | Bare skill | `skills/<name>/` | `npx skills@latest add smcllns/skills` |
-| Claude plugin | `claude-cowork-plugins/<name>/` | `claude plugin marketplace add smcllns/skills`; or Cowork UI |
+| Claude plugin | `claude-plugins/<name>/` | `claude plugin marketplace add smcllns/skills`; or Cowork UI |
 | Codex plugin | `codex-plugins/<name>/` (future) | TBD |
 
 > **Source-of-truth.** The bare skill in `skills/<name>/` is canonical. Plugin-embedded copies at `<host>-plugins/<name>/skills/<name>/` are derived. Run `scripts/sync-skills.sh` to refresh the derived copies from the canonical source. CI verifies no drift on PRs.
@@ -45,7 +45,7 @@ A given skill can ship in three forms:
 
 ## Plugin naming
 
-Plugins inside `claude-cowork-plugins/` use the bare skill name — no `-claude` suffix. The parent dir already encodes the host, so the suffix was redundant. The `inbox-zero-gmail-claude` directory on the `inbox-zero` branch is the older naming and will be renamed to `inbox-zero-gmail` when that branch ships.
+Plugins inside `claude-plugins/` use the bare skill name — no `-claude` suffix. The parent dir already encodes the host, so the suffix was redundant. The `inbox-zero-gmail-claude` directory on the `inbox-zero` branch is the older naming and will be renamed to `inbox-zero-gmail` when that branch ships.
 
 ## Persistence
 

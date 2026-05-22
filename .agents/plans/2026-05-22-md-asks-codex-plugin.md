@@ -1,6 +1,6 @@
 # Plan: md-asks Codex plugin
 
-Status: planned
+Status: in progress
 Branch: `codex/md-asks-codex-plugin`
 Base reviewed: `main` at `a55825a` (`feat: Skills sync workflow — canonical bare skill, derived plugin copies (#11)`)
 
@@ -14,9 +14,9 @@ Base reviewed: `main` at `a55825a` (`feat: Skills sync workflow — canonical ba
 
 ## Scope
 
-- [ ] Fix the `@` trigger test contract in canonical `skills/md-asks/`.
-- [ ] Rename `claude-cowork-plugins/` to `claude-plugins/` and update references.
-- [ ] Sync derived Claude copy and confirm no drift.
+- [x] Fix the `@` trigger test contract in canonical `skills/md-asks/`.
+- [x] Rename Claude plugin root to `claude-plugins/` and update references.
+- [x] Sync derived Claude copy and confirm no drift.
 - [ ] Add `codex-plugins/md-asks/` with `.codex-plugin/plugin.json`, README, and derived skill copy.
 - [ ] Add repo Codex marketplace at `.agents/plugins/marketplace.json`.
 - [ ] Polish Codex-facing skill/plugin UX copy without changing the protocol.

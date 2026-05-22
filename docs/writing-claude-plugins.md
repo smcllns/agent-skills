@@ -50,7 +50,7 @@ Repo-root file at `.claude-plugin/marketplace.json` declares the marketplace and
   "plugins": [
     {
       "name": "inbox-zero-gmail-claude",
-      "source": "./claude-cowork-plugins/inbox-zero-gmail-claude",
+      "source": "./claude-plugins/inbox-zero-gmail-claude",
       "description": "...",
       "category": "productivity"
     }
@@ -137,7 +137,7 @@ State lives at:
 Install via the in-app UI: **Directory → Plugins → Personal → Local uploads → `+`**. **Upload a zip of the plugin directory** — Cowork rejects a raw folder pick. Zip the plugin dir (the one containing `.claude-plugin/plugin.json`), not the whole marketplace:
 
 ```bash
-cd claude-cowork-plugins && zip -r /tmp/<plugin-name>.zip <plugin-name> -x '*.DS_Store'
+cd claude-plugins && zip -r /tmp/<plugin-name>.zip <plugin-name> -x '*.DS_Store'
 ```
 
 Then upload `/tmp/<plugin-name>.zip` via the UI. The zip is a frozen snapshot — re-zip and re-upload after each change you want Cowork to see. There is no local-path CLI flow in Cowork as of this writing.
@@ -152,7 +152,7 @@ Always uninstall via the host's UI, not by deleting files on disk. The hosts mai
 
 - Cowork plugins live alongside session state under `local-agent-mode-sessions/`. Treat the entire tree as Cowork-managed.
 - Cowork is Electron — quitting the last window does not always quit the process. Multiple zombie main processes can accumulate from repeated launches. Use `pgrep -lf '/Applications/Cowork.app/Contents/MacOS/'` to check (replace Cowork with the actual app name).
-- The Gmail connector exposes tools as `mcp__<connector-id>__<name>`. Inside `search_threads`, `label:` queries use display names; mutation tools use label IDs. See `claude-cowork-plugins/inbox-zero-gmail-claude/skills/inbox-zero-gmail/references/transport-cowork.md` for the catalog of Gmail tool gotchas.
+- The Gmail connector exposes tools as `mcp__<connector-id>__<name>`. Inside `search_threads`, `label:` queries use display names; mutation tools use label IDs. See `claude-plugins/inbox-zero-gmail-claude/skills/inbox-zero-gmail/references/transport-cowork.md` for the catalog of Gmail tool gotchas.
 - Cowork supports scheduled tasks via the built-in scheduling skill: `mcp__scheduled-tasks__create_scheduled_task`. Scheduled tasks run only while the computer is awake AND Cowork is open; otherwise they're skipped (not queued) until the next wake.
 - **Schedule minimum is 1 minute on Desktop**, not hourly as the UI dropdown implies. The dropdown only exposes presets (Manual, Hourly, Daily, Weekdays, Weekly). To get sub-hourly intervals, ask Claude in any Desktop session in plain language — e.g. *"schedule a task to run every 5 minutes that runs the X skill on Y"* — and Claude creates it via the MCP tool with the custom interval. Cloud Routines (the off-machine alternative) has a hard 1-hour minimum. Source: <https://code.claude.com/docs/en/desktop-scheduled-tasks>.
 
