@@ -57,7 +57,7 @@ For each unresolved comment:
 - For discussion comments (no doc change requested), answer concisely inside the callout.
 - If the comment sits on a task item, update the checkbox too.
 
-**Conclude** if the work is genuinely complete, with `[!DONE]-` callout and write a one-line outcome summary as the title (past-tense action + scope, ≤~60 chars).
+**Conclude** if the work is genuinely complete, with `[!DONE]-` callout and write a one-line outcome summary as the title (past-tense action + scope, ≤~60 chars), and make the original request the first message in the discussion thread. Never remove or modify the content of the original request.
 
 **Take a turn** if completion requires further input from the human, with `[!NOTE]+` callout so the thread stays visually open, awaiting human input.
 
