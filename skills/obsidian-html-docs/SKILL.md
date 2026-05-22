@@ -1,6 +1,6 @@
 ---
 name: obsidian-html-docs
-description: "Author HTML files for the Obsidian HTML Docs plugin (github.com/smcllns/obsidian-plugin-html-docs). Use when creating .html docs intended to render inline in Obsidian: theme tokens, sandbox constraints, asset rules, embed sizing, and things that silently do not work."
+description: "Use when creating .html docs intended to render inline in Obsidian with the HTML Docs plugin (github.com/smcllns/obsidian-plugin-html-docs)."
 ---
 
 # Obsidian HTML Docs authoring guide
