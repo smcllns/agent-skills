@@ -7,7 +7,7 @@
 #
 # For each model passed as an arg, copies fixture.md to results/<model>.md,
 # then invokes `claude -p --model <model>` asking it to resolve all md-asks
-# directives in that file. Inspect the result files by eye.
+# asks in that file. Inspect the result files by eye.
 
 set -euo pipefail
 

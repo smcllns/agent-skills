@@ -1,128 +1,139 @@
 ---
-name: markdown-agent-directives
-description: "Use when a markdown file (Obsidian note or any .md) contains one or more `#claude`, `#codex`or `#agent` comments requesting input or changes on the document."
+name: md-asks
+description: "Use when markdown files (Obsidian notes or regular .md) contain one or more `@claude`, `@codex` or `@agent` asks requesting input or changes on the document."
 ---
 
-# Markdown Agent Directives
+# md-asks
 
-A human writes `#claude do X` in a markdown file. This skill finds those directives, does the work, and wraps the exchange in a callout which contains the related discussion thread.
-
+A human writes `@claude do X` in a markdown file. This skill finds those asks, does the work, and wraps the exchange in a callout containing the discussion thread.
 
 ## Example
 
 User writes:
 
 ```
-#claude can you clean up that formatting pls
+@claude can you clean up that formatting pls
 ```
 
-After the agent acts, the line becomes:
+After the agent acts:
 
 ```
 > [!DONE]- cleaned up broken formatting
 >
-> #claude can you clean up that formatting pls
+> @claude can you clean up that formatting pls
 >
-> ---
->
-> @claude: done — removed broken newlines and added missing periods at the end of sentences. No changes to text content.
+> @claude: done — removed broken newlines and added missing periods. No changes to text content.
 ```
 
-## Directive shapes
+The original ask is preserved verbatim as the first body line. The title is the outcome summary.
+
+## Ask shapes
 
 | Pattern | Status | Scan | Agent behavior |
 |---|---|---|---|
-| `#agent` | New | Picks up | New directive, action required. |
-| `[!NOTE]+` | Active agent thread | Picks up | Read the thread. If the human spoke last, act. If the agent spoke last, leave it. |
-| `[!DONE]-` | Resolved agent thread | Skips | Will not process |
+| `@agent` | New | Picks up | New ask, action required. |
+| `[!NOTE]+` | Active thread | Picks up | If the human spoke last, act. If the agent spoke last, leave it. |
+| `[!DONE]-` | Resolved thread | Skips | Will not process |
 
-The `+/-` marker matters: 
-- `[!NOTE]` followed by `+` distinguishes agent threads from regular callouts.
-- `[!DONE]` followed by `-` will collapse the callout in Obsidian and others that support this syntax.
+The `+/-` marker is load-bearing:
+- `[!NOTE]+` distinguishes agent threads from regular callouts.
+- `[!DONE]-` collapses the callout in Obsidian.
 
 ## Unresolved rule
 
-A comment is unresolved when any of:
+An ask is unresolved when any of:
 
-- An open `> [!NOTE]+ ...` callout whose last reply is from the user
-- A valid inline `#agent` directive not yet processed into a callout.
+- An open `> [!NOTE]+ ...` callout whose last reply is from the user.
+- A valid inline `@agent` ask not yet processed into a callout.
 
 ## Resolution contract
 
-For each unresolved comment:
+For each unresolved ask:
 
-- Read the full file and enough surrounding context to understand the request.
+- Read the file and enough surrounding context to understand the request.
 - Use any better-matching skill/tool first when one applies.
-- Do the requested work when it is concrete — edit the document body, not the callout. The callout gets a one-line acknowledgement; the actual change goes where the user asked for it.
-- For discussion comments (no doc change requested), answer concisely inside the callout.
-- If the comment sits on a task item, update the checkbox too.
+- Do the requested work when it is concrete — edit the **document body**, not the callout. The callout gets a one-line acknowledgement; the actual change goes where the user asked for it.
+- For discussion-only asks (no doc change requested), answer concisely inside the callout.
+- If the ask sits on a task item, update the checkbox too.
+- **Never remove or modify the original ask.** It must appear verbatim as the first body line of the resulting callout, in both `[!DONE]-` and `[!NOTE]+` cases.
 
-**Conclude** if the work is genuinely complete, with `[!DONE]-` callout and write a one-line outcome summary as the title (past-tense action + scope, ≤~60 chars), and make the original request the first message in the discussion thread. Never remove or modify the content of the original request.
+**Conclude** with `[!DONE]-` and a one-line outcome summary as the title (past-tense action + scope, ≤~60 chars) once the work is genuinely complete.
 
-**Take a turn** if completion requires further input from the human, with `[!NOTE]+` callout so the thread stays visually open, awaiting human input.
+**Take a turn** with `[!NOTE]+` if completion requires further input from the human, so the thread stays visually open.
 
 ## If further human input required
 
-**If you can't act or complete the directive** because the request is ambiguous, missing context, or non-actionable, **don't guess**, wrap the directive in a `[!NOTE]+` callout with a clarifying question:
+When the ask is ambiguous, missing context, or non-actionable, **don't guess**. Wrap with `[!NOTE]+`, keep the original ask as the first body line, and add a clarifying question:
 
 ```
-> [!NOTE]+ #claude tighten the wording above
-> @claude: the request is ambiguous — the wording above stretches back 12,000 words but your ask sounds smaller. Please confirm: (1) the last paragraph, (2) the last 4 paragraphs on this topic, or (3) the full doc.
+> [!NOTE]+ awaiting clarification
+>
+> @claude tighten the wording above
+>
+> @claude: the wording above stretches back 12,000 words but your ask sounds smaller. Confirm: (1) the last paragraph, (2) the last 4 paragraphs on this topic, or (3) the full doc.
 ```
 
-## Scanning for unresolved directives
+## Scanning for unresolved asks
 
-Find files with directives or open threads, sort by file mtime, then cap:
+Find files with asks or open threads, sort by file mtime, then cap:
 
 ```sh
-grep -rlnE --include='*.md' '(\[!NOTE\]\+|^([^>]*[[:space:]])?#(agent|claude|codex)([^[:alnum:]_]|$))' <path>
+grep -rlnE --include='*.md' '(\[!NOTE\]\+|^([^>]*[[:space:]])?@(agent|claude|codex)([^[:alnum:]_]|$))' <path>
 ```
+
+**Default triggers:** `@claude`, `@codex`, `@agent`. The caller can override by passing a custom list in the invocation prompt (e.g. *"scan ~/notes for asks tagged `@nora,@hermes`"*) — substitute that list into the regex's alternation at runtime.
 
 Two patterns are matched:
 
-- **Inline directive** — `#claude`, `#codex`, or `#agent` at line-start, indented, or mid-prose with a preceding space.
-- **Active agent thread** — `[!NOTE]+` only. Bare `[!NOTE]` and `[!NOTE]-` are plain markdown callouts, not agent threads.
+- **Inline ask** — `@claude`, `@codex`, or `@agent` at line-start, indented, or mid-prose with a preceding space.
+- **Active agent thread** — `[!NOTE]+` only. Bare `[!NOTE]` and `[!NOTE]-` are plain markdown callouts.
 
 What's filtered out:
 
 - **Resolved threads** — `[!DONE]-` is the canonical resolved marker. `[!DONE]+` and bare `[!DONE]` are also treated as plain markdown.
-- **Invalid directive tags** — whitespace or newline is required before `#`, so `example.com#claude` and `` `#claude` `` (inside backticks) will not trigger.
-- **Tags within callouts** — the `^[^>]` clause skips directives inside any blockquote line.
+- **Invalid asks** — whitespace or newline is required before `@`, so `contact@claude.com` and `` `@claude` `` (inside backticks) will not trigger.
+- **Asks inside callouts** — the `^[^>]` clause skips asks inside any blockquote line.
 
-For the full pattern catalog (indents, edge cases, accepted false positives), see [`reference/directives-spec.md`](reference/directives-spec.md)
+For the full pattern catalog (indents, edge cases, accepted false positives), see [`reference/directives-spec.md`](reference/directives-spec.md).
 
-## Discussion Thread Format
+## Discussion thread format
 
-Once a `#claude` directive is wrapped, the callout is the place for further turns. 
+Inside a callout, separate every turn with a **single blank `>` line** — one paragraph per turn.
 
-- **Separate every speaker turn** with `> ---` on its own line, blank `>` lines on either side. The callout title acts as the separator before the first reply. Without the rule, long replies bleed together visually.
+```markdown
+> [!NOTE]+ tightened introduction
+>
+> @claude tighten the intro
+>
+> @claude: trimmed to 3 sentences — does that read OK or want to go shorter?
+>
+> @sam: shorter please, ~1 sentence
+>
+> @claude: done — single sentence.
+```
 
-  ```markdown
-  > [!NOTE]+ tightened introduction
-  >
-  > #claude tighten the intro
-  >
-  > ---
-  >
-  > @claude: trimmed to 3 sentences — does that read OK or want to go shorter?
-  >
-  > ---
-  >
-  > @sam: shorter please, ~1 sentence
-  >
-  > ---
-  >
-  > @claude: done — single sentence.
-  ```
+For a soft line break inside a single turn, use two trailing spaces.
 
-## Best practices:
+## Final message (scheduled-run summary)
 
-**Don't prematurely limit results.** Actionable threads cluster in recently-touched files, so sort matches by file mtime descending. If you must, cap after sorting.
+Your last assistant message becomes the Cowork task-card body. Keep it to one of these one-liners — Cowork already shows tool/file counts, so don't repeat them:
 
-**Use callout only for discussion, not the work.** Edits go in the **document body**; the callout is a side thread for discussion and one-line acknowledgements of the changes made. Don't paste rewritten paragraphs, drafted sections, or new code into the reply — that belongs in the body. Discussion-only directives (e.g. `#claude why did we pick X?`) have no body edit, so the answer is the reply.
+```
+No asks. Scanned N files.
+Resolved K of N. Open: <file:line>, <file:line>.
+Blocked: <one-sentence reason>. See <report-path>.
+```
+
+No preamble. If a verbose report exists, link to it from the one-liner.
+
+## Best practices
+
+**Don't prematurely limit results.** Actionable threads cluster in recently-touched files — sort matches by file mtime descending. If you must, cap after sorting.
+
+**Callout is for discussion, not the work.** Edits go in the **document body**; the callout is a side thread for discussion and one-line acknowledgements of the changes made. Don't paste rewritten paragraphs, drafted sections, or new code into the reply — that belongs in the body. Discussion-only asks (e.g. `@claude why did we pick X?`) have no body edit, so the answer is the reply.
 
 **Proactively correct formatting.** Allow the human to write shorthand imperfectly, and update the callout to use correct syntax if required, without modifying the discussion content itself.
 
-**Reply using familiar agent name.** Instead of `> @agent: ...`, you can use the agent name the user expects in your context (`@claude`, `@codex`, `@pi`, `@hermes`, etc).
+**Reply using familiar agent name.** Instead of `> @agent: ...`, use the agent name the user expects in your context (`@claude`, `@codex`, `@pi`, `@hermes`, etc).
 
-**Don't self-reply.** If the agent's last reply is the most recent line in a `[!NOTE]+` thread, the thread is waiting on the human. Leave it. If the same thread keeps showing up across scans with no human movement, mention it to the user (e.g. "this thread's been open without follow-up for N scans, want me to close or chase it?").
+**Don't self-reply.** If the agent's last reply is the most recent line in a `[!NOTE]+` thread, the thread is waiting on the human. Leave it. If the same thread keeps showing up across scans with no human movement, mention it to the user.

@@ -10,23 +10,23 @@ The cases are in independent sections so a per-case pass/fail can be assigned wi
 
 Plase fix this lne it has two typos.
 
-#claude fix the typos in the line above
+@claude fix the typos in the line above
 
 ---
 
-## L2 — mid-prose edit referenced by directive
+## L2 — mid-prose edit referenced by ask
 
 The weather report below says foo today.
 
 foo
 
-#claude change "foo" in the line above to "beautiful"
+@claude change "foo" in the line above to "beautiful"
 
 ---
 
-## L3 — directive on a task-list item
+## L3 — ask on a task-list item
 
-- [ ] migrate `config.yml` to the new v2 schema #claude do this and mark complete
+- [ ] migrate `config.yml` to the new v2 schema @claude do this and mark complete
 
 ---
 
@@ -40,15 +40,15 @@ The intro is too long. The intro repeats itself. The intro could be shorter. The
 
 Lorem ipsum dolor sit amet, the rest of the body is fine.
 
-#claude clean up the intro above — it's too repetitive
+@claude clean up the intro above — it's too repetitive
 
 ---
 
 ## L5 — ambiguous, agent must take a turn (not guess)
 
-A passage of writing precedes this directive. The writing is fine but could be many things — funnier, shorter, longer, more formal, more casual, more concrete, more abstract.
+A passage of writing precedes this ask. The writing is fine but could be many things — funnier, shorter, longer, more formal, more casual, more concrete, more abstract.
 
-#claude make this better
+@claude make this better
 
 ---
 
@@ -56,7 +56,7 @@ A passage of writing precedes this directive. The writing is fine but could be m
 
 > [!NOTE]+ drafting a headline
 >
-> #claude give me a headline for this section
+> @claude give me a headline for this section
 >
 > @claude: how about "Three reasons to switch to v2"?
 >
@@ -68,7 +68,7 @@ A passage of writing precedes this directive. The writing is fine but could be m
 
 > [!DONE]- prior fix landed
 >
-> #claude fix the typo
+> @claude fix the typo
 >
 > @claude: done — replaced "teh" with "the".
 
@@ -76,11 +76,11 @@ A passage of writing precedes this directive. The writing is fine but could be m
 
 ## L8 — false-positive traps (none should trigger)
 
-A reference URL: example.com#claude — this is part of a link, not a directive.
+An email address: contact@claude.com — this is part of an email, not an ask.
 
-Inline code mention: `#claude` is the tag used to invoke an agent.
+Inline code mention: `@claude` is the syntax used to invoke an agent.
 
-> A blockquote mentioning #claude inside it does not count, because the regex skips `>`-prefixed lines.
+> A blockquote mentioning @claude inside it does not count, because the regex skips `>`-prefixed lines.
 
 ---
 
@@ -88,4 +88,4 @@ Inline code mention: `#claude` is the tag used to invoke an agent.
 
 We picked approach X over approach Y last quarter. Approach X uses async batch processing; approach Y was a streaming model.
 
-#claude why did we pick approach X over approach Y here?
+@claude why did we pick approach X over approach Y here?
