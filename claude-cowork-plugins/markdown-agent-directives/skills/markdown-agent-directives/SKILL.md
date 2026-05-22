@@ -1,6 +1,6 @@
 ---
 name: markdown-agent-directives
-description: "Use when a markdown file (Obsidian note or any .md) contains one or more `#claude`, `#codex`or `#agent` tags requesting input or changes on the document."
+description: "Use when a markdown file (Obsidian note or any .md) contains one or more `#claude`, `#codex`or `#agent` comments requesting input or changes on the document."
 ---
 
 # Markdown Agent Directives

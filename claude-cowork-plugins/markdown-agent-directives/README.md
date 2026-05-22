@@ -30,7 +30,7 @@ In **Claude Cowork** on desktop, set the folder you can explicitly type the skil
 /markdown-agent-directives
 ``` 
 
-or more simply ask claude in plain speak like `resolve md directives` and it'll involve the skill.
+or more simply ask claude in plain speak like `resolve md directives` and it'll invoke the skill.
 
 ### Scheduled usage
 
@@ -39,6 +39,8 @@ In **Claude Cowork** on desktop, you can type something like the following to ru
 ```plaintext
 Schedule a task to run every 5 minutes that runs the markdown-agent-directives skill on my obsidian vault at ~/Projects/obsidian.
 ```
+
+Claude Cowork provides a nice UI for managing scheduled tasks and you can pause/delete there, or ask Claude if you want to run it on a different timer.
 
 ## Feedback
 
