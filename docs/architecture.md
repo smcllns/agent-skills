@@ -17,7 +17,7 @@ smcllns/skills/                        ← repo root
 │   ├── obsidian-html-docs/
 │   └── token-count/
 ├── claude-cowork-plugins/             ← Claude plugins (work in Cowork + Code CLI)
-│   └── markdown-agent-directives/     ← per-plugin dir; contains its own skills/, hooks/, etc.
+│   └── md-asks/                       ← per-plugin dir; contains its own skills/, hooks/, etc.
 ├── codex-plugins/                     ← Codex plugins (format TBD, empty for now)
 ├── docs/                              ← plans, notes
 ├── .gitignore
