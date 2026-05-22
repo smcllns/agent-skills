@@ -39,7 +39,9 @@ A given skill can ship in three forms:
 | Claude plugin | `claude-cowork-plugins/<name>/` | `claude plugin marketplace add smcllns/skills`; or Cowork UI |
 | Codex plugin | `codex-plugins/<name>/` (future) | TBD |
 
-> **Source-of-truth tension.** The bare skill in `skills/` and the plugin's embedded copy at `claude-cowork-plugins/<plugin>/skills/<skill>/` are two files of the same SKILL.md. **No symlinks** (decision, see scratch doc). For now we keep them in sync by hand. If drift becomes painful, we'll introduce a build step or one-direction copy at commit time. Don't pre-build either.
+> **Source-of-truth.** The bare skill in `skills/<name>/` is canonical. Plugin-embedded copies at `<host>-plugins/<name>/skills/<name>/` are derived. Run `scripts/sync-skills.sh` to refresh the derived copies from the canonical source. CI verifies no drift on PRs.
+>
+> **No symlinks** — marketplace tarballs, `npm pack`, and some installers strip or choke on symlinks. Real files copy cleanly across all hosts.
 
 ## Plugin naming
 
