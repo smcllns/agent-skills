@@ -121,6 +121,34 @@ body.theme-dark .callout[data-callout="done"][data-callout-fold="-"] > .callout-
   border-top-color: rgba(120, 230, 160, 0.22);
 }
 
+/* ─── Legacy `> ---` divider support ────────────────────────────── */
+/* Callouts authored with the old `> ---` turn separator produce a real
+ * <hr> inside .callout-content. Style it identically to the p+p divider
+ * so old and new callouts look the same. New callouts (blank-> only)
+ * don't emit <hr> and ignore these rules. */
+
+.callout[data-callout="note"][data-callout-fold="+"] > .callout-content hr {
+  border: 0;
+  border-top: 1px solid rgba(110, 70, 0, 0.4);
+  margin: 0;
+  height: 0;
+}
+
+.callout[data-callout="done"][data-callout-fold="-"] > .callout-content hr {
+  border: 0;
+  border-top: 1px solid rgba(8, 80, 30, 0.4);
+  margin: 0;
+  height: 0;
+}
+
+body.theme-dark .callout[data-callout="note"][data-callout-fold="+"] > .callout-content hr {
+  border-top-color: rgba(255, 200, 80, 0.22);
+}
+
+body.theme-dark .callout[data-callout="done"][data-callout-fold="-"] > .callout-content hr {
+  border-top-color: rgba(120, 230, 160, 0.22);
+}
+
 /* Soft line break inside a single turn — let two trailing spaces produce
  * a visible gap rather than collapsing to almost nothing. */
 
