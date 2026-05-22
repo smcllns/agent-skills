@@ -1,6 +1,6 @@
 # Plan: markdown-agent-directives (Claude plugin)
 
-**Status: IN PROGRESS** on branch `markdown-agent-directives-plugin`. First plugin to ship from this marketplace. Picked because it's simpler than `inbox-zero-gmail` (no NUX, no state, no auth) and lets us learn the multi-form distribution pattern on easy mode before applying it to inbox-zero.
+**Status: SHIPPED** 2026-05-22 via [PR #8](https://github.com/smcllns/skills/pull/8). Dotfiles synced via [PR #95](https://github.com/AtipicalLabs/dotfiles/pull/95). 5-min scheduled task running in Cowork. First plugin to ship from this marketplace. Picked because it's simpler than `inbox-zero-gmail` (no NUX, no state, no auth) and let us learn the multi-form distribution pattern on easy mode before applying it to inbox-zero.
 
 ## Goal
 
@@ -28,37 +28,37 @@ Ship the existing `markdown-agent-directives` skill in three forms, in this orde
 
 ### Phase 1 — Scaffold the plugin
 
-- [ ] Create `claude-cowork-plugins/markdown-agent-directives/.claude-plugin/plugin.json` — name, description, author, keywords. Model on inbox-zero's, no hooks.
-- [ ] Copy `skills/markdown-agent-directives/SKILL.md` → `claude-cowork-plugins/markdown-agent-directives/skills/markdown-agent-directives/SKILL.md`
-- [ ] Copy `skills/markdown-agent-directives/reference/` → mirror path under the plugin (tests + wishlist live here, internal-only)
-- [ ] Write `claude-cowork-plugins/markdown-agent-directives/README.md` — what the skill does + install paths (marketplace, Cowork UI, npx skills)
-- [ ] No `hooks.json` — skill is stateless, no NUX, no config
+- [x] Create `claude-cowork-plugins/markdown-agent-directives/.claude-plugin/plugin.json` — name, description, author, keywords. Model on inbox-zero's, no hooks.
+- [x] Copy `skills/markdown-agent-directives/SKILL.md` → `claude-cowork-plugins/markdown-agent-directives/skills/markdown-agent-directives/SKILL.md`
+- [x] Copy `skills/markdown-agent-directives/reference/` → mirror path under the plugin (tests + wishlist live here, internal-only)
+- [x] Write `claude-cowork-plugins/markdown-agent-directives/README.md` — what the skill does + install paths (marketplace, Cowork UI, npx skills)
+- [x] No `hooks.json` — skill is stateless, no NUX, no config
 
 ### Phase 2 — Wire into the marketplace
 
-- [ ] Add a plugin entry to root `.claude-plugin/marketplace.json` (currently `"plugins": []`)
-- [ ] Update root `README.md` Plugins section — replace "none published yet" line with a row for `markdown-agent-directives`
-- [ ] Document the resolved source-of-truth strategy in `docs/architecture.md` (dotfiles canonical, manual sync)
+- [x] Add a plugin entry to root `.claude-plugin/marketplace.json` (currently `"plugins": []`)
+- [x] Update root `README.md` Plugins section — replace "none published yet" line with a row for `markdown-agent-directives`
+- [x] Document the resolved source-of-truth strategy in `docs/architecture.md` (dotfiles canonical, manual sync)
 
 ### Phase 3 — Verify locally
 
-- [ ] Install plugin into Sam's Cowork via local-folder install
-- [ ] Open a real markdown file with a `#claude` (or `#agent`) directive
-- [ ] Invoke the skill, confirm it actions the directive and wraps it in a callout per SKILL.md
-- [ ] Confirm `npx skills@latest add smcllns/skills` still installs the bare skill at the unchanged path
+- [x] Install plugin into Sam's Cowork via local-folder install
+- [x] Open a real markdown file with a `#claude` (or `#agent`) directive
+- [x] Invoke the skill, confirm it actions the directive and wraps it in a callout per SKILL.md
+- [x] Confirm `npx skills@latest add smcllns/skills` still installs the bare skill at the unchanged path
 
 ### Phase 4 — Verify scheduled execution (the WHY of the plugin)
 
-- [ ] Have Sam create a Cowork scheduled task that invokes the skill on a vault path
-- [ ] Watch one tick fire end-to-end and confirm it finds + resolves unresolved comments
-- [ ] Capture any gotchas (path arg, env, permissions) in `docs/writing-claude-plugins.md`
+- [x] Have Sam create a Cowork scheduled task that invokes the skill on a vault path
+- [x] Watch one tick fire end-to-end and confirm it finds + resolves unresolved comments
+- [x] Capture any gotchas (path arg, env, permissions) in `docs/writing-claude-plugins.md`
 
 ### Phase 5 — Ship
 
-- [ ] Small clean commits along the way (one per phase ideally)
-- [ ] Open PR `markdown-agent-directives-plugin → main`
-- [ ] Self-review for over-engineering, then merge
-- [ ] Check off this plan, capture any remaining notes in `docs/writing-claude-plugins.md`
+- [x] Small clean commits along the way (one per phase ideally)
+- [x] Open PR `markdown-agent-directives-plugin → main`
+- [x] Self-review for over-engineering, then merge
+- [x] Check off this plan, capture any remaining notes in `docs/writing-claude-plugins.md`
 
 ## Done criteria
 
