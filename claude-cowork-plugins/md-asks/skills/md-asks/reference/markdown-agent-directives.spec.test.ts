@@ -1,7 +1,7 @@
 // Verifies the scan documented in `SKILL.md` against the fixtures in
-// `directives-spec.md`.
+// `markdown-agent-directives.spec.md`.
 //
-// Run: `bun test` from this directory, or `bun test reference/directives-spec.test.ts`
+// Run: `bun test` from this directory, or `bun test reference/markdown-agent-directives.spec.test.ts`
 // from the skill root. Requires bun >= 1.3. No package.json needed — bun ships
 // with `bun:test` built in. For editor types, install `@types/bun` globally
 // (optional; the test runs fine without it).
@@ -10,9 +10,9 @@
 //   - SCAN_REGEX and AGENTS are HARDCODED here as TS constants.
 //   - A consistency test asserts SKILL.md contains both verbatim, so editing
 //     SKILL.md without updating the test (or vice versa) fails loud.
-//   - Fixtures live in `directives-spec.md`. Each section's fenced block whose
-//     info string is `md @test:match` or `md @test:nomatch` is one fixture;
-//     other fences are ignored.
+//   - Fixtures live in `markdown-agent-directives.spec.md`. Each section's
+//     fenced block whose info string is `md @test:match` or `md @test:nomatch`
+//     is one fixture; other fences are ignored.
 //   - Per-agent fixtures (one bare `#<agent>` directive per name) are
 //     generated programmatically from AGENTS.
 
@@ -27,7 +27,7 @@ const SCAN_REGEX = String.raw`(\[!NOTE\]\+|^([^>]*[[:space:]])?#(agent|claude|co
 const AGENTS = ["agent", "claude", "codex"] as const;
 
 const SKILL_PATH = new URL("../SKILL.md", import.meta.url);
-const SPEC_PATH = new URL("./directives-spec.md", import.meta.url);
+const SPEC_PATH = new URL("./markdown-agent-directives.spec.md", import.meta.url);
 const SKILL = readFileSync(SKILL_PATH, "utf8");
 const SPEC = readFileSync(SPEC_PATH, "utf8");
 

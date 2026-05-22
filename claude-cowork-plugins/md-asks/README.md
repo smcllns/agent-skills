@@ -46,6 +46,25 @@ Claude Cowork provides a nice UI for managing scheduled tasks and you can pause/
 
 For a nicer look in Obsidian Reading mode, the repo ships a CSS snippet at `skills/md-asks/companion/agent-callouts.css`. Copy it into your vault's `.obsidian/snippets/`, then enable it via Settings → Appearance → CSS snippets. Renders amber for active threads, green for resolved.
 
+## Tests
+
+Two test harnesses live under `skills/md-asks/reference/`:
+
+**Spec test** — verifies the scan regex in `SKILL.md` against the fixture catalog in `markdown-agent-directives.spec.md`. Requires `bun >= 1.3`.
+
+```bash
+bun test skills/md-asks/reference/markdown-agent-directives.spec.test.ts
+```
+
+**Model comparison** — runs the skill across multiple Claude models on a graded fixture, saves each result to `reference/model-comparison/results/<model>.md` (gitignored) for eyeball comparison.
+
+```bash
+cd skills/md-asks/reference/model-comparison
+./run.sh haiku-4.5 sonnet-4.6 opus-4.7
+```
+
+See `reference/model-comparison/README.md` for the rubric.
+
 ## Feedback
 
 Please direct issues or feedback to [github.com/smcllns/skills](https://github.com/smcllns/skills)

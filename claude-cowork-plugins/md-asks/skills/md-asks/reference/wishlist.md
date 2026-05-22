@@ -29,11 +29,7 @@ Future ideas for `md-asks`:
 >
 > <cite data-agent>@claude</cite> Can do — should I trim to 3 bullets, or fold the whole thing into the next paragraph?
 >
-> ---
->
 > <cite>@sam</cite> 3 bullets please
->
-> ---
 >
 > <cite data-agent>@claude</cite> Done.
 ```

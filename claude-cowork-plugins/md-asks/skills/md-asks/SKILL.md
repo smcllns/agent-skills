@@ -94,7 +94,7 @@ What's filtered out:
 - **Invalid asks** — whitespace or newline is required before `@`, so `contact@claude.com` and `` `@claude` `` (inside backticks) will not trigger.
 - **Asks inside callouts** — the `^[^>]` clause skips asks inside any blockquote line.
 
-For the full pattern catalog (indents, edge cases, accepted false positives), see [`reference/directives-spec.md`](reference/directives-spec.md).
+For the full pattern catalog (indents, edge cases, accepted false positives), see [`reference/markdown-agent-directives.spec.md`](reference/markdown-agent-directives.spec.md).
 
 ## Discussion thread format
 
