@@ -6,7 +6,9 @@ This repo serves as a **Claude plugin marketplace** ([docs](https://code.claude.
 
 ## Plugins
 
-_None published yet — first plugin (`markdown-agent-comments`) in progress._
+| Plugin | Purpose |
+| --- | --- |
+| `markdown-agent-directives` | Picks up `#claude`/`#codex`/`#agent` directives in any markdown file, does the requested work, and records the exchange in a callout that can be continued. |
 
 ### Install as a marketplace
 
@@ -24,7 +26,7 @@ Then install a specific plugin from within Claude Code:
 
 | Skill | Purpose |
 | --- | --- |
-| `markdown-agent-comments` | Resolves `@human`/`#claude`/`#codex` (etc) comments in any markdown file — Obsidian vaults, repo docs, plain notes — by making the requested edits and responding in place. |
+| `markdown-agent-directives` | Picks up `#claude`/`#codex`/`#agent` directives in any markdown file — Obsidian vaults, repo docs, plain notes — does the requested edit, and records the exchange in a callout that can be continued if follow-up is needed. |
 | `obsidian-html-docs` | Helps agents author `.html` files for the HTML Docs Obsidian plugin, including sandbox limits, theme tokens, assets, and embeds. |
 | `token-count` | Free, accurate token counts via Anthropic/Gemini/OpenAI server-side endpoints — for prompt budgeting, skill sizing, or annotating file references without local tokenizer deps. |
 

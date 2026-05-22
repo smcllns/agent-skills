@@ -134,7 +134,13 @@ State lives at:
 
 ### Cowork
 
-Install via the in-app UI: **Customize → Plugins → My Uploads → Upload** (point at the plugin directory). There is no local-path CLI flow in Cowork as of this writing.
+Install via the in-app UI: **Directory → Plugins → Personal → Local uploads → `+`**. **Upload a zip of the plugin directory** — Cowork rejects a raw folder pick. Zip the plugin dir (the one containing `.claude-plugin/plugin.json`), not the whole marketplace:
+
+```bash
+cd claude-cowork-plugins && zip -r /tmp/<plugin-name>.zip <plugin-name> -x '*.DS_Store'
+```
+
+Then upload `/tmp/<plugin-name>.zip` via the UI. The zip is a frozen snapshot — re-zip and re-upload after each change you want Cowork to see. There is no local-path CLI flow in Cowork as of this writing.
 
 Cowork's installed-plugin state lives at `~/Library/Application Support/Claude/local-agent-mode-sessions/<UUID>/<UUID>/rpm/manifest.json`, with each plugin in a sibling `plugin_<id>/` directory. **Do not edit this by hand.**
 
@@ -148,6 +154,7 @@ Always uninstall via the host's UI, not by deleting files on disk. The hosts mai
 - Cowork is Electron — quitting the last window does not always quit the process. Multiple zombie main processes can accumulate from repeated launches. Use `pgrep -lf '/Applications/Cowork.app/Contents/MacOS/'` to check (replace Cowork with the actual app name).
 - The Gmail connector exposes tools as `mcp__<connector-id>__<name>`. Inside `search_threads`, `label:` queries use display names; mutation tools use label IDs. See `claude-cowork-plugins/inbox-zero-gmail-claude/skills/inbox-zero-gmail/references/transport-cowork.md` for the catalog of Gmail tool gotchas.
 - Cowork supports scheduled tasks via the built-in scheduling skill: `mcp__scheduled-tasks__create_scheduled_task`. Scheduled tasks run only while the computer is awake AND Cowork is open; otherwise they're skipped (not queued) until the next wake.
+- **Schedule minimum is 1 minute on Desktop**, not hourly as the UI dropdown implies. The dropdown only exposes presets (Manual, Hourly, Daily, Weekdays, Weekly). To get sub-hourly intervals, ask Claude in any Desktop session in plain language — e.g. *"schedule a task to run every 5 minutes that runs the X skill on Y"* — and Claude creates it via the MCP tool with the custom interval. Cloud Routines (the off-machine alternative) has a hard 1-hour minimum. Source: <https://code.claude.com/docs/en/desktop-scheduled-tasks>.
 
 ## Symlinks (we chose not to)
 
@@ -161,8 +168,8 @@ Flagging gaps honestly so the next agent doesn't take this as gospel:
 
 - [ ] **End-to-end install via the marketplace path.** We've drafted plugins but not yet run `claude plugin marketplace add smcllns/skills` against a published repo.
 - [ ] **SessionStart hook in a real run.** We dry-ran the command in a sandbox; haven't observed Cowork firing it.
-- [ ] **Cowork UI install of a local folder.** Sam uninstalled the prior `inbox-zero-plugin` via the UI but we haven't installed the new layout yet.
-- [ ] **Scheduled invocation through `mcp__scheduled-tasks__create_scheduled_task`.** Listed as a goal in the markdown-agent-comments plan; will verify there.
+- [x] **Cowork UI install of a local folder.** Verified 2026-05-21 with `markdown-agent-directives`: Cowork requires a **zip of the plugin dir**, not a folder pick. See *Verified findings* below for the exact flow.
+- [ ] **Scheduled invocation through `mcp__scheduled-tasks__create_scheduled_task`.** Listed as a goal in the markdown-agent-directives plan; will verify there.
 - [ ] **Whether `npx skills@latest add smcllns/skills` finds the bare skills under `skills/`.** The vercel-labs/skills CLI may or may not scan the standard `skills/` subdir. Check before committing.
 - [ ] **marketplace.json schema validation.** We've parsed it as JSON but haven't validated against the actual runtime schema.
 
@@ -170,4 +177,4 @@ When you verify any of these, **tick the box and write what you found** below. T
 
 ## Verified findings
 
-(Add as work progresses.)
+- **Cowork local-plugin install requires a zip, not a folder** (verified 2026-05-21, `markdown-agent-directives`). UI path: **Directory → Plugins → Personal → Local uploads → `+`**. Picking a folder is rejected; you must upload a zip whose top-level entry is the plugin directory (the one with `.claude-plugin/plugin.json`). The zip is a frozen snapshot — Cowork does not re-read source files, so re-zip and re-upload on every change you want it to see. Implication: this is a slow inner loop; iterate on the bare skill at `skills/<name>/` and only re-zip when you're ready to verify in Cowork.
