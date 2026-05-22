@@ -7,7 +7,7 @@ Base reviewed: `main` at `a55825a` (`feat: Skills sync workflow — canonical ba
 ## Current read
 
 - PR #11 merged the canonical `skills/md-asks/` source and derived Claude plugin copy.
-- `scripts/sync-skills.sh` already syncs into both `claude-cowork-plugins` and future `codex-plugins`.
+- `scripts/sync-skills.sh` already syncs into both the current Claude plugin directory and future `codex-plugins`.
 - Sync is clean: running `scripts/sync-skills.sh` produced no repo diff.
 - The spec harness is red: `markdown-agent-directives.spec.test.ts` still scans `#agent/#claude/#codex`, while `SKILL.md` and fixtures now use `@agent/@claude/@codex`.
 - Root README and architecture docs still have some stale `markdown-agent-directives` / `#claude` wording.
@@ -15,6 +15,7 @@ Base reviewed: `main` at `a55825a` (`feat: Skills sync workflow — canonical ba
 ## Scope
 
 - [ ] Fix the `@` trigger test contract in canonical `skills/md-asks/`.
+- [ ] Rename `claude-cowork-plugins/` to `claude-plugins/` and update references.
 - [ ] Sync derived Claude copy and confirm no drift.
 - [ ] Add `codex-plugins/md-asks/` with `.codex-plugin/plugin.json`, README, and derived skill copy.
 - [ ] Add repo Codex marketplace at `.agents/plugins/marketplace.json`.
