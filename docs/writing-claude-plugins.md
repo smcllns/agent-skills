@@ -154,6 +154,7 @@ Always uninstall via the host's UI, not by deleting files on disk. The hosts mai
 - Cowork is Electron — quitting the last window does not always quit the process. Multiple zombie main processes can accumulate from repeated launches. Use `pgrep -lf '/Applications/Cowork.app/Contents/MacOS/'` to check (replace Cowork with the actual app name).
 - The Gmail connector exposes tools as `mcp__<connector-id>__<name>`. Inside `search_threads`, `label:` queries use display names; mutation tools use label IDs. See `claude-cowork-plugins/inbox-zero-gmail-claude/skills/inbox-zero-gmail/references/transport-cowork.md` for the catalog of Gmail tool gotchas.
 - Cowork supports scheduled tasks via the built-in scheduling skill: `mcp__scheduled-tasks__create_scheduled_task`. Scheduled tasks run only while the computer is awake AND Cowork is open; otherwise they're skipped (not queued) until the next wake.
+- **Schedule minimum is 1 minute on Desktop**, not hourly as the UI dropdown implies. The dropdown only exposes presets (Manual, Hourly, Daily, Weekdays, Weekly). To get sub-hourly intervals, ask Claude in any Desktop session in plain language — e.g. *"schedule a task to run every 5 minutes that runs the X skill on Y"* — and Claude creates it via the MCP tool with the custom interval. Cloud Routines (the off-machine alternative) has a hard 1-hour minimum. Source: <https://code.claude.com/docs/en/desktop-scheduled-tasks>.
 
 ## Symlinks (we chose not to)
 

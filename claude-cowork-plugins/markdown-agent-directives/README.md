@@ -20,14 +20,26 @@ Then from within Claude Code or Cowork:
 /plugin install markdown-agent-directives@smcllns-skills
 ```
 
-**As a bare skill (no plugin runtime):**
-
-```bash
-npx skills@latest add smcllns/skills
-```
-
 ## Usage
 
-Drive it from a Cowork scheduled task pointed at a vault path, or invoke it manually on a directory or single file. 
+### Manual usage
 
-The skill finds files containing unresolved directives, processes them per `SKILL.md`'s resolution contract, and leaves a clean callout trail.
+In **Claude Cowork** on desktop, set the folder you can explicitly type the skill to trigger it 
+
+```text
+/markdown-agent-directives
+``` 
+
+or more simply ask claude in plain speak like `resolve md directives` and it'll involve the skill.
+
+### Scheduled usage
+
+In **Claude Cowork** on desktop, you can type something like the following to run it on a schedule.
+
+```plaintext
+Schedule a task to run every 5 minutes that runs the markdown-agent-directives skill on my obsidian vault at ~/Projects/obsidian.
+```
+
+## Feedback
+
+Please direct issues or feedback to [github.com/smcllns/skills](https://github.com/smcllns/skills)
