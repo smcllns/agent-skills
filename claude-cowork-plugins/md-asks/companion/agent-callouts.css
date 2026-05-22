@@ -101,14 +101,24 @@
   padding: 8px 14px 8px 14px;
 }
 
-.callout[data-callout="note"][data-callout-fold="+"] > .callout-content > p + p,
-.callout[data-callout="done"][data-callout-fold="-"] > .callout-content > p + p {
-  border-top: 1px solid rgba(0, 0, 0, 0.12);
+/* Divider color: a darkened version of the callout's hue at ~45% alpha,
+ * so the line reads as callout-tinted rather than neutral grey on a
+ * mostly-white page. Per-type to avoid a colour-mix dependency. */
+
+.callout[data-callout="note"][data-callout-fold="+"] > .callout-content > p + p {
+  border-top: 1px solid rgba(110, 70, 0, 0.4);
 }
 
-body.theme-dark .callout[data-callout="note"][data-callout-fold="+"] > .callout-content > p + p,
+.callout[data-callout="done"][data-callout-fold="-"] > .callout-content > p + p {
+  border-top: 1px solid rgba(8, 80, 30, 0.4);
+}
+
+body.theme-dark .callout[data-callout="note"][data-callout-fold="+"] > .callout-content > p + p {
+  border-top-color: rgba(255, 200, 80, 0.22);
+}
+
 body.theme-dark .callout[data-callout="done"][data-callout-fold="-"] > .callout-content > p + p {
-  border-top-color: rgba(0, 0, 0, 0.3);
+  border-top-color: rgba(120, 230, 160, 0.22);
 }
 
 /* Soft line break inside a single turn — let two trailing spaces produce
