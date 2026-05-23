@@ -28,9 +28,7 @@ Standalone skills are the source of truth. Plugins and extensions copy those ski
 
 | Name | Use when | Install and Usage |
 |---|---|---|
-| `md-asks` for Claude Code | Resolve `@claude`, `@codex`, or `@agent` asks in markdown files and record the exchange in a callout thread. | [Claude Plugin](claude-plugins/md-asks/README.md) |
-| `md-asks` for Cowork | Resolve `@claude`, `@codex`, or `@agent` asks in markdown files and record the exchange in a callout thread. | [Claude Plugin](claude-plugins/md-asks/README.md) |
-| `md-asks` for Codex | Resolve `@claude`, `@codex`, or `@agent` asks in markdown files and record the exchange in a callout thread. | [Codex Plugin](codex-plugins/md-asks/README.md) |
+| `md-asks` | Resolve `@claude`, `@codex`, or `@agent` asks in markdown files and record the exchange in a callout thread. | <ul><li><a href="claude-plugins/md-asks/README.md">Claude&nbsp;Code</a></li><li><a href="claude-plugins/md-asks/README.md">Cowork</a></li><li><a href="codex-plugins/md-asks/README.md">Codex</a></li></ul> |
 
 ## Install Plugins & Extensions
 
