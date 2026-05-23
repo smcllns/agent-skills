@@ -1,8 +1,20 @@
-# Sam Collins Skills
+# @smcllns/skills — agent marketplace
 
-A collection of my skills and plugins I use regularly and can be useful to others — across productivity, writing code, research, design, decision making, etc.
+**Artisanal agent skills, harness upgrades, and field notes on cognitive witchcraft**
 
-This repo has standalone skills plus plugins and extensions for agent platforms and harnesses. The main README is the quick map; each skill or plugin README has the detailed usage notes.
+![Dark workbench of agent tools](docs/assets/skills-marketplace-hero.png)
+
+This repo catalogs the agent skills, plugins, and utilities I use nearly every day across writing, code, research, design, and decision making.
+
+Some are standalone skills. Some are plugin wrappers or MCP tools for Codex, Claude, Pi, OpenCode, OpenClaw, and other agent harnesses. Each has its own README with installation and usage notes.
+
+## Skills Catalog
+
+| Name | Use when | Install and Usage |
+|---|---|---|
+| `md-asks` | Resolve `@agent` asks and open `[!NOTE]+` discussion threads in markdown files. | [md-asks skill](skills/md-asks/SKILL.md) |
+| `obsidian-html-docs` | Author `.html` docs for the Obsidian HTML Docs plugin within its sandbox and asset constraints. | [obsidian-html-docs skill](skills/obsidian-html-docs/SKILL.md) |
+| `token-count` | Count tokens with Anthropic, Gemini, and OpenAI server-side endpoints for prompt budgeting. | [token-count skill](skills/token-count/SKILL.md) |
 
 ## Install Skills
 
@@ -14,25 +26,16 @@ npx skills@latest add smcllns/skills
 
 Standalone skills are the source of truth. Plugins and extensions copy those skills into platform-specific packages and add only the metadata or runtime wrapper they need.
 
-## Skills Catalog
-
-| Name | Use when | Install and Usage |
-|---|---|---|
-| `md-asks` | Resolve `@agent` asks and open `[!NOTE]+` discussion threads in markdown files. | [md-asks skill](skills/md-asks/SKILL.md) |
-| `obsidian-html-docs` | Author `.html` docs for the Obsidian HTML Docs plugin within its sandbox and asset constraints. | [obsidian-html-docs skill](skills/obsidian-html-docs/SKILL.md) |
-| `token-count` | Count tokens with Anthropic, Gemini, and OpenAI server-side endpoints for prompt budgeting. | [token-count skill](skills/token-count/SKILL.md) |
 
 ## Plugins & Extensions
 
 | Name | Use when | Install and Usage |
 |---|---|---|
-| `md-asks` for Claude Code | Resolve `@claude`, `@codex`, or `@agent` asks in markdown files and record the exchange in a callout thread. | [Claude Plugin](claude-plugins/md-asks/README.md) |
-| `md-asks` for Cowork | Resolve `@claude`, `@codex`, or `@agent` asks in markdown files and record the exchange in a callout thread. | [Claude Plugin](claude-plugins/md-asks/README.md) |
-| `md-asks` for Codex | Resolve `@claude`, `@codex`, or `@agent` asks in markdown files and record the exchange in a callout thread. | [Codex Plugin](codex-plugins/md-asks/README.md) |
+| `md-asks` | Resolve `@claude`, `@codex`, or `@agent` asks in markdown files and record the exchange in a callout thread. | <ul><li><a href="claude-plugins/md-asks/README.md">Claude</a></li><li><a href="codex-plugins/md-asks/README.md">Codex</a></li></ul> |
 
 ## Install Plugins & Extensions
 
-### Claude Code / Cowork
+### Claude (Code, Cowork)
 
 Add this repo as a Claude plugin marketplace:
 
@@ -78,7 +81,7 @@ The bare skill in `skills/<name>/` is the source of truth. Plugin-embedded copie
 
 ## Feedback
 
-Issues, fixes, and usage notes are welcome at [github.com/smcllns/skills](https://github.com/smcllns/skills).
+If a human reads every word that gets sent, issues, fixes, and usage notes are welcome at [github.com/smcllns/skills](https://github.com/smcllns/skills).
 
 ## License
 
