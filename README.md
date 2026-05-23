@@ -12,9 +12,9 @@ Some are standalone skills. Some are plugin wrappers or MCP tools for Codex, Cla
 
 | Name | Use when | Install and Usage |
 |---|---|---|
-| <code>md&#8209;asks</code> | Resolve `@agent` asks and open `[!NOTE]+` discussion threads in markdown files. | [md-asks skill](skills/md-asks/SKILL.md) |
-| <code>obsidian&#8209;html&#8209;docs</code> | Author `.html` docs for the Obsidian HTML Docs plugin within its sandbox and asset constraints. | [obsidian-html-docs skill](skills/obsidian-html-docs/SKILL.md) |
-| <code>token&#8209;count</code> | Count tokens with Anthropic, Gemini, and OpenAI server-side endpoints for prompt budgeting. | [token-count skill](skills/token-count/SKILL.md) |
+| <code>md&#8209;asks</code> | Resolve `@agent` asks and open `[!NOTE]+` discussion threads in markdown files. | <a href="skills/md-asks/SKILL.md">md&#8209;asks&nbsp;skill</a> |
+| <code>obsidian&#8209;html&#8209;docs</code> | Author `.html` docs for the Obsidian HTML Docs plugin within its sandbox and asset constraints. | <a href="skills/obsidian-html-docs/SKILL.md">obsidian&#8209;html&#8209;docs&nbsp;skill</a> |
+| <code>token&#8209;count</code> | Count tokens with Anthropic, Gemini, and OpenAI server-side endpoints for prompt budgeting. | <a href="skills/token-count/SKILL.md">token&#8209;count&nbsp;skill</a> |
 
 ## Install Skills
 
