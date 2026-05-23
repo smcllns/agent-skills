@@ -1,6 +1,6 @@
 ---
 name: md-asks
-description: "Use when markdown files (Obsidian notes or regular .md) contain default `@claude`, `@codex`, `@agent`, or user-specified `@trigger` asks; also use when asked to resolve md asks, scan markdown for agent asks, or process open `[!NOTE]+` threads."
+description: "Use when markdown files (Obsidian notes or regular .md) contain `@claude`, `@codex`, `@agent`, or user-specified `@trigger` asks; also use when asked to resolve md asks, scan markdown for agent asks, or process open `[!NOTE]+` threads."
 ---
 
 # md-asks
@@ -45,7 +45,7 @@ The `+/-` marker is load-bearing:
 An ask is unresolved when any of:
 
 - An open `> [!NOTE]+ ...` callout whose last reply is from the user.
-- A valid inline ask for a default or user-specified trigger not yet processed into a callout.
+- A valid inline ask for a recognized trigger not yet processed into a callout.
 
 ## Resolution contract
 
