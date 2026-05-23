@@ -122,7 +122,7 @@ Each installed plugin gets a private directory the runtime resolves to `${CLAUDE
 
 ```sh
 # From the repo containing the marketplace
-claude plugin marketplace add ~/Projects/skills        # adds the marketplace from a local path
+claude plugin marketplace add /path/to/skills          # adds the marketplace from a local path
 /plugin install <plugin-name>@smcllns-skills           # inside Claude Code
 ```
 
@@ -160,7 +160,7 @@ Always uninstall via the host's UI, not by deleting files on disk. The hosts mai
 
 The plugin spec supports symlinks within a marketplace — at install time they're dereferenced into the plugin cache. Reference: <https://code.claude.com/docs/en/plugins-reference#share-files-within-a-marketplace-with-symlinks>.
 
-We decided **not** to use symlinks (decision in `~/Projects/obsidian/scratch/Figured out single repo architecture for public skills and plugins - v3.md`). They complicated the layout (cycle-avoidance, individual-child symlinks vs directory symlinks), made the diff confusing in Codiff, and the DRY benefit didn't pay rent at one plugin. If you find yourself wanting them later, the spec supports it — just confirm the dereferenced output looks right in the install cache.
+We decided **not** to use symlinks. They complicated the layout (cycle-avoidance, individual-child symlinks vs directory symlinks), made the diff confusing in review tools, and the DRY benefit didn't pay rent at one plugin. If you find yourself wanting them later, the spec supports it — just confirm the dereferenced output looks right in the install cache.
 
 ## Things we haven't verified
 
