@@ -13,12 +13,16 @@ whether the scan should pick this file up:
 The test also auto-generates one fixture per agent name in the documented
 agent list. Add a name there → the fixture set extends automatically.
 
-The scan catches **two** kinds of thing: `@agent` asks that haven't been
-wrapped yet, and `[!NOTE]+` callouts (active agent threads). The marker is the
-protocol signal: only `+` on `[!NOTE]` and `-` on `[!DONE]` indicate an agent
-thread. Bare `[!NOTE]`, `[!NOTE]-`, `[!DONE]`, and `[!DONE]+` are all plain
-markdown callouts — the scan ignores them. This way the agent never has to
-inspect a regular note-taking callout to figure out it's not for them.
+The fast grep scan catches **two** kinds of thing: `@agent` asks that haven't
+been wrapped yet, and `[!NOTE]+` callouts (active agent threads). A separate
+awk scan catches human follow-ups inside `[!DONE]-` callouts by inspecting the
+last `> @name:` speaker line in each resolved thread.
+
+The marker is the protocol signal: only `+` on `[!NOTE]` and `-` on `[!DONE]`
+indicate an agent thread. Bare `[!NOTE]`, `[!NOTE]-`, `[!DONE]`, and `[!DONE]+`
+are all plain markdown callouts — the scans ignore them. This way the agent
+never has to inspect a regular note-taking callout to figure out it's not for
+them.
 
 ---
 
@@ -82,10 +86,40 @@ Same as above — filtered by the scan.
 
 Once an `@claude` ask is wrapped in `[!DONE]-`, the leading `>` on its
 line makes the inline-ask regex skip it (the regex requires a non-`>`
-line start).
+line start). The DONE follow-up scan still skips this unless a later speaker
+line shows the human replied after completion.
 
 ```md @test:nomatch
 > [!DONE]- @claude already wrapped
+```
+
+### Human follow-up inside `[!DONE]-`
+
+The grep scan skips this, but `done-followups.awk` reports the human speaker
+line because the latest `> @name:` line is not an agent.
+
+```md
+> [!DONE]- tightened intro
+>
+> @claude tighten the intro
+>
+> @claude: done, tightened it.
+>
+> @sam: one more tweak please
+```
+
+### Agent reply after human follow-up inside `[!DONE]-`
+
+The DONE follow-up scan skips this because the latest speaker line is an agent.
+
+```md
+> [!DONE]- tightened intro
+>
+> @claude tighten the intro
+>
+> @sam: one more tweak please
+>
+> @claude: done, tightened it again.
 ```
 
 ### Ask inside an indented blockquote
