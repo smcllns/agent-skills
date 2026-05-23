@@ -3,9 +3,9 @@ name: md-asks
 description: "Use when markdown files (Obsidian notes or regular .md) contain `@claude`, `@codex`, `@agent`, or user-specified `@trigger` asks; also use when asked to resolve md asks, scan markdown for agent asks, or process open `[!NOTE]+` threads."
 ---
 
-# md-asks
+# Markdown asks
 
-A human writes `@codex do X` or `@claude do X` in a markdown file. This skill finds those asks, does the work, and wraps the exchange in a callout containing the discussion thread.
+A human writes `@codex do X` or `@claude do X` in a markdown file. This skill resolves agent asks in markdown and records the exchange in a callout thread.
 
 ## Example
 
