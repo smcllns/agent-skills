@@ -1,6 +1,8 @@
-# Sam Collins Skills
+# @smcllns/skills — agent marketplace
 
-A collection of my skills and plugins I use regularly and can be useful to others — across productivity, writing code, research, design, decision making, etc.
+**Artisanal harness upgrades, agent skills, survival tools, and advanced reading for cognitive witchcraft**
+
+![Dark workbench of agent tools](docs/assets/skills-marketplace-hero.png)
 
 This repo has standalone skills plus plugins and extensions for agent platforms and harnesses. The main README is the quick map; each skill or plugin README has the detailed usage notes.
 
