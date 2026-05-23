@@ -9,7 +9,7 @@ This repo is meant to be a small marketplace-style entry point: install the thin
 Install the portable `skills/` tree with the skills CLI:
 
 ```bash
-npx skills@latest add smcllns/skills
+bunx skills@latest add smcllns/skills
 ```
 
 Standalone skills are the canonical source. Host plugins copy those skills into the plugin package and add only the host-specific metadata or runtime wrapper.
