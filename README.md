@@ -1,6 +1,6 @@
 # @smcllns/skills — agent marketplace
 
-**Artisanal harness upgrades, agent skills, survival tools, and advanced reading for cognitive witchcraft**
+**Artisanal agent skills, harness upgrades, and field notes on cognitive witchcraft**
 
 ![Dark workbench of agent tools](docs/assets/skills-marketplace-hero.png)
 
