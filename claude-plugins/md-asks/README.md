@@ -1,6 +1,6 @@
-# md-asks
+# Markdown asks
 
-A Claude plugin that picks up inline `@claude`, `@codex`, or `@agent` asks in any markdown file — Obsidian vaults, repo docs, plain notes — does the requested edit in the document body, and wraps the exchange in a callout thread that can be continued if follow-up is needed.
+A Claude plugin that resolves `@agent` asks in markdown files and records the exchange in callout threads.
 
 Invoke it on a path; it scans, finds unresolved asks and open `[!NOTE]+` threads, and resolves them.
 

@@ -1,6 +1,6 @@
 {
   "name": "md-asks",
-  "description": "Picks up `@claude`/`@codex`/`@agent` asks in any markdown file, does the requested work, and records the exchange in a callout that can be continued.",
+  "description": "Resolve @agent asks in markdown files and record the exchange in callout threads.",
   "author": { "name": "Sam Collins" },
   "keywords": ["markdown", "obsidian", "directives", "asks", "callouts", "agents", "notes"]
 }

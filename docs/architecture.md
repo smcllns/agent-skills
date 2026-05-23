@@ -66,4 +66,3 @@ Don't pre-build cross-host machinery (shared SKILL.md sources, generated wrapper
 
 - `docs/writing-claude-plugins.md` — accumulated how-to knowledge for authoring plugins (gotchas, schema, hooks, persistence, install/uninstall). Grows as we ship.
 - The repository history captures the decision trail for the single-repo layout; this file documents the current architecture.
-- `docs/plans/2026-05-19-markdown-agent-directives-plugin.md` — current plan (was originally `markdown-agent-comments`; renamed after narrowing scope to directives only)

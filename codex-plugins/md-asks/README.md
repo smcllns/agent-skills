@@ -1,6 +1,6 @@
-# md-asks
+# Markdown asks
 
-A Codex plugin that picks up inline `@claude`, `@codex`, or `@agent` asks in markdown files, does the requested edit in the document body, and wraps the exchange in a callout thread that can be continued if follow-up is needed.
+A Codex plugin that resolves `@agent` asks in markdown files and records the exchange in callout threads.
 
 The implementation is the same canonical skill shipped in `skills/md-asks/`. This plugin wrapper only adds Codex discovery and install metadata.
 
