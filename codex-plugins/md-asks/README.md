@@ -15,10 +15,14 @@ Resolve md asks in docs/
 or invoke it explicitly:
 
 ```text
-Use md-asks on ~/Projects/obsidian
+Use md-asks on /path/to/notes
 ```
 
 See `skills/md-asks/SKILL.md` for the protocol details: ask shapes, `[!NOTE]+` / `[!DONE]-` markers, scan regex, and discussion thread format.
+
+## Obsidian styling (optional)
+
+For a nicer look in Obsidian Reading mode, the repo ships a CSS snippet at `skills/md-asks/companion/md-asks-callouts.css`. Copy it into your vault's `.obsidian/snippets/`, then enable it via Settings → Appearance → CSS snippets. Renders amber for active threads, green for resolved.
 
 ## Tests
 

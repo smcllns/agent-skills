@@ -37,14 +37,14 @@ or more simply ask claude in plain speak like `resolve md asks` and it'll invoke
 In **Claude Cowork** on desktop, you can type something like the following to run it on a schedule.
 
 ```plaintext
-Schedule a task to run every 5 minutes that runs the md-asks skill on my obsidian vault at ~/Projects/obsidian.
+Schedule a task to run every 5 minutes that runs the md-asks skill on my notes folder at /path/to/notes.
 ```
 
 Claude Cowork provides a nice UI for managing scheduled tasks and you can pause/delete there, or ask Claude if you want to run it on a different timer.
 
 ## Obsidian styling (optional)
 
-For a nicer look in Obsidian Reading mode, the repo ships a CSS snippet at `skills/md-asks/companion/agent-callouts.css`. Copy it into your vault's `.obsidian/snippets/`, then enable it via Settings → Appearance → CSS snippets. Renders amber for active threads, green for resolved.
+For a nicer look in Obsidian Reading mode, the repo ships a CSS snippet at `skills/md-asks/companion/md-asks-callouts.css`. Copy it into your vault's `.obsidian/snippets/`, then enable it via Settings → Appearance → CSS snippets. Renders amber for active threads, green for resolved.
 
 ## Tests
 
