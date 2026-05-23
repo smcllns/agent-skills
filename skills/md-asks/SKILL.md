@@ -1,6 +1,6 @@
 ---
 name: md-asks
-description: "Use when markdown files (Obsidian notes or regular .md) contain asks with `@claude`, `@codex`, `@agent`, or user-specified `@trigger`. Also use when asked to resolve md comments, scan for agent asks, or process open `[!NOTE]+` threads."
+description: "Use when markdown files (Obsidian notes or regular .md) contain `@claude`, `@codex`, `@agent`, or user-specified `@trigger` asks. Also use when asked to resolve agent asks in markdown, scan for @agent comments, or process open `[!NOTE]+` threads."
 ---
 
 # Markdown asks

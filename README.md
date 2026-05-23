@@ -12,16 +12,16 @@ Some are standalone skills. Some are plugin wrappers or MCP tools for Codex, Cla
 
 | Name | Use when | Install and Usage |
 |---|---|---|
-| <code>md&#8209;asks</code> | Resolve `@agent` asks in markdown files and record the exchange in callout threads. | <a href="skills/md-asks/SKILL.md">Markdown asks&nbsp;skill</a> |
-| <code>obsidian&#8209;html&#8209;docs</code> | Author `.html` docs for the Obsidian HTML Docs plugin within its sandbox and asset constraints. | <a href="skills/obsidian-html-docs/SKILL.md">obsidian&#8209;html&#8209;docs&nbsp;skill</a> |
-| <code>token&#8209;count</code> | Count tokens with Anthropic, Gemini, and OpenAI server-side endpoints for prompt budgeting. | <a href="skills/token-count/SKILL.md">token&#8209;count&nbsp;skill</a> |
+| `md-asks` | Resolve `@agent` asks in markdown files and record the exchange in callout threads. | [Markdown asks skill](skills/md-asks/SKILL.md) |
+| `obsidian-html-docs` | Author `.html` docs for the Obsidian HTML Docs plugin within its sandbox and asset constraints. | [obsidian-html-docs skill](skills/obsidian-html-docs/SKILL.md) |
+| `token-count` | Count tokens with Anthropic, Gemini, and OpenAI server-side endpoints for prompt budgeting. | [token-count skill](skills/token-count/SKILL.md) |
 
 ## Install Skills
 
 Install this skill collection with the standard skills CLI:
 
 ```bash
-npx skills@latest add smcllns/skills
+bunx skills@latest add smcllns/skills
 ```
 
 Standalone skills are the source of truth. Plugins and extensions copy those skills into platform-specific packages and add only the metadata or runtime wrapper they need.
@@ -31,8 +31,8 @@ Standalone skills are the source of truth. Plugins and extensions copy those ski
 
 | Name | Use when | Install and Usage |
 |---|---|---|
-| <code>md&#8209;asks</code> | Resolve `@agent` asks in markdown files and record the exchange in callout threads. | <ul><li><a href="claude-plugins/md-asks/README.md">Claude</a></li><li><a href="codex-plugins/md-asks/README.md">Codex</a></li></ul> |
-| <code>HTML&nbsp;Docs</code> | Render sandboxed `.html` notes inside Obsidian with local assets and app-style documents. | <a href="https://community.obsidian.md/plugins/html-docs">Obsidian&nbsp;plugin</a> |
+| `md-asks` | Resolve `@agent` asks in markdown files and record the exchange in callout threads. | [Claude](claude-plugins/md-asks/README.md), [Codex](codex-plugins/md-asks/README.md) |
+| HTML Docs | Render sandboxed `.html` notes inside Obsidian with local assets and app-style documents. | [Obsidian plugin](https://community.obsidian.md/plugins/html-docs) |
 
 ## Install Plugins & Extensions
 
@@ -70,7 +70,7 @@ Coming soon once we stabilize using it across Claude and Codex.
 @smcllns/skills (this repo)/
 |-- .claude-plugin/marketplace.json    # Claude marketplace manifest
 |-- .agents/plugins/marketplace.json   # Codex marketplace manifest
-|-- skills/                            # Canonical portable skills
+|-- skills/                            # Canonical skills copied at build to plugin dirs
 |-- claude-plugins/                    # Claude plugin packages
 |-- codex-plugins/                     # Codex plugin packages
 |-- docs/                              # Architecture notes, plans, handoffs

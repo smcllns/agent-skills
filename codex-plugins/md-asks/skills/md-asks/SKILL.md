@@ -1,6 +1,6 @@
 ---
 name: md-asks
-description: "Use when markdown files (Obsidian notes or regular .md) contain `@claude`, `@codex`, `@agent`, or user-specified `@trigger` asks; also use when asked to resolve md asks, scan markdown for agent asks, or process open `[!NOTE]+` threads."
+description: "Use when markdown files (Obsidian notes or regular .md) contain `@claude`, `@codex`, `@agent`, or user-specified `@trigger` asks. Also use when asked to resolve agent asks in markdown, scan for @agent comments, or process open `[!NOTE]+` threads."
 ---
 
 # Markdown asks
@@ -99,11 +99,11 @@ find <path> -name '*.md' -exec awk -v agents='nora hermes' -f reference/done-fol
 
 Sort matched files by mtime descending before capping.
 
-## Reference and tests
+## Tests
 
-[`reference/markdown-agent-directives.spec.md`](reference/markdown-agent-directives.spec.md) is a rough first pass at a scan spec plus initial test fixtures. It documents current edge cases and accepted false positives, but the protocol is still early and breaking changes are expected.
+[`reference/markdown-agent-directives.spec.md`](reference/markdown-agent-directives.spec.md) is a rough first pass at a spec and test fixtures. It documents current edge cases and accepted false positives, but the protocol is still early and breaking changes are expected.
 
-Smoke test after setup: create a scratch `.md` file with a simple `@codex` ask, run the skill against that folder, and confirm the ask is wrapped in a callout. Then add a human `> @sam: ...` follow-up inside the resulting `[!DONE]-` callout and run again; it should be picked up.
+**Smoke test after setup:** create a scratch `.md` file with a simple `@codex` ask, run the skill against that folder, and confirm the ask is wrapped in a callout. Then add a human `> @sam: ...` follow-up inside the resulting `[!DONE]-` callout and run again; it should be picked up.
 
 Contributor regression test: run `bun test` after changing scan commands, agent defaults, callout markers, or files under `reference/`.
 
