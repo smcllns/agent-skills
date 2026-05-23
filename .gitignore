@@ -5,3 +5,8 @@
 **/bun.lockb
 skills/md-asks/reference/model-comparison/results/
 claude-cowork-plugins/md-asks/skills/md-asks/reference/model-comparison/results/
+
+# Local agent planning and handoff notes
+.agents/plans/
+docs/handoffs/
+docs/plans/
