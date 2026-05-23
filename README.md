@@ -16,17 +16,19 @@ Standalone skills are the source of truth. Plugins and extensions copy those ski
 
 ## Skills Catalog
 
-| Name | Use when | Read more |
+| Name | Use when | Install and Usage |
 |---|---|---|
-| `md-asks` | Resolve `@agent` asks and open `[!NOTE]+` discussion threads in markdown files. | [`skills/md-asks/SKILL.md`](skills/md-asks/SKILL.md) |
-| `obsidian-html-docs` | Author `.html` docs for the Obsidian HTML Docs plugin within its sandbox and asset constraints. | [`skills/obsidian-html-docs/SKILL.md`](skills/obsidian-html-docs/SKILL.md) |
-| `token-count` | Count tokens with Anthropic, Gemini, and OpenAI server-side endpoints for prompt budgeting. | [`skills/token-count/SKILL.md`](skills/token-count/SKILL.md) |
+| `md-asks` | Resolve `@agent` asks and open `[!NOTE]+` discussion threads in markdown files. | [md-asks skill](skills/md-asks/SKILL.md) |
+| `obsidian-html-docs` | Author `.html` docs for the Obsidian HTML Docs plugin within its sandbox and asset constraints. | [obsidian-html-docs skill](skills/obsidian-html-docs/SKILL.md) |
+| `token-count` | Count tokens with Anthropic, Gemini, and OpenAI server-side endpoints for prompt budgeting. | [token-count skill](skills/token-count/SKILL.md) |
 
-## Plugins & Extensions (Codex, Claude, Cowork, Pi)
+## Plugins & Extensions
 
-| Name | Use when | Read more |
+| Name | Use when | Install and Usage |
 |---|---|---|
-| `md-asks` | Resolve `@claude`, `@codex`, or `@agent` asks in markdown files and record the exchange in a callout thread. | [`claude-plugins/md-asks/README.md`](claude-plugins/md-asks/README.md), [`codex-plugins/md-asks/README.md`](codex-plugins/md-asks/README.md) |
+| `md-asks` for Claude Code | Resolve `@claude`, `@codex`, or `@agent` asks in markdown files and record the exchange in a callout thread. | [Claude Plugin](claude-plugins/md-asks/README.md) |
+| `md-asks` for Cowork | Resolve `@claude`, `@codex`, or `@agent` asks in markdown files and record the exchange in a callout thread. | [Claude Plugin](claude-plugins/md-asks/README.md) |
+| `md-asks` for Codex | Resolve `@claude`, `@codex`, or `@agent` asks in markdown files and record the exchange in a callout thread. | [Codex Plugin](codex-plugins/md-asks/README.md) |
 
 ## Install Plugins & Extensions
 
@@ -54,9 +56,9 @@ codex plugin marketplace add smcllns/skills
 
 Then install `md-asks@smcllns-skills` from the Codex plugin picker.
 
-### Pi
+### Pi, OpenCode, OpenClaw, Hermes, and others
 
-No Pi extension is packaged yet.
+Coming soon once we stabilize using it across Claude and Codex.
 
 ## Repo Organization
 
