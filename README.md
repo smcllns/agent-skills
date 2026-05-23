@@ -1,20 +1,20 @@
-# Sam Collins Skills
+# Sam Collins's Skills and Harness Upgrades
 
 A collection of my skills and plugins I use regularly and can be useful to others — across productivity, writing code, research, design, decision making, etc.
 
-This repo is meant to be a small marketplace-style entry point: install the thing you need, browse what exists, then read the individual skill or plugin README for detailed usage.
+This repo has standalone skills plus plugins and extensions for agent platforms and harnesses. The main README is the quick map; each skill or plugin README has the detailed usage notes.
 
-## Quick Start: Install Skills
+## Install Skills
 
-Install the portable `skills/` tree with the skills CLI:
+Install this skill collection with the standard skills CLI:
 
 ```bash
-bunx skills@latest add smcllns/skills
+npx skills@latest add smcllns/skills
 ```
 
-Standalone skills are the canonical source. Host plugins copy those skills into the plugin package and add only the host-specific metadata or runtime wrapper.
+Standalone skills are the source of truth. Plugins and extensions copy those skills into platform-specific packages and add only the metadata or runtime wrapper they need.
 
-## Skills
+## Skills Catalog
 
 | Name | Use when | Read more |
 |---|---|---|
@@ -22,7 +22,17 @@ Standalone skills are the canonical source. Host plugins copy those skills into 
 | `obsidian-html-docs` | Author `.html` docs for the Obsidian HTML Docs plugin within its sandbox and asset constraints. | [`skills/obsidian-html-docs/SKILL.md`](skills/obsidian-html-docs/SKILL.md) |
 | `token-count` | Count tokens with Anthropic, Gemini, and OpenAI server-side endpoints for prompt budgeting. | [`skills/token-count/SKILL.md`](skills/token-count/SKILL.md) |
 
-## Quick Start: Install Plugins & Extensions
+## Plugins & Extensions (Codex, Claude, Cowork, Pi)
+
+Plugins and extensions package the same underlying skills for a specific platform or harness.
+
+## Plugin Catalog
+
+| Plugin | Platform / Harness | What it does | Read more |
+|---|---|---|---|
+| `md-asks` | Claude Code, Cowork, Codex | Resolve `@claude`, `@codex`, or `@agent` asks in markdown files and record the exchange in a callout thread. | [`claude-plugins/md-asks/README.md`](claude-plugins/md-asks/README.md), [`codex-plugins/md-asks/README.md`](codex-plugins/md-asks/README.md) |
+
+## Install Plugins & Extensions
 
 ### Claude Code / Cowork
 
@@ -40,15 +50,17 @@ Then install a plugin from inside Claude Code or Cowork:
 
 ### Codex
 
-Codex marketplace metadata lives in `.agents/plugins/marketplace.json`; Codex plugin wrappers live in `codex-plugins/`.
+Add this repo as a Codex plugin marketplace:
 
-Install through the Codex plugin flow when this marketplace is available, then invoke the installed skill by name or in plain language.
+```bash
+codex plugin marketplace add smcllns/skills
+```
 
-## Plugins & Extensions (Codex, Claude, Cowork, Pi)
+Then install `md-asks@smcllns-skills` from the Codex plugin picker.
 
-| Name | Use when | Read more |
-|---|---|---|
-| `md-asks` | Resolve `@claude`, `@codex`, or `@agent` asks in markdown files and record the exchange in a callout thread. | [`claude-plugins/md-asks/README.md`](claude-plugins/md-asks/README.md), [`codex-plugins/md-asks/README.md`](codex-plugins/md-asks/README.md) |
+### Pi
+
+No Pi extension is packaged yet.
 
 ## Repo Organization
 
