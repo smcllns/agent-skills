@@ -1,6 +1,6 @@
 # Sam Collins Skills
 
-Personal agent skills and host-specific plugin wrappers for Claude, Codex, and standalone skill loaders.
+A collection of my skills and plugins I use regularly and can be useful to others — across productivity, writing code, research, design, decision making, etc.
 
 This repo is meant to be a small marketplace-style entry point: install the thing you need, browse what exists, then read the individual skill or plugin README for detailed usage.
 
