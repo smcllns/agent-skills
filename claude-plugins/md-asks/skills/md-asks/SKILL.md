@@ -31,10 +31,10 @@ The original ask is preserved verbatim as the first body line. The title is the 
 
 | Pattern | Status | Scan | Agent behavior |
 |---|---|---|---|
-| `@agent` | New | Picks up | New ask, action required. |
+| `@agent`, `@claude`, `@codex` | New | Picks up | New ask, action required. |
 | `@<custom>` | New | Picks up if the caller specified custom triggers | New ask, action required. |
 | `[!NOTE]+` | Active thread | Picks up | If the human spoke last, act. If the agent spoke last, leave it. |
-| `[!DONE]-` | Resolved thread | Skips | Will not process |
+| `[!DONE]-` | Resolved thread | Grep skips; DONE scan checks | If a human spoke after the agent marked done, act. Otherwise leave it. |
 
 The `+/-` marker is load-bearing:
 - `[!NOTE]+` distinguishes agent threads from regular callouts.
@@ -46,6 +46,7 @@ An ask is unresolved when any of:
 
 - An open `> [!NOTE]+ ...` callout whose last reply is from the user.
 - A valid inline ask for a recognized trigger not yet processed into a callout.
+- A resolved `> [!DONE]- ...` callout whose last speaker line is from a human.
 
 ## Resolution contract
 
@@ -76,26 +77,35 @@ When the ask is ambiguous, missing context, or non-actionable, **don't guess**. 
 
 ## Scanning for unresolved asks
 
-Find files with asks or open threads, sort by file mtime, then cap:
+Scan in two passes:
+
+1. **Grep for new and active threads** — cheap single-line scan for inline asks and `[!NOTE]+` callouts.
 
 ```sh
 grep -rlnE --include='*.md' '(\[!NOTE\]\+|^([^>]*[[:space:]])?@(agent|claude|codex)([^[:alnum:]_]|$))' <path>
 ```
 
-**Default triggers:** `@claude`, `@codex`, `@agent`. The caller can override by passing a custom list in the invocation prompt (e.g. *"scan ~/notes for asks tagged `@nora,@hermes`"*) — substitute that list into the regex's alternation at runtime.
+2. **Awk to check DONE threads for follow-ups** — multiline scan for `[!DONE]-` callouts whose latest `> @name:` speaker is human.
 
-Two patterns are matched:
+```sh
+find <path> -name '*.md' -exec awk -f reference/done-followups.awk {} +
+```
 
-- **Inline ask** — `@claude`, `@codex`, or `@agent` at line-start, indented, or mid-prose with a preceding space.
-- **Active agent thread** — `[!NOTE]+` only. Bare `[!NOTE]` and `[!NOTE]-` are plain markdown callouts.
+Default agent names are `agent claude codex`. If the caller provides custom triggers, use the same names in both passes: substitute the grep alternation and pass them to awk.
 
-What's filtered out:
+```sh
+find <path> -name '*.md' -exec awk -v agents='nora hermes' -f reference/done-followups.awk {} +
+```
 
-- **Resolved threads** — `[!DONE]-` is the canonical resolved marker. `[!DONE]+` and bare `[!DONE]` are also treated as plain markdown.
-- **Invalid asks** — whitespace or newline is required before `@`, so `contact@claude.com` and `` `@claude` `` (inside backticks) will not trigger.
-- **Asks inside callouts** — the `^[^>]` clause skips asks inside any blockquote line.
+Sort matched files by mtime descending before capping.
 
-For the full pattern catalog (indents, edge cases, accepted false positives), see [`reference/markdown-agent-directives.spec.md`](reference/markdown-agent-directives.spec.md).
+## Reference and tests
+
+[`reference/markdown-agent-directives.spec.md`](reference/markdown-agent-directives.spec.md) is a rough first pass at a scan spec plus initial test fixtures. It documents current edge cases and accepted false positives, but the protocol is still early and breaking changes are expected.
+
+Smoke test after setup: create a scratch `.md` file with a simple `@codex` ask, run the skill against that folder, and confirm the ask is wrapped in a callout. Then add a human `> @sam: ...` follow-up inside the resulting `[!DONE]-` callout and run again; it should be picked up.
+
+Contributor regression test: run `bun test` after changing scan commands, agent defaults, callout markers, or files under `reference/`.
 
 ## Discussion thread format
 
