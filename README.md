@@ -81,7 +81,7 @@ The bare skill in `skills/<name>/` is the source of truth. Plugin-embedded copie
 
 ## Feedback
 
-Issues, fixes, and usage notes are welcome at [github.com/smcllns/skills](https://github.com/smcllns/skills).
+If a human reads every word that gets sent, issues, fixes, and usage notes are welcome at [github.com/smcllns/skills](https://github.com/smcllns/skills).
 
 ## License
 
