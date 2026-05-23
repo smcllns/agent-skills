@@ -9,7 +9,7 @@
   "plugins": [
     {
       "name": "md-asks",
-      "source": "./claude-cowork-plugins/md-asks",
+      "source": "./claude-plugins/md-asks",
       "description": "Picks up `@claude`/`@codex`/`@agent` asks in any markdown file, does the requested work, and records the exchange in a callout that can be continued.",
       "category": "productivity"
     }

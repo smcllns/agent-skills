@@ -1,18 +1,18 @@
 ---
 name: md-asks
-description: "Use when markdown files (Obsidian notes or regular .md) contain one or more `@claude`, `@codex` or `@agent` asks requesting input or changes on the document."
+description: "Use when markdown files (Obsidian notes or regular .md) contain `@claude`, `@codex`, `@agent`, or user-specified `@trigger` asks; also use when asked to resolve md asks, scan markdown for agent asks, or process open `[!NOTE]+` threads."
 ---
 
 # md-asks
 
-A human writes `@claude do X` in a markdown file. This skill finds those asks, does the work, and wraps the exchange in a callout containing the discussion thread.
+A human writes `@codex do X` or `@claude do X` in a markdown file. This skill finds those asks, does the work, and wraps the exchange in a callout containing the discussion thread.
 
 ## Example
 
 User writes:
 
 ```
-@claude can you clean up that formatting pls
+@codex can you clean up that formatting pls
 ```
 
 After the agent acts:
@@ -20,9 +20,9 @@ After the agent acts:
 ```
 > [!DONE]- cleaned up broken formatting
 >
-> @claude can you clean up that formatting pls
+> @codex can you clean up that formatting pls
 >
-> @claude: done — removed broken newlines and added missing periods. No changes to text content.
+> @codex: done — removed broken newlines and added missing periods. No changes to text content.
 ```
 
 The original ask is preserved verbatim as the first body line. The title is the outcome summary.
@@ -32,6 +32,7 @@ The original ask is preserved verbatim as the first body line. The title is the 
 | Pattern | Status | Scan | Agent behavior |
 |---|---|---|---|
 | `@agent` | New | Picks up | New ask, action required. |
+| `@<custom>` | New | Picks up if the caller specified custom triggers | New ask, action required. |
 | `[!NOTE]+` | Active thread | Picks up | If the human spoke last, act. If the agent spoke last, leave it. |
 | `[!DONE]-` | Resolved thread | Skips | Will not process |
 
@@ -44,7 +45,7 @@ The `+/-` marker is load-bearing:
 An ask is unresolved when any of:
 
 - An open `> [!NOTE]+ ...` callout whose last reply is from the user.
-- A valid inline `@agent` ask not yet processed into a callout.
+- A valid inline ask for a recognized trigger not yet processed into a callout.
 
 ## Resolution contract
 
@@ -101,7 +102,7 @@ For the full pattern catalog (indents, edge cases, accepted false positives), se
 Inside a callout, separate every turn with a **single blank `>` line** — one paragraph per turn.
 
 ```markdown
-> [!NOTE]+ tightened introduction
+> [!DONE]- tightened introduction
 >
 > @claude tighten the intro
 >
@@ -114,17 +115,13 @@ Inside a callout, separate every turn with a **single blank `>` line** — one p
 
 For a soft line break inside a single turn, use two trailing spaces.
 
-## Final message (scheduled-run summary)
+## Final message
 
-Your last assistant message becomes the Cowork task-card body. Keep it to one of these one-liners — Cowork already shows tool/file counts, so don't repeat them:
+By default, keep the last assistant message brief and easy to override.
 
-```
-No asks. Scanned N files.
-Resolved K of N. Open: <file:line>, <file:line>.
-Blocked: <one-sentence reason>. See <report-path>.
-```
+If there are no changes, use one line: `Scanned N files in <path>. No open unresolved markdown asks with @<triggers> detected.`
 
-No preamble. If a verbose report exists, link to it from the one-liner.
+If there are changes or human input is required, provide a clear, concise executive update with links to changed files and line numbers/anchors when available. Follow any user-specified summary format over this default.
 
 ## Best practices
 

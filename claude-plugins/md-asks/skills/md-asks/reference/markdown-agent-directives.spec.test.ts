@@ -13,7 +13,7 @@
 //   - Fixtures live in `markdown-agent-directives.spec.md`. Each section's
 //     fenced block whose info string is `md @test:match` or `md @test:nomatch`
 //     is one fixture; other fences are ignored.
-//   - Per-agent fixtures (one bare `#<agent>` directive per name) are
+//   - Per-agent fixtures (one bare `@<agent>` ask per name) are
 //     generated programmatically from AGENTS.
 
 import { afterAll, beforeAll, describe, expect, it } from "bun:test";
@@ -23,7 +23,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 // ─── single source of truth (TS side) ─────────────────────────────────────
-const SCAN_REGEX = String.raw`(\[!NOTE\]\+|^([^>]*[[:space:]])?#(agent|claude|codex)([^[:alnum:]_]|$))`;
+const SCAN_REGEX = String.raw`(\[!NOTE\]\+|^([^>]*[[:space:]])?@(agent|claude|codex)([^[:alnum:]_]|$))`;
 const AGENTS = ["agent", "claude", "codex"] as const;
 
 const SKILL_PATH = new URL("../SKILL.md", import.meta.url);
@@ -59,9 +59,9 @@ function nearestHeadingBefore(text: string, offset: number): string | null {
 
 const SPEC_FIXTURES = parseSpec(SPEC);
 const AGENT_FIXTURES: Fixture[] = AGENTS.map((agent) => ({
-  name: `bare #${agent} directive (generated)`,
+  name: `bare @${agent} ask (generated)`,
   expect: "match",
-  content: `#${agent} please assist`,
+  content: `@${agent} please assist`,
 }));
 const ALL_FIXTURES = [...SPEC_FIXTURES, ...AGENT_FIXTURES];
 

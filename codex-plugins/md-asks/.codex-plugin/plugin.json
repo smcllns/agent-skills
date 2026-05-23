@@ -1,0 +1,39 @@
+{
+  "name": "md-asks",
+  "version": "0.1.0",
+  "description": "Resolve markdown @agent asks and record the exchange in callout threads.",
+  "author": {
+    "name": "Sam Collins",
+    "url": "https://github.com/smcllns"
+  },
+  "homepage": "https://github.com/smcllns/skills/tree/main/codex-plugins/md-asks",
+  "repository": "https://github.com/smcllns/skills",
+  "license": "MIT",
+  "keywords": [
+    "markdown",
+    "obsidian",
+    "agents",
+    "asks",
+    "callouts",
+    "notes"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "MD Asks",
+    "shortDescription": "Resolve @agent asks in markdown files.",
+    "longDescription": "Find unresolved @claude, @codex, and @agent asks in markdown files, make the requested document edits, and preserve the exchange in Obsidian-friendly callout threads.",
+    "developerName": "Sam Collins",
+    "category": "Productivity",
+    "capabilities": [
+      "Read",
+      "Write"
+    ],
+    "websiteURL": "https://github.com/smcllns/skills",
+    "defaultPrompt": [
+      "Resolve md asks in this repo.",
+      "Scan my notes for @codex asks.",
+      "Handle open markdown agent threads."
+    ],
+    "brandColor": "#16A34A"
+  }
+}
