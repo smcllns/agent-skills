@@ -32,6 +32,7 @@ Standalone skills are the source of truth. Plugins and extensions copy those ski
 | Name | Use when | Install and Usage |
 |---|---|---|
 | <code>md&#8209;asks</code> | Resolve `@claude`, `@codex`, or `@agent` asks in markdown files and record the exchange in a callout thread. | <ul><li><a href="claude-plugins/md-asks/README.md">Claude</a></li><li><a href="codex-plugins/md-asks/README.md">Codex</a></li></ul> |
+| <code>HTML&nbsp;Docs</code> | Render sandboxed `.html` notes inside Obsidian with local assets and app-style documents. | <a href="https://community.obsidian.md/plugins/html-docs">Obsidian&nbsp;plugin</a> |
 
 ## Install Plugins & Extensions
 
