@@ -1,6 +1,6 @@
 ---
 name: md-asks
-description: "Use when markdown files (Obsidian notes or regular .md) contain `@claude`, `@codex`, or `@agent` asks; also use when asked to resolve md asks, scan markdown for agent asks, or process open `[!NOTE]+` threads."
+description: "Use when markdown files (Obsidian notes or regular .md) contain default `@claude`, `@codex`, `@agent`, or user-specified `@trigger` asks; also use when asked to resolve md asks, scan markdown for agent asks, or process open `[!NOTE]+` threads."
 ---
 
 # md-asks
@@ -32,6 +32,7 @@ The original ask is preserved verbatim as the first body line. The title is the 
 | Pattern | Status | Scan | Agent behavior |
 |---|---|---|---|
 | `@agent` | New | Picks up | New ask, action required. |
+| `@<custom>` | New | Picks up if the caller specified custom triggers | New ask, action required. |
 | `[!NOTE]+` | Active thread | Picks up | If the human spoke last, act. If the agent spoke last, leave it. |
 | `[!DONE]-` | Resolved thread | Skips | Will not process |
 
@@ -44,7 +45,7 @@ The `+/-` marker is load-bearing:
 An ask is unresolved when any of:
 
 - An open `> [!NOTE]+ ...` callout whose last reply is from the user.
-- A valid inline `@agent` ask not yet processed into a callout.
+- A valid inline ask for a default or user-specified trigger not yet processed into a callout.
 
 ## Resolution contract
 
@@ -101,7 +102,7 @@ For the full pattern catalog (indents, edge cases, accepted false positives), se
 Inside a callout, separate every turn with a **single blank `>` line** — one paragraph per turn.
 
 ```markdown
-> [!NOTE]+ tightened introduction
+> [!DONE]- tightened introduction
 >
 > @claude tighten the intro
 >
@@ -116,15 +117,11 @@ For a soft line break inside a single turn, use two trailing spaces.
 
 ## Final message
 
-For scheduled/background runs, keep the last assistant message to one of these one-liners:
+By default, keep the last assistant message brief and easy to override.
 
-```
-No asks. Scanned N files.
-Resolved K of N. Open: <file:line>, <file:line>.
-Blocked: <one-sentence reason>. See <report-path>.
-```
+If there are no changes, use one line: `Scanned N files in <path>. No open unresolved markdown asks with @<triggers> detected.`
 
-For interactive runs, summarize what changed and mention any open/blocked threads. No preamble. If a verbose report exists, link to it from the summary.
+If there are changes or human input is required, provide a clear, concise executive update with links to changed files and line numbers/anchors when available. Follow any user-specified summary format over this default.
 
 ## Best practices
 
