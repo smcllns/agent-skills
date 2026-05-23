@@ -12,9 +12,9 @@ Some are standalone skills. Some are plugin wrappers or MCP tools for Codex, Cla
 
 | Name | Use when | Install and Usage |
 |---|---|---|
-| `md-asks` | Resolve `@agent` asks and open `[!NOTE]+` discussion threads in markdown files. | [md-asks skill](skills/md-asks/SKILL.md) |
-| `obsidian-html-docs` | Author `.html` docs for the Obsidian HTML Docs plugin within its sandbox and asset constraints. | [obsidian-html-docs skill](skills/obsidian-html-docs/SKILL.md) |
-| `token-count` | Count tokens with Anthropic, Gemini, and OpenAI server-side endpoints for prompt budgeting. | [token-count skill](skills/token-count/SKILL.md) |
+| <code>md&#8209;asks</code> | Resolve `@agent` asks and open `[!NOTE]+` discussion threads in markdown files. | [md-asks skill](skills/md-asks/SKILL.md) |
+| <code>obsidian&#8209;html&#8209;docs</code> | Author `.html` docs for the Obsidian HTML Docs plugin within its sandbox and asset constraints. | [obsidian-html-docs skill](skills/obsidian-html-docs/SKILL.md) |
+| <code>token&#8209;count</code> | Count tokens with Anthropic, Gemini, and OpenAI server-side endpoints for prompt budgeting. | [token-count skill](skills/token-count/SKILL.md) |
 
 ## Install Skills
 
@@ -31,7 +31,7 @@ Standalone skills are the source of truth. Plugins and extensions copy those ski
 
 | Name | Use when | Install and Usage |
 |---|---|---|
-| `md-asks` | Resolve `@claude`, `@codex`, or `@agent` asks in markdown files and record the exchange in a callout thread. | <ul><li><a href="claude-plugins/md-asks/README.md">Claude</a></li><li><a href="codex-plugins/md-asks/README.md">Codex</a></li></ul> |
+| <code>md&#8209;asks</code> | Resolve `@claude`, `@codex`, or `@agent` asks in markdown files and record the exchange in a callout thread. | <ul><li><a href="claude-plugins/md-asks/README.md">Claude</a></li><li><a href="codex-plugins/md-asks/README.md">Codex</a></li></ul> |
 
 ## Install Plugins & Extensions
 
