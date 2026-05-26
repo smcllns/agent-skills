@@ -23,3 +23,7 @@ Companion CSS should style `p > code:first-child` as the quieter agent label and
 - `diff -qr skills/md-asks codex-plugins/md-asks/skills/md-asks`
 - `bun test skills/md-asks/reference/markdown-agent-directives.spec.test.ts` passed with 126 tests.
 - `git diff --check`
+
+## PR
+
+- https://github.com/smcllns/skills/pull/26

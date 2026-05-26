@@ -6,7 +6,7 @@
 - [x] Update canonical md-asks skill docs, fixtures, wishlist, and companion CSS.
 - [x] Sync plugin copies.
 - [x] Run regression tests.
-- [ ] Publish PR.
+- [x] Publish PR: https://github.com/smcllns/skills/pull/26
 
 ## Questions
 
