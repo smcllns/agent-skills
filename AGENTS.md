@@ -1,11 +1,11 @@
 # AGENTS.md
 
-## md-asks Naming
+## atag Naming
 
-Use this naming for the markdown ask workflow:
+Use `docs/naming/atag.md` as the source of truth for the markdown tag workflow.
 
-- Display name: **Markdown asks**
-- Description: Resolve `@agent` asks in markdown files and record the exchange in callout threads.
-- Package / skill / command: `md-asks`
-- Description phrase: agent asks in markdown
-- Avoid: `markdown-agent-asks` unless you need a fully explicit internal codename
+- Formal spec name: **Markdown Agent Tags**
+- Package / module / repo / folder / CLI / command: `atag`
+- User-facing construct: `@agent` tag, `@claude` tag, `@codex` tag, or just "tag"
+- Verb: tag / tagged / tagging
+- Avoid: "ATAG", "Atag", "an atag", "the atag tag", and "atags"
