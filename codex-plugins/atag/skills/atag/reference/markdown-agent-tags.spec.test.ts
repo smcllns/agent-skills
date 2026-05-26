@@ -27,7 +27,6 @@ import { join } from "node:path";
 const SCAN_REGEX = String.raw`(\[!NOTE\]\+|^([^>]*[[:space:]])?@(agent|claude|codex)([^[:alnum:]_]|$))`;
 const AGENTS = ["agent", "claude", "codex"] as const;
 const DONE_EOT = "<!--atag:eot-->";
-const LEGACY_DONE_EOT = "<!--md-asks:eot-->";
 const DONE_SCAN_AWK = String.raw`function finish_done() {
   if (in_done && !sealed) print callout_file ":" start
   in_done = 0
@@ -48,7 +47,7 @@ $0 !~ /^[[:space:]]*>/ { finish_done(); next }
   line = $0
   sub(/^[[:space:]]*>[[:space:]]*/, "", line)
   if (line !~ /^[[:space:]]*$/) {
-    sealed = (line ~ /<!--(atag|md-asks):eot-->[[:space:]]*$/)
+    sealed = (line ~ /<!--atag:eot-->[[:space:]]*$/)
   }
 }
 END { finish_done() }`;
@@ -170,7 +169,6 @@ describe("SKILL.md ⇄ test constants are in sync", () => {
   });
   it("SKILL.md contains the DONE seal token and inline awk verbatim", () => {
     expect(SKILL).toContain(DONE_EOT);
-    expect(SKILL).toContain(LEGACY_DONE_EOT);
     expect(SKILL).toContain(DONE_SCAN_AWK);
   });
   it("SKILL.md mentions every agent name", () => {

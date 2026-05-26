@@ -36,9 +36,7 @@ The original tag is preserved verbatim as the first body line. The title is the 
 | `@agent`, `@claude`, `@codex` | New | Picks up | New tag, action required. |
 | `@<custom>` | New | Picks up if the caller specified custom triggers | New tag, action required. |
 | `[!NOTE]+` | Active thread | Picks up | If the human spoke last, act. If the agent spoke last, leave it. |
-| `[!DONE]-` | Resolved thread | Grep skips; DONE seal scan checks | If the thread is not sealed with `<!--atag:eot-->`, inspect and reseal. Legacy `<!--md-asks:eot-->` seals also count as sealed. |
-
-TODO: Remove legacy `<!--md-asks:eot-->` support once Sam's vaults and installed plugin caches have zero remaining matches.
+| `[!DONE]-` | Resolved thread | Grep skips; DONE seal scan checks | If the thread is not sealed with `<!--atag:eot-->`, inspect and reseal. |
 
 The `+/-` marker is load-bearing:
 - `[!NOTE]+` distinguishes agent threads from regular callouts.
@@ -76,7 +74,7 @@ A tag is unresolved when any of:
 
 - An open `> [!NOTE]+ ...` callout whose last reply is from the user.
 - A valid inline tag for a recognized trigger not yet processed into a callout.
-- A resolved `> [!DONE]- ...` callout whose latest nonblank quoted line does not end with `<!--atag:eot-->` or legacy `<!--md-asks:eot-->`.
+- A resolved `> [!DONE]- ...` callout whose latest nonblank quoted line does not end with `<!--atag:eot-->`.
 
 ## Resolution contract
 
@@ -117,7 +115,7 @@ grep -rlnE --include='*.md' '(\[!NOTE\]\+|^([^>]*[[:space:]])?@(agent|claude|cod
 
 Default agent names are `agent claude codex`. For custom triggers, replace `?@(agent|claude|codex)` with the custom alternation, e.g. `?@(nora|hermes)`.
 
-2. **Inline awk to check DONE threads for missing seals** — multiline scan for `[!DONE]-` callouts whose latest nonblank quoted line does not end with `<!--atag:eot-->` or legacy `<!--md-asks:eot-->`.
+2. **Inline awk to check DONE threads for missing seals** — multiline scan for `[!DONE]-` callouts whose latest nonblank quoted line does not end with `<!--atag:eot-->`.
 
 ```sh
 find <path> -name '*.md' -exec awk '
@@ -141,7 +139,7 @@ $0 !~ /^[[:space:]]*>/ { finish_done(); next }
   line = $0
   sub(/^[[:space:]]*>[[:space:]]*/, "", line)
   if (line !~ /^[[:space:]]*$/) {
-    sealed = (line ~ /<!--(atag|md-asks):eot-->[[:space:]]*$/)
+    sealed = (line ~ /<!--atag:eot-->[[:space:]]*$/)
   }
 }
 END { finish_done() }

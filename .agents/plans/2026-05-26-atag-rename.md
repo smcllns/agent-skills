@@ -15,7 +15,7 @@
 ## Execution decisions
 
 - New resolved threads use `<!--atag:eot-->`.
-- Existing `<!--md-asks:eot-->` seals stay recognized by the DONE scan so old resolved threads do not reopen during migration.
+- No legacy `<!--md-asks:eot-->` compatibility is kept; the seal was introduced the same day as the rename, so `<!--atag:eot-->` is the only supported seal.
 - Rename the syntax-contract fixture files from `markdown-agent-directives.*` to `markdown-agent-tags.*`.
 - Keep an old-name redirect doc so `md-asks` searches point to `atag`.
 - Use `atag@smcllns-skills` as the marketplace install target. This repo does not ship an npm package for `@smcllns/atag`.
@@ -44,7 +44,7 @@
 ## Test and protocol steps
 
 - [x] Decide whether protocol markers rename from `<!--md-asks:eot-->` to `<!--atag:eot-->`.
-- [x] If markers rename, add backward-compatibility tests or intentionally document the migration break.
+- [x] Document that `<!--atag:eot-->` is the only supported seal.
 - [x] Rename `reference/markdown-agent-directives.spec.md` and test file only if "Markdown Agent Tags" should replace the old internal spec codename.
 - [x] Update constants, temp prefixes, fixtures, and expected strings in the Bun tests.
 - [x] Run `bun test skills/atag/reference/markdown-agent-tags.spec.test.ts`.

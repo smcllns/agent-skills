@@ -23,7 +23,7 @@
 - The old repo policy said `Markdown asks` / `md-asks` / "agent asks in markdown"; it is now superseded.
 - Do not write "ATAG" in brand prose because it collides with the W3C accessibility standard.
 - New resolved threads use `<!--atag:eot-->`.
-- Existing `<!--md-asks:eot-->` seals remain recognized by the DONE scan so old resolved threads do not reopen during migration.
+- No legacy `<!--md-asks:eot-->` compatibility is kept; the seal was introduced the same day as the rename, so `<!--atag:eot-->` is the only supported seal.
 - Old-name discoverability lives in `docs/naming/md-asks.md`; marketplace manifests do not keep deprecated `md-asks` plugin entries.
 
 ## Verification run
@@ -33,7 +33,7 @@
 - `diff -qr skills/atag claude-plugins/atag/skills/atag`
 - `diff -qr skills/atag codex-plugins/atag/skills/atag`
 - `git diff --check`
-- Stale-name grep: remaining hits are intentional legacy-seal compatibility, naming anti-examples, and the old-name redirect doc.
+- Stale-name grep: remaining hits are naming anti-examples, historical planning references, and the old-name redirect doc.
 
 ## Suggested first commands
 
