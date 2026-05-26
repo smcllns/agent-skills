@@ -22,7 +22,7 @@ After the agent acts:
 >
 > @codex can you clean up that formatting pls
 >
-> @codex: done — removed broken newlines and added missing periods. No changes to text content.
+> @codex: done — removed broken newlines and added missing periods. No changes to text content. <!--md-asks:eot-->
 ```
 
 The original ask is preserved verbatim as the first body line. The title is the outcome summary.
@@ -34,11 +34,30 @@ The original ask is preserved verbatim as the first body line. The title is the 
 | `@agent`, `@claude`, `@codex` | New | Picks up | New ask, action required. |
 | `@<custom>` | New | Picks up if the caller specified custom triggers | New ask, action required. |
 | `[!NOTE]+` | Active thread | Picks up | If the human spoke last, act. If the agent spoke last, leave it. |
-| `[!DONE]-` | Resolved thread | Grep skips; DONE scan checks | If a human spoke after the agent marked done, act. Otherwise leave it. |
+| `[!DONE]-` | Resolved thread | Grep skips; DONE seal scan checks | If the thread is not sealed with `<!--md-asks:eot-->`, inspect and reseal. |
 
 The `+/-` marker is load-bearing:
 - `[!NOTE]+` distinguishes agent threads from regular callouts.
 - `[!DONE]-` collapses the callout in Obsidian.
+
+## Discussion thread format
+
+Inside an active callout, separate agent-authored turns with a **single blank `>` line** — one paragraph per turn. In `[!DONE]-` threads, a human can add follow-up text directly after the `<!--md-asks:eot-->` token; the next agent pass will inspect and reseal.
+
+```markdown
+> [!DONE]- tightened introduction
+>
+> @claude tighten the intro
+>
+> @claude: trimmed to 3 sentences — does that read OK or want to go shorter?
+>
+> @sam: shorter please, ~1 sentence
+>
+> @claude: done — single sentence. <!--md-asks:eot-->
+> no, make it sharper
+```
+
+For a soft line break inside a single turn, use two trailing spaces.
 
 ## Unresolved rule
 
@@ -46,7 +65,7 @@ An ask is unresolved when any of:
 
 - An open `> [!NOTE]+ ...` callout whose last reply is from the user.
 - A valid inline ask for a recognized trigger not yet processed into a callout.
-- A resolved `> [!DONE]- ...` callout whose last speaker line is from a human.
+- A resolved `> [!DONE]- ...` callout whose latest nonblank quoted line does not end with `<!--md-asks:eot-->`.
 
 ## Resolution contract
 
@@ -59,7 +78,7 @@ For each unresolved ask:
 - If the ask sits on a task item, update the checkbox too.
 - **Never remove or modify the original ask.** It must appear verbatim as the first body line of the resulting callout, in both `[!DONE]-` and `[!NOTE]+` cases.
 
-**Conclude** with `[!DONE]-` and a one-line outcome summary as the title (past-tense action + scope, ≤~60 chars) once the work is genuinely complete.
+**Conclude** with `[!DONE]-` and a one-line outcome summary as the title (past-tense action + scope, ≤~60 chars) once the work is genuinely complete. End the final agent reply with `<!--md-asks:eot-->`.
 
 **Take a turn** with `[!NOTE]+` if completion requires further input from the human, so the thread stays visually open.
 
@@ -85,45 +104,46 @@ Scan in two passes. Sort matched files by mtime descending before capping.
 grep -rlnE --include='*.md' '(\[!NOTE\]\+|^([^>]*[[:space:]])?@(agent|claude|codex)([^[:alnum:]_]|$))' <path>
 ```
 
-2. **Awk to check DONE threads for follow-ups** — multiline scan for `[!DONE]-` callouts whose latest `> @name:` speaker is human.
+Default agent names are `agent claude codex`. For custom triggers, replace `?@(agent|claude|codex)` with the custom alternation, e.g. `?@(nora|hermes)`.
+
+2. **Inline awk to check DONE threads for missing seals** — multiline scan for `[!DONE]-` callouts whose latest nonblank quoted line does not end with `<!--md-asks:eot-->`.
 
 ```sh
-find <path> -name '*.md' -exec awk -f reference/done-followups.awk {} +
+find <path> -name '*.md' -exec awk '
+function finish_done() {
+  if (in_done && !sealed) print callout_file ":" start
+  in_done = 0
+  sealed = 0
+  callout_file = ""
+}
+FNR == 1 && NR > 1 { finish_done() }
+/^[[:space:]]*>[[:space:]]*\[!DONE\]-/ {
+  finish_done()
+  in_done = 1
+  sealed = 0
+  callout_file = FILENAME
+  start = FNR
+}
+!in_done { next }
+$0 !~ /^[[:space:]]*>/ { finish_done(); next }
+{
+  line = $0
+  sub(/^[[:space:]]*>[[:space:]]*/, "", line)
+  if (line !~ /^[[:space:]]*$/) {
+    sealed = (line ~ /<!--md-asks:eot-->[[:space:]]*$/)
+  }
+}
+END { finish_done() }
+' {} +
 ```
-
-**Custom agent names.** Default agent names are `agent claude codex`. If the caller provides custom triggers, use the same names in both passes: substitute the grep alternation and pass them to awk.
-
-```sh
-find <path> -name '*.md' -exec awk -v agents='nora hermes' -f reference/done-followups.awk {} +
-```
-
-
 
 ## Tests
 
 [`reference/markdown-agent-directives.spec.md`](reference/markdown-agent-directives.spec.md) is a rough first pass at a spec and test fixtures. It documents current edge cases and accepted false positives, but the protocol is still early and breaking changes are expected.
 
-**Smoke test after setup:** create a scratch `.md` file with a simple `@codex` ask, run the skill against that folder, and confirm the ask is wrapped in a callout. Then add a human `> @sam: ...` follow-up inside the resulting `[!DONE]-` callout and run again; it should be picked up.
+**Smoke test after setup:** create a scratch `.md` file with a simple `@codex` ask, run the skill against that folder, and confirm the ask is wrapped in a sealed callout. Then add a human `> ...` follow-up after the `<!--md-asks:eot-->` token and run again; it should be picked up.
 
 Contributor regression test: run `bun test` after changing scan commands, agent defaults, callout markers, or files under `reference/`.
-
-## Discussion thread format
-
-Inside a callout, separate every turn with a **single blank `>` line** — one paragraph per turn.
-
-```markdown
-> [!DONE]- tightened introduction
->
-> @claude tighten the intro
->
-> @claude: trimmed to 3 sentences — does that read OK or want to go shorter?
->
-> @sam: shorter please, ~1 sentence
->
-> @claude: done — single sentence.
-```
-
-For a soft line break inside a single turn, use two trailing spaces.
 
 ## Final message
 
