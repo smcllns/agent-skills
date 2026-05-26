@@ -6,11 +6,11 @@
 skills/md-asks/reference/model-comparison/results/
 claude-cowork-plugins/md-asks/skills/md-asks/reference/model-comparison/results/
 
-# Local agent planning and handoff notes
+# Local agent planning and handoff notes. Keep plugin marketplace config tracked.
 !.agents/
+.agents/*
 !.agents/plugins/
+!.agents/plugins/*
 !.agents/plugins/marketplace.json
-.agents/plans/
-.agents/memory/
 docs/handoffs/
 docs/plans/
