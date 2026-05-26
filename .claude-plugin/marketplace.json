@@ -8,9 +8,9 @@
   },
   "plugins": [
     {
-      "name": "md-asks",
-      "source": "./claude-plugins/md-asks",
-      "description": "Resolve @agent asks in markdown files and record the exchange in callout threads.",
+      "name": "atag",
+      "source": "./claude-plugins/atag",
+      "description": "Resolve @agent tags in markdown files and record the exchange in callout threads.",
       "category": "productivity"
     }
   ]

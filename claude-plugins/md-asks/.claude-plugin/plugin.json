@@ -1,6 +1,0 @@
-{
-  "name": "md-asks",
-  "description": "Resolve @agent asks in markdown files and record the exchange in callout threads.",
-  "author": { "name": "Sam Collins" },
-  "keywords": ["markdown", "obsidian", "directives", "asks", "callouts", "agents", "notes"]
-}
