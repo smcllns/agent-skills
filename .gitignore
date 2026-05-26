@@ -10,7 +10,7 @@ claude-cowork-plugins/md-asks/skills/md-asks/reference/model-comparison/results/
 !.agents/
 .agents/*
 !.agents/plugins/
-!.agents/plugins/*
+.agents/plugins/*
 !.agents/plugins/marketplace.json
 docs/handoffs/
 docs/plans/
