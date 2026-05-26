@@ -12,6 +12,13 @@
 - [ ] Run regression tests and sync-drift checks.
 - [ ] Publish implementation PR after Sam reviews this plan.
 
+## Execution decisions
+
+- New resolved threads use `<!--atag:eot-->`.
+- Existing `<!--md-asks:eot-->` seals stay recognized by the DONE scan so old resolved threads do not reopen during migration.
+- Rename the syntax-contract fixture files from `markdown-agent-directives.*` to `markdown-agent-tags.*`.
+- Keep an old-name redirect doc so `md-asks` searches point to `atag`.
+
 ## Rename steps
 
 - [ ] Rename `skills/md-asks/` to `skills/atag/`.
@@ -59,7 +66,5 @@ rg -n "md-asks|Markdown asks|MD Asks|markdown-agent-asks|agent asks in markdown|
 
 ## Open questions
 
-- Should existing `<!--md-asks:eot-->` seals be supported during a transition, or should this be a clean break to `<!--atag:eot-->`?
-- Should `markdown-agent-directives` spec/test filenames be renamed to `markdown-agent-tags`, or preserved as a historical syntax-contract name?
 - Is the package target `@smcllns/atag`, bare `atag`, or both across different package managers?
 - Should old `md-asks` plugin entries stay as deprecated shims for one release?
