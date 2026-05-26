@@ -77,7 +77,7 @@ When the ask is ambiguous, missing context, or non-actionable, **don't guess**. 
 
 ## Scanning for unresolved asks
 
-Scan in two passes:
+Scan in two passes. Sort matched files by mtime descending before capping.
 
 1. **Grep for new and active threads** — cheap single-line scan for inline asks and `[!NOTE]+` callouts.
 
@@ -91,13 +91,13 @@ grep -rlnE --include='*.md' '(\[!NOTE\]\+|^([^>]*[[:space:]])?@(agent|claude|cod
 find <path> -name '*.md' -exec awk -f reference/done-followups.awk {} +
 ```
 
-Default agent names are `agent claude codex`. If the caller provides custom triggers, use the same names in both passes: substitute the grep alternation and pass them to awk.
+**Custom agent names.** Default agent names are `agent claude codex`. If the caller provides custom triggers, use the same names in both passes: substitute the grep alternation and pass them to awk.
 
 ```sh
 find <path> -name '*.md' -exec awk -v agents='nora hermes' -f reference/done-followups.awk {} +
 ```
 
-Sort matched files by mtime descending before capping.
+
 
 ## Tests
 
@@ -134,6 +134,8 @@ If there are no changes, use one line: `Scanned N files in <path>. No open unres
 If there are changes or human input is required, provide a clear, concise executive update with links to changed files and line numbers/anchors when available. Follow any user-specified summary format over this default.
 
 ## Best practices
+
+**Scheduled runs should exit asap.** When wrapping this skill in a scheduled task, gate the run on the Scanning grep and exit immediately if it returns empty — don't invoke the skill on no-op runs.
 
 **Don't prematurely limit results.** Actionable threads cluster in recently-touched files — sort matches by file mtime descending. If you must, cap after sorting.
 
