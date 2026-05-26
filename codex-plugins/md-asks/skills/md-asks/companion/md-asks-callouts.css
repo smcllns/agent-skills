@@ -101,6 +101,46 @@
   padding: 8px 14px 8px 14px;
 }
 
+/* ─── Speaker labels ───────────────────────────────────────────── */
+/* Agent replies use `` `claude`:``. Human replies use ``*`sam`*:``.
+ * Human labels are stronger because they are rarer and usually mean the
+ * thread needs another agent response.
+ */
+
+.callout[data-callout="note"][data-callout-fold="+"] > .callout-content > p > em:first-child,
+.callout[data-callout="done"][data-callout-fold="-"] > .callout-content > p > em:first-child {
+  font-style: normal;
+}
+
+.callout[data-callout="note"][data-callout-fold="+"] > .callout-content > p > code:first-child,
+.callout[data-callout="note"][data-callout-fold="+"] > .callout-content > p > em:first-child > code:first-child,
+.callout[data-callout="done"][data-callout-fold="-"] > .callout-content > p > code:first-child,
+.callout[data-callout="done"][data-callout-fold="-"] > .callout-content > p > em:first-child > code:first-child {
+  display: inline-block;
+  margin-right: 4px;
+  padding: 1px 5px 2px;
+  border-radius: 4px;
+  font-family: var(--font-interface, var(--font-text, ui-sans-serif, system-ui, sans-serif));
+  font-size: 0.78em;
+  font-weight: 680;
+  line-height: 1.18;
+  vertical-align: 0.08em;
+}
+
+.callout[data-callout="note"][data-callout-fold="+"] > .callout-content > p > code:first-child,
+.callout[data-callout="done"][data-callout-fold="-"] > .callout-content > p > code:first-child {
+  color: var(--text-muted, rgb(71, 85, 105));
+  border: 1px solid var(--background-modifier-border, rgba(100, 116, 139, 0.35));
+  background: var(--background-primary, rgba(255, 255, 255, 0.42));
+}
+
+.callout[data-callout="note"][data-callout-fold="+"] > .callout-content > p > em:first-child > code:first-child,
+.callout[data-callout="done"][data-callout-fold="-"] > .callout-content > p > em:first-child > code:first-child {
+  color: var(--text-normal, rgb(30, 41, 59));
+  border: 1px solid rgba(var(--md-asks-hue), 0.82);
+  background: rgba(var(--md-asks-hue), 0.24);
+}
+
 /* Divider color: a darkened version of the callout's hue at ~45% alpha,
  * so the line reads as callout-tinted rather than neutral grey on a
  * mostly-white page. Per-type to avoid a colour-mix dependency. */

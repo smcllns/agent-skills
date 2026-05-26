@@ -2,47 +2,39 @@
 
 Future ideas for `md-asks`:
 
-* **[Speaker labels](#speaker-labels)**: enable styling on speaker names to make it easier to scan bigger threads
+* Keep this file for candidate protocol polish that is not yet ready for `SKILL.md`.
 
 
 ---
 
 ## Speaker labels
 
-**Problem to solve:** in long, multi-turn threads, the eye loses track of who said what when every turn opens with `@sam:` or `@claude:` in plain text. Cannot style them as-is because it's all text within a callout.
+**Status:** accepted into the main protocol. Kept here as the decision record for why we did not use HTML.
 
-**Proposal:** The agent when it processes the comments, adds minimal markup to enable styling without making the raw markdown too noisy. No change to how humans write.
+**Problem solved:** in long, multi-turn threads, the eye loses track of who said what when every turn opens with `@sam:` or `@claude:` in plain text. `@name:` also makes raw markdown harder to scan because `@name` means both "trigger this agent" and "speaker label".
 
-```html
-<cite>@sam</cite> human input on the same line…
-<cite data-agent>@claude</cite> agent reply on the same line…
-```
+**Accepted shape:** reserve `@name` for trigger asks. Use inline-code speaker labels inside callouts:
 
-- `<cite>@name</cite>` — human turn
-- `<cite data-agent>@name</cite>` — agent turn (distinguished via attribute so CSS can paint agents a different colour / weight)
-- The trailing `:` from the shorthand form (`@sam:`) is **dropped** when upgrading to the badge form — the visual tag replaces the colon as the speaker delimiter
+- `` `claude`: reply`` — agent turn, common/simple path
+- ``*`sam`*: reply`` — human turn, emphasized because it is the rarer and more actionable turn
+- The trailing `:` stays outside the label
 
 **Example thread:**
 
 ```markdown
-> [!NOTE]+ <cite>@sam</cite> this section is too wordy — can we simplify?
+> [!NOTE]+ awaiting scope
 >
-> <cite data-agent>@claude</cite> Can do — should I trim to 3 bullets, or fold the whole thing into the next paragraph?
+> @claude this section is too wordy — can we simplify?
 >
-> <cite>@sam</cite> 3 bullets please
+> `claude`: Can do — should I trim to 3 bullets, or fold the whole thing into the next paragraph?
 >
-> <cite data-agent>@claude</cite> Done.
+> *`sam`*: 3 bullets please
+>
+> `claude`: Done.
 ```
 
-**Why not v1:**
+**Why not `<cite>`:**
 
 - Adds HTML markup the user has to mentally skip when reading raw markdown
-- The colon form (`@sam:`) already encodes the speaker — badges are a polish, not a need
-- Most threads are short enough that visual distinction isn't a problem yet
-- Couples the skill to editor CSS to render well — without the CSS, badges look like clutter
-
-**When to revisit:**
-
-- If thread length grows (multi-page conversations become common)
-- If multiple agents enter the same thread (`@claude` + `@codex` + `@hermes`) and human readers struggle to follow who said what
-- If we ship vault CSS that styles `<cite>` and `<cite data-agent>` distinctively — at that point the cost-benefit flips
+- Couples the protocol to HTML-ish rendering rather than compact markdown
+- The inline-code/emphasis version gives CSS enough hooks without attributes

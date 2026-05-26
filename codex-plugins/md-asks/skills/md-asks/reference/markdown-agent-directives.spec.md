@@ -30,6 +30,11 @@ The DONE seal is deliberately append-friendly: a human can type directly after
 the token, without a blank quoted separator or speaker label, and the thread
 becomes unresolved until an agent inspects it and reseals the final reply.
 
+Inside callouts, `@name` is only for the original trigger ask. Agent replies use
+plain inline-code speaker labels (`` `claude`:``). Human replies use emphasized
+inline-code speaker labels (``*`sam`*:``). The colon stays outside the label.
+`@name:` is not a supported speaker-label format.
+
 ---
 
 ## Callouts
@@ -71,7 +76,7 @@ agent-authored quoted line with `<!--md-asks:eot-->`.
 ```md @test:nomatch @done:nomatch
 > [!DONE]- resolved agent thread
 >
-> @claude: done. <!--md-asks:eot-->
+> `claude`: done. <!--md-asks:eot-->
 ```
 
 ### Bare `[!DONE]` — plain markdown
@@ -112,7 +117,7 @@ human wrote after the seal.
 >
 > @claude tighten the intro
 >
-> @claude: done, tightened it. <!--md-asks:eot-->
+> `claude`: done, tightened it. <!--md-asks:eot-->
 > one more tweak please
 ```
 
@@ -126,10 +131,10 @@ the seal token.
 >
 > @claude tighten the intro
 >
-> @claude: done, tightened it. <!--md-asks:eot-->
+> `claude`: done, tightened it. <!--md-asks:eot-->
 > one more tweak please
 >
-> @claude: done, tightened it again. <!--md-asks:eot-->
+> `claude`: done, tightened it again. <!--md-asks:eot-->
 ```
 
 ### Multiple DONE callouts with one unsealed
@@ -139,11 +144,11 @@ Any unsealed DONE callout in a file makes the file actionable.
 ```md @test:nomatch @done:match
 > [!DONE]- first
 >
-> @claude: done. <!--md-asks:eot-->
+> `claude`: done. <!--md-asks:eot-->
 
 > [!DONE]- second
 >
-> @codex: done.
+> `codex`: done.
 ```
 
 ### Ask inside an indented blockquote
