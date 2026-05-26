@@ -8,7 +8,7 @@ Future ideas and resolved protocol notes for Markdown Agent Tags (`atag`).
 
 **Status:** resolved by [PR #26](https://github.com/smcllns/skills/pull/26).
 
-**Decision:** reserve `@name` for trigger asks. Inside callout threads, speaker labels use compact inline-code markdown:
+**Decision:** reserve `@name` for trigger tags. Inside callout threads, speaker labels use compact inline-code markdown:
 
 - `` `claude`: reply`` — agent turn, common/simple path
 - ``*`sam`*: reply`` — human turn, emphasized because it is rarer and usually means the thread needs another agent response

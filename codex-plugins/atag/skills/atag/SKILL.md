@@ -38,6 +38,8 @@ The original tag is preserved verbatim as the first body line. The title is the 
 | `[!NOTE]+` | Active thread | Picks up | If the human spoke last, act. If the agent spoke last, leave it. |
 | `[!DONE]-` | Resolved thread | Grep skips; DONE seal scan checks | If the thread is not sealed with `<!--atag:eot-->`, inspect and reseal. Legacy `<!--md-asks:eot-->` seals also count as sealed. |
 
+TODO: Remove legacy `<!--md-asks:eot-->` support once Sam's vaults and installed plugin caches have zero remaining matches.
+
 The `+/-` marker is load-bearing:
 - `[!NOTE]+` distinguishes agent threads from regular callouts.
 - `[!DONE]-` collapses the callout in Obsidian.

@@ -11,7 +11,7 @@ Use one register per context:
 | Formal spec name | **Markdown Agent Tags** |
 | Short description phrase | agent tags in markdown |
 | Package, module, repo, folder, CLI, command | `atag` |
-| Domain | `atag.md` |
+| Future domain | `atag.md`, if claimed |
 | User-facing construct | `@agent` tag, `@claude` tag, `@codex` tag, or just "tag" |
 | Verb | tag, tagged, tagging |
 

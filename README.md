@@ -34,6 +34,8 @@ Standalone skills are the source of truth. Plugins and extensions copy those ski
 | `atag` | Resolve `@agent` tags in markdown files and record the exchange in callout threads. | [Claude](claude-plugins/atag/README.md), [Codex](codex-plugins/atag/README.md) |
 | HTML Docs | Render sandboxed `.html` notes inside Obsidian with local assets and app-style documents. | [Obsidian plugin](https://community.obsidian.md/plugins/html-docs) |
 
+Looking for `md-asks`? It was renamed to `atag`; see [the old-name note](docs/naming/md-asks.md).
+
 ## Install Plugins & Extensions
 
 ### Claude (Code, Cowork)

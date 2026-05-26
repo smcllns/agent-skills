@@ -7,6 +7,10 @@ skills/atag/reference/model-comparison/results/
 claude-plugins/atag/skills/atag/reference/model-comparison/results/
 codex-plugins/atag/skills/atag/reference/model-comparison/results/
 
-docs/handoffs/
+docs/handoffs/*
+!docs/handoffs/atag-naming-plan-2026-05-26.md
 docs/plans/
-.agents/plans
+!.agents/
+!.agents/plans/
+.agents/plans/*
+!.agents/plans/2026-05-26-atag-rename.md

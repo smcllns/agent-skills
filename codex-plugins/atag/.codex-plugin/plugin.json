@@ -12,8 +12,10 @@
   "keywords": [
     "markdown",
     "obsidian",
+    "tags",
+    "@agent",
+    "async",
     "agents",
-    "asks",
     "callouts",
     "notes"
   ],
@@ -32,7 +34,7 @@
     "defaultPrompt": [
       "Resolve @agent tags in this repo.",
       "Scan my notes for @codex tags.",
-      "Handle open markdown agent threads."
+      "Handle open @agent threads in markdown."
     ],
     "brandColor": "#16A34A"
   }

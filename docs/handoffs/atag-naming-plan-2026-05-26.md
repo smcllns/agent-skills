@@ -39,5 +39,5 @@
 
 ```bash
 git status --short --branch
-rg -n --hidden --glob '!.git/**' "md-asks|Markdown asks|MD Asks|markdown-agent-asks|agent asks in markdown|md asks|markdown-agent-directives|ATAG|Atag|atags" .
+rg -n --hidden --glob '!.git/**' "md-asks|Markdown asks|MD Asks|markdown-agent-asks|agent asks in markdown|md asks|markdown-agent-directives|\"asks\"|\"directives\"|ATAG|Atag|atags" .
 ```
