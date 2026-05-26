@@ -22,7 +22,7 @@ After the agent acts:
 >
 > @codex can you clean up that formatting pls
 >
-> @codex: done — removed broken newlines and added missing periods. No changes to text content. <!--md-asks:eot-->
+> `codex`: done — removed broken newlines and added missing periods. No changes to text content. <!--md-asks:eot-->
 ```
 
 The original ask is preserved verbatim as the first body line. The title is the outcome summary.
@@ -42,18 +42,25 @@ The `+/-` marker is load-bearing:
 
 ## Discussion thread format
 
-Inside an active callout, separate agent-authored turns with a **single blank `>` line** — one paragraph per turn. In `[!DONE]-` threads, a human can add follow-up text directly after the `<!--md-asks:eot-->` token; the next agent pass will inspect and reseal.
+Inside an active callout, separate turns with a **single blank `>` line** — one paragraph per turn.
+
+Use `@name` only for trigger asks. Speaker labels use inline code:
+
+- Agent turn: `` `claude`: reply``.
+- Human turn: ``*`sam`*: reply``.
+
+In `[!DONE]-` threads, a human can add follow-up text directly after the `<!--md-asks:eot-->` token; the next agent pass will inspect and reseal.
 
 ```markdown
 > [!DONE]- tightened introduction
 >
 > @claude tighten the intro
 >
-> @claude: trimmed to 3 sentences — does that read OK or want to go shorter?
+> `claude`: trimmed to 3 sentences — does that read OK or want to go shorter?
 >
-> @sam: shorter please, ~1 sentence
+> *`sam`*: shorter please, ~1 sentence
 >
-> @claude: done — single sentence. <!--md-asks:eot-->
+> `claude`: done — single sentence. <!--md-asks:eot-->
 > no, make it sharper
 ```
 
@@ -91,7 +98,7 @@ When the ask is ambiguous, missing context, or non-actionable, **don't guess**. 
 >
 > @claude tighten the wording above
 >
-> @claude: the wording above stretches back 12,000 words but your ask sounds smaller. Confirm: (1) the last paragraph, (2) the last 4 paragraphs on this topic, or (3) the full doc.
+> `claude`: the wording above stretches back 12,000 words but your ask sounds smaller. Confirm: (1) the last paragraph, (2) the last 4 paragraphs on this topic, or (3) the full doc.
 ```
 
 ## Scanning for unresolved asks
@@ -139,7 +146,7 @@ END { finish_done() }
 
 ## Tests
 
-[`reference/markdown-agent-directives.spec.md`](reference/markdown-agent-directives.spec.md) is a rough first pass at a spec and test fixtures. It documents current edge cases and accepted false positives, but the protocol is still early and breaking changes are expected.
+[`reference/markdown-agent-directives.spec.md`](reference/markdown-agent-directives.spec.md) documents scan edge cases, accepted false positives, and test fixtures.
 
 **Smoke test after setup:** create a scratch `.md` file with a simple `@codex` ask, run the skill against that folder, and confirm the ask is wrapped in a sealed callout. Then add a human `> ...` follow-up after the `<!--md-asks:eot-->` token and run again; it should be picked up.
 
@@ -161,8 +168,8 @@ If there are changes or human input is required, provide a clear, concise execut
 
 **Callout is for discussion, not the work.** Edits go in the **document body**; the callout is a side thread for discussion and one-line acknowledgements of the changes made. Don't paste rewritten paragraphs, drafted sections, or new code into the reply — that belongs in the body. Discussion-only asks (e.g. `@claude why did we pick X?`) have no body edit, so the answer is the reply.
 
-**Proactively correct formatting.** Allow the human to write shorthand imperfectly, and update the callout to use correct syntax if required, without modifying the discussion content itself.
+**Proactively correct formatting.** Allow the human to write shorthand imperfectly, and normalize speaker labels to the inline-code format when you touch a thread.
 
-**Reply using familiar agent name.** Instead of `> @agent: ...`, use the agent name the user expects in your context (`@claude`, `@codex`, `@pi`, `@hermes`, etc).
+**Reply using familiar agent name.** Use the agent name the user expects in your context (`` `claude`: ...``, `` `codex`: ...``, `` `pi`: ...``, `` `hermes`: ...``, etc).
 
-**Don't self-reply.** If the agent's last reply is the most recent line in a `[!NOTE]+` thread, the thread is waiting on the human. Leave it. If the same thread keeps showing up across scans with no human movement, mention it to the user.
+**Don't self-reply.** If the most recent speaker label in a `[!NOTE]+` thread is your agent label (for example `` `claude`:``), the thread is waiting on the human. Leave it. If the same thread keeps showing up across scans with no human movement, mention it to the user.
