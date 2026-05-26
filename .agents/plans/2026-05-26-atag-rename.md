@@ -1,4 +1,4 @@
-# atag rename plan
+# Markdown Agent Tags rename plan
 
 ## Scope
 
@@ -18,6 +18,7 @@
 - [ ] Rename `claude-plugins/md-asks/` to `claude-plugins/atag/`.
 - [ ] Rename `codex-plugins/md-asks/` to `codex-plugins/atag/`.
 - [ ] Update skill frontmatter: `name: atag`, heading `# Markdown Agent Tags`, description using first-mention wording.
+- [ ] Use short description phrase "agent tags in markdown" for package descriptions and README blurbs.
 - [ ] Update plugin manifests:
   - `.claude-plugin/marketplace.json`
   - `.agents/plugins/marketplace.json`
@@ -29,6 +30,7 @@
 - [ ] Rename companion CSS from `md-asks-callouts.css` to `atag-callouts.css`.
 - [ ] Rename CSS custom properties from `--md-asks-*` to `--atag-*`.
 - [ ] Update model comparison docs/scripts to say `atag` and "tags" rather than "md-asks".
+- [ ] Add old-name discoverability: either `docs/naming/md-asks.md` redirecting to `docs/naming/atag.md`, or a README alias note that points old `md-asks` searches to `atag`.
 
 ## Test and protocol steps
 
@@ -39,13 +41,20 @@
 - [ ] Run `bun test skills/atag/reference/*.test.ts`.
 - [ ] Run `scripts/sync-skills.sh`.
 - [ ] Run `git diff --exit-code -- claude-plugins/atag/skills/atag codex-plugins/atag/skills/atag` after sync.
-- [ ] Run `rg -n "md-asks|Markdown asks|MD Asks|markdown-agent-asks|agent asks in markdown|md asks|ATAG|Atag|atags" .` and resolve or explicitly justify remaining hits.
+- [ ] Run canonical stale-name grep and resolve or explicitly justify remaining hits.
+
+## Canonical stale-name grep
+
+```bash
+rg -n "md-asks|Markdown asks|MD Asks|markdown-agent-asks|agent asks in markdown|md asks|markdown-agent-directives|ATAG|Atag|atags" .
+```
 
 ## PR checks
 
 - [ ] Verify no generated plugin copy drift remains.
 - [ ] Verify all install examples use `atag`.
 - [ ] Verify user-facing prose says "`@agent` tag" or "tag", not "an atag".
+- [ ] Verify old-name searches point users to `atag` before deleting all `md-asks` docs references.
 - [ ] Have a critical reviewer check for over-broad rename fallout before opening the implementation PR.
 
 ## Open questions

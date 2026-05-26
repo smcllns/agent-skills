@@ -1,4 +1,4 @@
-# atag naming
+# Markdown Agent Tags naming
 
 **Markdown Agent Tags** (`atag`) lets you leave `@agent` tags in markdown files for an AI agent to pick up asynchronously.
 
@@ -9,6 +9,7 @@ Use one register per context:
 | Context | Use |
 |---|---|
 | Formal spec name | **Markdown Agent Tags** |
+| Short description phrase | agent tags in markdown |
 | Package, module, repo, folder, CLI, command | `atag` |
 | Domain | `atag.md` |
 | User-facing construct | `@agent` tag, `@claude` tag, `@codex` tag, or just "tag" |
@@ -16,7 +17,7 @@ Use one register per context:
 
 Rewrite sentence starts so lowercase `atag` is not first word: "The `atag` CLI handles..." instead of "`atag` handles..."
 
-## First Mention
+## First mention
 
 Use this or a close variant the first time the tool appears in docs, READMEs, or articles:
 
@@ -24,13 +25,15 @@ Use this or a close variant the first time the tool appears in docs, READMEs, or
 
 After first mention, use `atag` for the tool and `@agent` tag, trigger-specific tag, or "tag" for the construct.
 
-## Good Prose
+## Good prose
 
 - "I left an `@agent` tag in my daily note."
 - "I tagged Claude in my note."
 - "The agent picked up my tag and resolved it."
 - "Use the `atag` CLI to list open tags."
 - "Markdown Agent Tags supports custom triggers like `@codex`."
+
+The verb "tag" is intentionally plain English. In docs, anchor it with the first mention before switching to bare "tag"; in CLI output, bare "tag" is fine once the `atag` command context is established.
 
 ## Avoid
 
@@ -44,7 +47,7 @@ After first mention, use `atag` for the tool and `@agent` tag, trigger-specific 
 | "agent-tag" or "agent tags" without `@` | "`@agent` tag" |
 | "atags" | "`@agent` tags" or "tags" |
 
-## Codebase Rules
+## Codebase rules
 
 - File and folder names: lowercase `atag`.
 - Config keys: `atag.*`, for example `atag.triggers`.

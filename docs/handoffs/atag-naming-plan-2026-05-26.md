@@ -1,4 +1,4 @@
-# atag naming plan handoff
+# Markdown Agent Tags naming handoff
 
 ## Current state
 
@@ -29,5 +29,5 @@
 
 ```bash
 git status --short --branch
-rg -n "md-asks|Markdown asks|MD Asks|agent asks in markdown|markdown-agent-directives|ATAG|Atag|atags" .
+rg -n "md-asks|Markdown asks|MD Asks|markdown-agent-asks|agent asks in markdown|md asks|markdown-agent-directives|ATAG|Atag|atags" .
 ```
