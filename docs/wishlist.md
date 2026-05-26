@@ -1,6 +1,6 @@
 # Wishlist
 
-Future ideas and resolved protocol notes for `md-asks`.
+Future ideas and resolved protocol notes for Markdown Agent Tags (`atag`).
 
 ---
 

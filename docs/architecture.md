@@ -13,13 +13,13 @@ smcllns/skills/                        ← repo root
 ├── .claude-plugin/marketplace.json    ← marketplace manifest, lists Claude plugins
 ├── .agents/plugins/marketplace.json   ← marketplace manifest, lists Codex plugins
 ├── skills/                            ← bare skills (portable; `bunx skills add ...`)
-│   ├── md-asks/
+│   ├── atag/
 │   ├── obsidian-html-docs/
 │   └── token-count/
 ├── claude-plugins/                    ← Claude plugins (work in Cowork + Code CLI)
-│   └── md-asks/                       ← per-plugin dir; contains its own skills/, hooks/, etc.
+│   └── atag/                          ← per-plugin dir; contains its own skills/, hooks/, etc.
 ├── codex-plugins/                     ← Codex plugins
-│   └── md-asks/                       ← per-plugin dir; contains .codex-plugin/, skills/, etc.
+│   └── atag/                          ← per-plugin dir; contains .codex-plugin/, skills/, etc.
 ├── docs/                              ← plans, notes
 ├── .gitignore
 ├── LICENSE

@@ -12,7 +12,7 @@ Some are standalone skills. Some are plugin wrappers or MCP tools for Codex, Cla
 
 | Name | Use when | Install and Usage |
 |---|---|---|
-| `md-asks` | Resolve `@agent` asks in markdown files and record the exchange in callout threads. | [Markdown asks skill](skills/md-asks/SKILL.md) |
+| `atag` | Resolve `@agent` tags in markdown files and record the exchange in callout threads. | [Markdown Agent Tags skill](skills/atag/SKILL.md) |
 | `obsidian-html-docs` | Author `.html` docs for the Obsidian HTML Docs plugin within its sandbox and asset constraints. | [obsidian-html-docs skill](skills/obsidian-html-docs/SKILL.md) |
 | `token-count` | Count tokens with Anthropic, Gemini, and OpenAI server-side endpoints for prompt budgeting. | [token-count skill](skills/token-count/SKILL.md) |
 
@@ -31,7 +31,7 @@ Standalone skills are the source of truth. Plugins and extensions copy those ski
 
 | Name | Use when | Install and Usage |
 |---|---|---|
-| `md-asks` | Resolve `@agent` asks in markdown files and record the exchange in callout threads. | [Claude](claude-plugins/md-asks/README.md), [Codex](codex-plugins/md-asks/README.md) |
+| `atag` | Resolve `@agent` tags in markdown files and record the exchange in callout threads. | [Claude](claude-plugins/atag/README.md), [Codex](codex-plugins/atag/README.md) |
 | HTML Docs | Render sandboxed `.html` notes inside Obsidian with local assets and app-style documents. | [Obsidian plugin](https://community.obsidian.md/plugins/html-docs) |
 
 ## Install Plugins & Extensions
@@ -47,7 +47,7 @@ claude plugin marketplace add smcllns/skills
 Then install a plugin from inside Claude Code or Cowork:
 
 ```text
-/plugin install md-asks@smcllns-skills
+/plugin install atag@smcllns-skills
 ```
 
 ### Codex
@@ -58,7 +58,7 @@ Add this repo as a Codex plugin marketplace:
 codex plugin marketplace add smcllns/skills
 ```
 
-Then install `md-asks@smcllns-skills` from the Codex plugin picker.
+Then install `atag@smcllns-skills` from the Codex plugin picker.
 
 ### Pi, OpenCode, OpenClaw, Hermes, and others
 

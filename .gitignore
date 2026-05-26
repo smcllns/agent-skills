@@ -3,8 +3,9 @@
 **/node_modules
 **/bun.lock
 **/bun.lockb
-skills/md-asks/reference/model-comparison/results/
-claude-cowork-plugins/md-asks/skills/md-asks/reference/model-comparison/results/
+skills/atag/reference/model-comparison/results/
+claude-plugins/atag/skills/atag/reference/model-comparison/results/
+codex-plugins/atag/skills/atag/reference/model-comparison/results/
 
 docs/handoffs/
 docs/plans/

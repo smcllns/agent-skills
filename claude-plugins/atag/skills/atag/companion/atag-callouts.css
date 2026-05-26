@@ -1,0 +1,206 @@
+/* Markdown Agent Tags (`atag`) — Obsidian Reading-mode chrome for [!NOTE]+ / [!DONE]- callouts.
+ *   [!NOTE]+  → active thread (amber, "in progress")
+ *   [!DONE]-  → resolved thread (green, "done")
+ *
+ * Scoped to the fold-syntax variants so vanilla [!note] / [!done] callouts
+ * elsewhere in the vault stay default.
+ *
+ * Install:
+ *   1. Copy this file to <your-vault>/.obsidian/snippets/atag-callouts.css
+ *   2. Settings → Appearance → CSS snippets → Reload, then toggle on.
+ */
+
+/* ─── Active thread: amber/yellow ──────────────────────────────── */
+
+.callout[data-callout="note"] {
+  --atag-hue: 234, 179, 8;
+}
+
+.callout[data-callout="note"][data-callout-fold="+"] {
+  background: rgba(234, 179, 8, 0.07);
+  border: 1px solid rgba(234, 179, 8, 0.22);
+  border-left: 3px solid rgb(234, 179, 8);
+  border-radius: 6px;
+  padding: 0;
+  margin: 0.5em 0;
+}
+
+.callout[data-callout="note"][data-callout-fold="+"] > .callout-title {
+  padding: 9px 12px;
+  gap: 8px;
+  align-items: center;
+  background: rgba(234, 179, 8, 0.18);
+  cursor: pointer;
+}
+
+.callout[data-callout="note"][data-callout-fold="+"] > .callout-title > .callout-icon svg {
+  color: rgb(202, 138, 4);
+  width: 16px;
+  height: 16px;
+}
+
+.callout[data-callout="note"][data-callout-fold="+"] > .callout-title > .callout-title-inner {
+  font-weight: 500;
+  color: var(--text-normal);
+}
+
+.callout[data-callout="note"][data-callout-fold="+"] > .callout-content {
+  padding: 0;
+  line-height: 1.5;
+}
+
+/* ─── Resolved thread: vivid green ─────────────────────────────── */
+
+.callout[data-callout="done"] {
+  --atag-hue: 34, 197, 94;
+}
+
+.callout[data-callout="done"][data-callout-fold="-"] {
+  background: rgba(34, 197, 94, 0.08);
+  border: 1px solid rgba(34, 197, 94, 0.25);
+  border-left: 3px solid rgb(34, 197, 94);
+  border-radius: 6px;
+  padding: 0;
+  margin: 0.5em 0;
+}
+
+.callout[data-callout="done"][data-callout-fold="-"] > .callout-title {
+  padding: 9px 12px;
+  gap: 8px;
+  align-items: center;
+  background: rgba(34, 197, 94, 0.18);
+  cursor: pointer;
+}
+
+.callout[data-callout="done"][data-callout-fold="-"] > .callout-title > .callout-icon svg {
+  color: rgb(22, 163, 74);
+  width: 16px;
+  height: 16px;
+}
+
+.callout[data-callout="done"][data-callout-fold="-"] > .callout-title > .callout-title-inner {
+  font-weight: 500;
+  font-style: normal;
+  color: var(--text-normal);
+}
+
+.callout[data-callout="done"][data-callout-fold="-"] > .callout-content {
+  padding: 0;
+  line-height: 1.5;
+}
+
+/* ─── Per-turn paragraph chrome ────────────────────────────────── */
+/* Each turn is its own `<p>` inside `.callout-content`. We:
+ *   - give each turn its own padding (so the callout-content's own
+ *     padding is zero — no double-counting),
+ *   - draw a thin neutral divider between consecutive turns; the
+ *     low-alpha black lets the callout tint show through underneath,
+ *     so the line reads as "native" to the callout in both light and
+ *     dark themes.
+ * Scoped to fold-syntax variants only so plain callouts elsewhere
+ * stay default.
+ */
+
+.callout[data-callout="note"][data-callout-fold="+"] > .callout-content > p,
+.callout[data-callout="done"][data-callout-fold="-"] > .callout-content > p {
+  margin: 0;
+  padding: 8px 14px 8px 14px;
+}
+
+/* ─── Speaker labels ───────────────────────────────────────────── */
+/* Agent replies use `` `claude`:``. Human replies use ``*`sam`*:``.
+ * Human labels are stronger because they are rarer and usually mean the
+ * thread needs another agent response.
+ * Limitation: pure CSS cannot check for the label's trailing colon, so any
+ * turn that starts with inline code will be badge-styled.
+ */
+
+.callout[data-callout="note"] > .callout-content > p > em:first-child,
+.callout[data-callout="done"] > .callout-content > p > em:first-child {
+  font-style: normal;
+}
+
+.callout[data-callout="note"] > .callout-content > p > code:first-child,
+.callout[data-callout="note"] > .callout-content > p > em:first-child > code:first-child,
+.callout[data-callout="done"] > .callout-content > p > code:first-child,
+.callout[data-callout="done"] > .callout-content > p > em:first-child > code:first-child {
+  display: inline-block;
+  margin-right: 4px;
+  padding: 1px 5px 2px;
+  border-radius: 4px;
+  font-family: var(--font-interface, var(--font-text, ui-sans-serif, system-ui, sans-serif));
+  font-size: 0.78em;
+  font-weight: 680;
+  line-height: 1.18;
+  vertical-align: 0.08em;
+}
+
+.callout[data-callout="note"] > .callout-content > p > code:first-child,
+.callout[data-callout="done"] > .callout-content > p > code:first-child {
+  color: var(--text-muted, rgb(71, 85, 105));
+  border: 1px solid var(--background-modifier-border, rgba(100, 116, 139, 0.35));
+  background: var(--background-primary, rgba(255, 255, 255, 0.42));
+}
+
+.callout[data-callout="note"] > .callout-content > p > em:first-child > code:first-child,
+.callout[data-callout="done"] > .callout-content > p > em:first-child > code:first-child {
+  color: var(--text-normal, rgb(30, 41, 59));
+  border: 1px solid rgba(var(--atag-hue), 0.82);
+  background: rgba(var(--atag-hue), 0.24);
+}
+
+/* Divider color: a darkened version of the callout's hue at ~45% alpha,
+ * so the line reads as callout-tinted rather than neutral grey on a
+ * mostly-white page. Per-type to avoid a colour-mix dependency. */
+
+.callout[data-callout="note"][data-callout-fold="+"] > .callout-content > p + p {
+  border-top: 1px solid rgba(110, 70, 0, 0.4);
+}
+
+.callout[data-callout="done"][data-callout-fold="-"] > .callout-content > p + p {
+  border-top: 1px solid rgba(8, 80, 30, 0.4);
+}
+
+body.theme-dark .callout[data-callout="note"][data-callout-fold="+"] > .callout-content > p + p {
+  border-top-color: rgba(255, 200, 80, 0.22);
+}
+
+body.theme-dark .callout[data-callout="done"][data-callout-fold="-"] > .callout-content > p + p {
+  border-top-color: rgba(120, 230, 160, 0.22);
+}
+
+/* ─── `> ---` divider support ───────────────────────────────────── */
+/* Markdown turn separators render as <hr>. Match them to the paragraph
+ * divider so both separator styles share the same visual weight. */
+
+.callout[data-callout="note"][data-callout-fold="+"] > .callout-content hr {
+  border: 0;
+  border-top: 1px solid rgba(110, 70, 0, 0.4);
+  margin: 0;
+  height: 0;
+}
+
+.callout[data-callout="done"][data-callout-fold="-"] > .callout-content hr {
+  border: 0;
+  border-top: 1px solid rgba(8, 80, 30, 0.4);
+  margin: 0;
+  height: 0;
+}
+
+body.theme-dark .callout[data-callout="note"][data-callout-fold="+"] > .callout-content hr {
+  border-top-color: rgba(255, 200, 80, 0.22);
+}
+
+body.theme-dark .callout[data-callout="done"][data-callout-fold="-"] > .callout-content hr {
+  border-top-color: rgba(120, 230, 160, 0.22);
+}
+
+/* Soft line break inside a single turn — let two trailing spaces produce
+ * a visible gap rather than collapsing to almost nothing. */
+
+.callout[data-callout="note"][data-callout-fold] .callout-content br,
+.callout[data-callout="done"][data-callout-fold] .callout-content br {
+  display: block;
+  content: "";
+  margin-top: 0.4em;
+}

@@ -168,8 +168,8 @@ Flagging gaps honestly so the next agent doesn't take this as gospel:
 
 - [ ] **End-to-end install via the marketplace path.** We've drafted plugins but not yet run `claude plugin marketplace add smcllns/skills` against a published repo.
 - [ ] **SessionStart hook in a real run.** We dry-ran the command in a sandbox; haven't observed Cowork firing it.
-- [x] **Cowork UI install of a local folder.** Verified 2026-05-21 with the Markdown asks plugin under its earlier `markdown-agent-directives` codename: Cowork requires a **zip of the plugin dir**, not a folder pick. See *Verified findings* below for the exact flow.
-- [ ] **Scheduled invocation through `mcp__scheduled-tasks__create_scheduled_task`.** Still needs verification in a real Markdown asks scheduled run.
+- [x] **Cowork UI install of a local folder.** Verified 2026-05-21 with the Markdown Agent Tags plugin under its earlier syntax-contract codename: Cowork requires a **zip of the plugin dir**, not a folder pick. See *Verified findings* below for the exact flow.
+- [ ] **Scheduled invocation through `mcp__scheduled-tasks__create_scheduled_task`.** Still needs verification in a real Markdown Agent Tags scheduled run.
 - [ ] **Whether `bunx skills@latest add smcllns/skills` finds the bare skills under `skills/`.** The vercel-labs/skills CLI may or may not scan the standard `skills/` subdir. Check before committing.
 - [ ] **marketplace.json schema validation.** We've parsed it as JSON but haven't validated against the actual runtime schema.
 
@@ -177,4 +177,4 @@ When you verify any of these, **tick the box and write what you found** below. T
 
 ## Verified findings
 
-- **Cowork local-plugin install requires a zip, not a folder** (verified 2026-05-21 with the Markdown asks plugin under its earlier `markdown-agent-directives` codename). UI path: **Directory → Plugins → Personal → Local uploads → `+`**. Picking a folder is rejected; you must upload a zip whose top-level entry is the plugin directory (the one with `.claude-plugin/plugin.json`). The zip is a frozen snapshot — Cowork does not re-read source files, so re-zip and re-upload on every change you want it to see. Implication: this is a slow inner loop; iterate on the bare skill at `skills/<name>/` and only re-zip when you're ready to verify in Cowork.
+- **Cowork local-plugin install requires a zip, not a folder** (verified 2026-05-21 with the Markdown Agent Tags plugin under its earlier syntax-contract codename). UI path: **Directory → Plugins → Personal → Local uploads → `+`**. Picking a folder is rejected; you must upload a zip whose top-level entry is the plugin directory (the one with `.claude-plugin/plugin.json`). The zip is a frozen snapshot — Cowork does not re-read source files, so re-zip and re-upload on every change you want it to see. Implication: this is a slow inner loop; iterate on the bare skill at `skills/<name>/` and only re-zip when you're ready to verify in Cowork.
