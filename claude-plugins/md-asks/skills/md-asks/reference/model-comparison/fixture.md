@@ -70,7 +70,7 @@ A passage of writing precedes this ask. The writing is fine but could be many th
 >
 > @claude fix the typo
 >
-> @claude: done — replaced "teh" with "the".
+> @claude: done — replaced "teh" with "the". <!--md-asks:eot-->
 
 ---
 

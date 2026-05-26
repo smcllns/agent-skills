@@ -7,6 +7,8 @@ whether the scan should pick this file up:
 
 - info `md @test:match` — scan should find this file
 - info `md @test:nomatch` — scan should skip this file
+- info `md @done:match` — DONE seal scan should find this file
+- info `md @done:nomatch` — DONE seal scan should skip this file
 - any other info string (or no fenced block) — ignored by the runner, free for
   prose, framing, and category headers (like this preamble)
 
@@ -14,15 +16,19 @@ The test also auto-generates one fixture per agent name in the documented
 agent list. Add a name there → the fixture set extends automatically.
 
 The fast grep scan catches **two** kinds of thing: `@agent` asks that haven't
-been wrapped yet, and `[!NOTE]+` callouts (active agent threads). A separate
-awk scan catches human follow-ups inside `[!DONE]-` callouts by inspecting the
-last `> @name:` speaker line in each resolved thread.
+been wrapped yet, and `[!NOTE]+` callouts (active agent threads). The DONE seal
+scan catches `[!DONE]-` callouts whose latest nonblank quoted line does not end
+with `<!--md-asks:eot-->`.
 
 The marker is the protocol signal: only `+` on `[!NOTE]` and `-` on `[!DONE]`
 indicate an agent thread. Bare `[!NOTE]`, `[!NOTE]-`, `[!DONE]`, and `[!DONE]+`
 are all plain markdown callouts — the scans ignore them. This way the agent
 never has to inspect a regular note-taking callout to figure out it's not for
 them.
+
+The DONE seal is deliberately append-friendly: a human can type directly after
+the token, without a blank quoted separator or speaker label, and the thread
+becomes unresolved until an agent inspects it and reseals the final reply.
 
 ---
 
@@ -35,7 +41,7 @@ Discussion threads spawned from an `@agent` ask use two markers:
 
 The only marker form that triggers the scan as an agent thread.
 
-```md @test:match
+```md @test:match @done:nomatch
 > [!NOTE]+ @claude tighten the intro
 ```
 
@@ -45,7 +51,7 @@ A `[!NOTE]` without `+` is a regular Obsidian note callout. The scan skips it
 even though it looks like a callout, because the protocol uses `+` to mark
 "agent thread, active."
 
-```md @test:nomatch
+```md @test:nomatch @done:nomatch
 > [!NOTE] Just a regular note callout, not for the agent
 ```
 
@@ -53,16 +59,19 @@ even though it looks like a callout, because the protocol uses `+` to mark
 
 Same rule: only `+` indicates an agent thread.
 
-```md @test:nomatch
+```md @test:nomatch @done:nomatch
 > [!NOTE]- A collapsed note callout — still plain markdown
 ```
 
 ### Resolved agent thread — `[!DONE]-`
 
-The canonical resolved marker.
+The canonical resolved marker. A sealed resolved thread ends the final
+agent-authored quoted line with `<!--md-asks:eot-->`.
 
-```md @test:nomatch
+```md @test:nomatch @done:nomatch
 > [!DONE]- resolved agent thread
+>
+> @claude: done. <!--md-asks:eot-->
 ```
 
 ### Bare `[!DONE]` — plain markdown
@@ -70,7 +79,7 @@ The canonical resolved marker.
 `[!DONE]` without `-` is a regular markdown callout. Filtered by the scan
 either way (the regex doesn't look for `[!DONE]`).
 
-```md @test:nomatch
+```md @test:nomatch @done:nomatch
 > [!DONE] Just a regular done-style callout
 ```
 
@@ -78,48 +87,63 @@ either way (the regex doesn't look for `[!DONE]`).
 
 Same as above — filtered by the scan.
 
-```md @test:nomatch
+```md @test:nomatch @done:nomatch
 > [!DONE]+ Some other plain done callout
 ```
 
-### Wrapped ask inside a `[!DONE]-` callout
+### Unsealed wrapped ask inside a `[!DONE]-` callout
 
 Once an `@claude` ask is wrapped in `[!DONE]-`, the leading `>` on its
 line makes the inline-ask regex skip it (the regex requires a non-`>`
-line start). The DONE follow-up scan still skips this unless a later speaker
-line shows the human replied after completion.
+line start). The DONE seal scan still reports this callout unless the latest
+nonblank quoted line ends with `<!--md-asks:eot-->`.
 
-```md @test:nomatch
+```md @test:nomatch @done:match
 > [!DONE]- @claude already wrapped
 ```
 
 ### Human follow-up inside `[!DONE]-`
 
-The grep scan skips this, but `done-followups.awk` reports the human speaker
-line because the latest `> @name:` line is not an agent.
+The grep scan skips this, but the DONE seal scan reports the callout because the
+human wrote after the seal.
 
-```md
+```md @test:nomatch @done:match
 > [!DONE]- tightened intro
 >
 > @claude tighten the intro
 >
-> @claude: done, tightened it.
->
-> @sam: one more tweak please
+> @claude: done, tightened it. <!--md-asks:eot-->
+> one more tweak please
 ```
 
-### Agent reply after human follow-up inside `[!DONE]-`
+### Resealed agent reply after human follow-up inside `[!DONE]-`
 
-The DONE follow-up scan skips this because the latest speaker line is an agent.
+The DONE seal scan skips this because the latest nonblank quoted line ends with
+the seal token.
 
-```md
+```md @test:nomatch @done:nomatch
 > [!DONE]- tightened intro
 >
 > @claude tighten the intro
 >
-> @sam: one more tweak please
+> @claude: done, tightened it. <!--md-asks:eot-->
+> one more tweak please
 >
-> @claude: done, tightened it again.
+> @claude: done, tightened it again. <!--md-asks:eot-->
+```
+
+### Multiple DONE callouts with one unsealed
+
+Any unsealed DONE callout in a file makes the file actionable.
+
+```md @test:nomatch @done:match
+> [!DONE]- first
+>
+> @claude: done. <!--md-asks:eot-->
+
+> [!DONE]- second
+>
+> @codex: done.
 ```
 
 ### Ask inside an indented blockquote
