@@ -161,11 +161,9 @@ body.theme-dark .callout[data-callout="done"][data-callout-fold="-"] > .callout-
   border-top-color: rgba(120, 230, 160, 0.22);
 }
 
-/* ─── Legacy `> ---` divider support ────────────────────────────── */
-/* Callouts authored with the old `> ---` turn separator produce a real
- * <hr> inside .callout-content. Style it identically to the p+p divider
- * so old and new callouts look the same. New callouts (blank-> only)
- * don't emit <hr> and ignore these rules. */
+/* ─── `> ---` divider support ───────────────────────────────────── */
+/* Markdown turn separators render as <hr>. Match them to the paragraph
+ * divider so both separator styles share the same visual weight. */
 
 .callout[data-callout="note"][data-callout-fold="+"] > .callout-content hr {
   border: 0;

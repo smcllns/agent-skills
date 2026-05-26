@@ -32,8 +32,7 @@ becomes unresolved until an agent inspects it and reseals the final reply.
 
 Inside callouts, `@name` is only for the original trigger ask. Agent replies use
 plain inline-code speaker labels (`` `claude`:``). Human replies use emphasized
-inline-code speaker labels (``*`sam`*:``). The colon stays outside the label.
-`@name:` is not a supported speaker-label format.
+inline-code speaker labels (``*`sam`*:``).
 
 ---
 

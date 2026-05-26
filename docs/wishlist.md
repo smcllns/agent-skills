@@ -12,8 +12,6 @@ Future ideas and resolved protocol notes for `md-asks`.
 
 - `` `claude`: reply`` — agent turn, common/simple path
 - ``*`sam`*: reply`` — human turn, emphasized because it is rarer and usually means the thread needs another agent response
-- The trailing `:` stays outside the label
-- `@name:` is not a supported speaker-label format
 
 **Example thread:**
 
