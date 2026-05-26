@@ -20,11 +20,11 @@
 
 ## Gotchas
 
-- The old repo policy said `Markdown asks` / `md-asks` / "agent asks in markdown"; it is now superseded.
+- The previous repo naming policy is superseded by `docs/naming/atag.md`.
 - Do not write "ATAG" in brand prose because it collides with the W3C accessibility standard.
 - New resolved threads use `<!--atag:eot-->`.
-- Existing `<!--md-asks:eot-->` seals remain recognized by the DONE scan so old resolved threads do not reopen during migration.
-- Old-name discoverability lives in `docs/naming/md-asks.md`; marketplace manifests do not keep deprecated `md-asks` plugin entries.
+- No pre-rename seal compatibility is kept; the seal was introduced the same day as the rename, so `<!--atag:eot-->` is the only supported seal.
+- Old-name discoverability docs were removed after the zero-lingering-reference review; marketplace manifests do not keep deprecated plugin entries.
 
 ## Verification run
 
@@ -33,11 +33,11 @@
 - `diff -qr skills/atag claude-plugins/atag/skills/atag`
 - `diff -qr skills/atag codex-plugins/atag/skills/atag`
 - `git diff --check`
-- Stale-name grep: remaining hits are intentional legacy-seal compatibility, naming anti-examples, and the old-name redirect doc.
+- Stale-name grep: no remaining hits for the old skill name or old description phrases.
 
 ## Suggested first commands
 
 ```bash
 git status --short --branch
-rg -n --hidden --glob '!.git/**' "md-asks|Markdown asks|MD Asks|markdown-agent-asks|agent asks in markdown|md asks|markdown-agent-directives|\"asks\"|\"directives\"|ATAG|Atag|atags" .
+rg -n --hidden --glob '!.git/**' "Markdown Agent Tags|atag|@agent" .
 ```

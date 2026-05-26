@@ -18,7 +18,7 @@ agent list. Add a name there → the fixture set extends automatically.
 The fast grep scan catches **two** kinds of thing: `@agent` tags that haven't
 been wrapped yet, and `[!NOTE]+` callouts (active agent threads). The DONE seal
 scan catches `[!DONE]-` callouts whose latest nonblank quoted line does not end
-with `<!--atag:eot-->` or legacy `<!--md-asks:eot-->`.
+with `<!--atag:eot-->`.
 
 The marker is the protocol signal: only `+` on `[!NOTE]` and `-` on `[!DONE]`
 indicate an agent thread. Bare `[!NOTE]`, `[!NOTE]-`, `[!DONE]`, and `[!DONE]+`
@@ -78,17 +78,6 @@ agent-authored quoted line with `<!--atag:eot-->`.
 > `claude`: done. <!--atag:eot-->
 ```
 
-### Legacy resolved agent thread — `[!DONE]-`
-
-The DONE scan also treats legacy `<!--md-asks:eot-->` seals as sealed so old
-resolved threads do not reopen during the rename.
-
-```md @test:nomatch @done:nomatch
-> [!DONE]- legacy resolved agent thread
->
-> `claude`: done. <!--md-asks:eot-->
-```
-
 ### Bare `[!DONE]` — plain markdown
 
 `[!DONE]` without `-` is a regular markdown callout. Filtered by the scan
@@ -111,7 +100,7 @@ Same as above — filtered by the scan.
 Once an `@claude` tag is wrapped in `[!DONE]-`, the leading `>` on its
 line makes the inline-tag regex skip it (the regex requires a non-`>`
 line start). The DONE seal scan still reports this callout unless the latest
-nonblank quoted line ends with `<!--atag:eot-->` or legacy `<!--md-asks:eot-->`.
+nonblank quoted line ends with `<!--atag:eot-->`.
 
 ```md @test:nomatch @done:match
 > [!DONE]- @claude already wrapped
