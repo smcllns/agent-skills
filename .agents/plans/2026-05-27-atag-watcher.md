@@ -95,7 +95,7 @@ Add a standalone `atag` watcher that checks markdown files cheaply and only invo
 - [x] Add readable blank lines before `atag-poll: match ...` and after the `atag-poll: invoking ...` debug command.
 - [ ] Decide terminal-vs-markdown response style for Claude output.
   - Problem: skill output is useful Markdown by default, but noisy in a terminal.
-  - Simple likely approach: add script arg like `--response-style auto|terminal|markdown`; `auto` can use `[[ -t 1 ]]` and tell Claude to use terminal-appropriate plain text when stdout is a TTY.
+  - Decision: add script arg `--response-style auto|terminal|markdown`; `auto` uses `[[ -t 1 ]]` and tells Claude to use terminal-appropriate plain text when stdout is a TTY.
   - Keep UI/menu-bar future use in mind: callers should be able to force Markdown.
 - [ ] Tighten `SKILL.md` final-output contract.
   - Output only: changes made, active threads left unchanged, or changes that should have happened but could not.
@@ -103,9 +103,7 @@ Add a standalone `atag` watcher that checks markdown files cheaply and only invo
   - Avoid Markdown tables in terminal mode.
 - [ ] Fix active `[!NOTE]+` scan false positives before more poller testing.
   - Current problem: cheap grep flags every `[!NOTE]+` file even when Claude was the last speaker, so the poller keeps spawning Claude for threads waiting on the human.
-  - Fresh-agent task: evaluate options before changing the protocol.
-  - Options to consider:
-    - Add a richer pre-scan that only reports `[!NOTE]+` threads whose latest speaker is human or whose original inline tag has no agent reply.
-    - Add an `<!--atag:eot-->`-style seal to every agent reply, not only `[!DONE]-`; this likely changes grep/AWK behavior and the callout protocol.
-    - Keep cheap file-level grep but have the poller suppress Claude if a second scanner says all active threads are agent-last.
+  - Decision: make `<!--atag:eot-->` mean "agent yielded the turn" on every agent response, not only `[!DONE]-`.
+  - Implementation shape: keep inline trigger grep cheap, move `[!NOTE]+` detection to a callout-aware scan that reports only unsealed active threads, and keep the existing `[!DONE]-` seal scan.
+  - Backward compatibility: also skip legacy `[!NOTE]+` threads whose latest nonblank quoted line is an agent speaker label, even if it lacks the seal.
   - After fixing active-thread scanning, rerun `skills/atag/dev/fixture.md` to determine whether L8 is actually spawning Claude or only being commented on because other tags caused the file to be read.
