@@ -108,3 +108,30 @@ Add a standalone `atag` watcher that checks markdown files cheaply and only invo
   - Implementation shape: keep inline trigger grep cheap, move `[!NOTE]+` detection to a callout-aware scan that reports only unsealed active threads, and keep the existing `[!DONE]-` seal scan.
   - Backward compatibility: also skip legacy `[!NOTE]+` threads whose latest nonblank quoted line is an agent speaker label, even if it lacks the seal.
   - Verified against `skills/atag/dev/fixture.md`: after the CSS scratch text was removed, L8 does not trigger either scan; L5/L6 are skipped because Claude is the last speaker, so the poller does not invoke Claude.
+
+## Current task list after run-2 testing
+
+- [ ] Align on the exact `SKILL.md` wording for inline body tags.
+  - Current decision shape: keep "preserve the original tag/request verbatim inside the callout" as the default invariant.
+  - Narrow exception: if the tag was inline, such as on a task list item or inside a table cell, create a new callout immediately after the affected block, copy the original line verbatim into the callout, and remove the live trigger from the body.
+  - Also allow modifying the original when prepending the user's speaker label for callout ergonomics, or when the user explicitly asks.
+- [ ] Patch `skills/atag/SKILL.md` with the agreed wording.
+- [ ] Add/update regression fixtures for inline task tags.
+  - Example: checked task item should no longer keep a live `@claude` in the body after resolution.
+  - Keep the cheap scanner simple; do not add historical body-vs-callout matching unless we explicitly decide the protocol cannot avoid it.
+- [ ] Patch poller terminal UX.
+  - Ctrl-C prints a one-line stop message.
+  - Add a blank separator between Claude output and the next `atag-poll:` status line.
+  - Replace duplicate debug match lines with a concise single-file summary like `atag-poll: found 1 agent tag (@agent, @claude, @codex) in dev/fixture-run2.md`.
+  - Prefix the long invocation command with `[DEBUG]`; regular mode should use a short `spawning claude agent to resolve...` line.
+- [ ] Decide speed defaults after one more local test.
+  - Trace found first run was about 88s, mostly one long thinking block.
+  - Candidate first tweak: add `--effort low` to poller Claude defaults.
+  - Defer model switch to Haiku until we see whether low effort is enough.
+- [ ] Run verification and sync.
+  - `bash -n skills/atag/scripts/atag-poll.sh`
+  - `bun test skills/atag/reference/markdown-agent-tags.spec.test.ts skills/atag/reference/atag-poll.test.ts`
+  - `scripts/sync-skills.sh`
+  - `diff -qr -x dev skills/atag claude-plugins/atag/skills/atag`
+  - `diff -qr -x dev skills/atag codex-plugins/atag/skills/atag`
+  - Copy/sync the active Claude skill path after repo verification.
