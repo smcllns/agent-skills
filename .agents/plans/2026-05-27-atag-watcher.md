@@ -27,14 +27,15 @@ Add a standalone `atag` watcher that checks markdown files cheaply and only invo
 - Claude invocation: invoke the installed skill, not the plugin. Local verification passed after copying `atag` into `/Users/smcllns/Projects/dotfiles/skills/atag`.
 - Claude defaults: use `--permission-mode acceptEdits`, latest Sonnet alias, no default budget.
 - Claude passthrough: support normal Claude CLI args so callers can override model, budget, permission mode, max turns, etc.
-- Runaway guard: set a default max-turns cap if Claude CLI exposes a suitable flag; otherwise add a timeout wrapper around the Claude subprocess.
+- Runaway guard: Claude CLI does not expose a max-turns flag; use a 30-minute timeout wrapper around the Claude subprocess.
 - Scan scope: do not skip directories. Use the documented recursive scan exactly.
 - Custom triggers replace defaults. Example: passing `@pi` scans only for `@pi`, not `agent claude codex pi`.
 - Dev test folder: `/Users/smcllns/Projects/skills/skills/atag/dev`.
+- `skills/atag/dev/` is local scratch and must not ship. It is gitignored and excluded by `scripts/sync-skills.sh`.
 
 ## Implementation plan
 
-- [ ] Add `skills/atag/scripts/atag-poll.sh`.
+- [x] Add `skills/atag/scripts/atag-poll.sh`.
   - Bash, no new dependencies.
   - Default behavior: run a foreground polling loop every 60 seconds.
   - Args: `--dir DIR`, `--interval SECONDS`, `--once`, `--debug`, `--claude-arg ARG`, optional trigger list.
@@ -48,7 +49,7 @@ Add a standalone `atag` watcher that checks markdown files cheaply and only invo
   - `--once`: perform one scan/invocation cycle, then exit with the scan/Claude result; used for tests and scheduler-agnostic future wrappers.
   - Debug: write scan path, triggers, matched files, and Claude command to stderr.
   - Signal handling: trap INT/TERM/HUP and exit cleanly so terminal close or Ctrl-C stops the loop.
-- [ ] Add `skills/atag/reference/atag-watch.test.ts`.
+- [x] Add `skills/atag/reference/atag-poll.test.ts`.
   - Use temp fixtures and a stub `claude` on `PATH`.
   - Test no-match quiet behavior.
   - Test default trigger match invokes Claude once.
@@ -57,25 +58,35 @@ Add a standalone `atag` watcher that checks markdown files cheaply and only invo
   - Test unsealed `[!DONE]-` match invokes Claude.
   - Test debug no-match output is a single status line on stderr.
   - Test Claude failure propagates.
-- [ ] Update `skills/atag/SKILL.md`.
+- [x] Update `skills/atag/SKILL.md`.
   - Add a short "Watcher script" section.
   - Keep the existing scan commands as source of truth.
   - Mention no-token gate, quiet default, debug mode, and local scheduling.
-- [ ] Update `claude-plugins/atag/README.md`.
+- [x] Update `claude-plugins/atag/README.md`.
   - Add local technical-user setup.
   - Include marketplace install command and watcher example.
-- [ ] Run verification.
+- [x] Run verification.
   - `bun test skills/atag/reference/markdown-agent-tags.spec.test.ts`
-  - `bun test skills/atag/reference/atag-watch.test.ts`
+  - `bun test skills/atag/reference/atag-poll.test.ts`
   - `scripts/sync-skills.sh`
-  - `diff -qr skills/atag claude-plugins/atag/skills/atag`
-  - `diff -qr skills/atag codex-plugins/atag/skills/atag`
+  - `diff -qr -x dev skills/atag claude-plugins/atag/skills/atag`
+  - `diff -qr -x dev skills/atag codex-plugins/atag/skills/atag`
   - `git diff --check`
-- [ ] Local machine setup.
+- [x] Local machine setup.
   - Copy or install the `atag` skill into Claude Code's effective skill directory.
   - Smoke test on a temp folder with `@codex`.
   - Smoke test quiet no-op on a temp folder with no tags.
   - Run the foreground polling script against `/Users/smcllns/Projects/skills/skills/atag/dev`.
+
+## Verification results
+
+- `bash -n skills/atag/scripts/atag-poll.sh` passed.
+- `bun test skills/atag/reference/markdown-agent-tags.spec.test.ts skills/atag/reference/atag-poll.test.ts claude-plugins/atag/skills/atag/reference/atag-poll.test.ts codex-plugins/atag/skills/atag/reference/atag-poll.test.ts` passed: 153 pass, 0 fail.
+- `diff -qr -x dev skills/atag claude-plugins/atag/skills/atag` passed.
+- `diff -qr -x dev skills/atag codex-plugins/atag/skills/atag` passed.
+- `git diff --check` passed.
+- Quiet no-op smoke passed against a temp folder.
+- Live smoke passed against `skills/atag/dev`: poller found `fixture.md`, invoked `claude -p`, and Claude resolved four tags.
 
 ## Open questions
 
