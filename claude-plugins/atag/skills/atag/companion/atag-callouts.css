@@ -27,10 +27,9 @@ body[for="html-export"] .callout[data-callout="done"] {
 body[for="html-export"] .callout:is([data-callout="note"], [data-callout="done"]) {
   margin: 0.75rem 0 1rem;
   padding: 0;
-  overflow: hidden;
-  border: 1px solid rgba(var(--atag-accent), 0.28);
-  border-left: 4px solid rgb(var(--atag-accent));
-  border-radius: 8px;
+  border: 0;
+  border-left: 3px solid rgb(var(--atag-accent));
+  border-radius: 0;
   background: rgba(var(--atag-accent-soft), 0.5);
 }
 
@@ -118,7 +117,7 @@ body[for="html-export"] .callout:is([data-callout="note"], [data-callout="done"]
 .markdown-rendered .callout:is([data-callout="note"], [data-callout="done"]) > .callout-content > p > em:first-child > code:first-child,
 .markdown-preview .callout:is([data-callout="note"], [data-callout="done"]) > p > em:first-child > code:first-child,
 body[for="html-export"] .callout:is([data-callout="note"], [data-callout="done"]) > p > em:first-child > code:first-child {
-  border-color: rgba(var(--atag-accent), 0.55);
+  border-color: rgba(var(--atag-accent), 0.72);
   color: var(--text-normal, #1f2937);
   background: rgba(var(--atag-title), 0.55);
 }
