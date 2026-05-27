@@ -8,6 +8,7 @@ Simplify `skills/atag/companion/atag-callouts.css` so it works as progressive en
 
 - [x] Inspect current CSS and fixture DOMs.
 - [x] Replace overspecified Obsidian-only selectors with portable callout styling.
+- [x] Remove redundant Obsidian `data-callout-fold` selectors; `note` and `done` are the protocol states.
 - [x] Keep active/done color, turn dividers, and speaker-label styling.
 - [x] Sync CSS to Claude and Codex plugin copies.
 - [x] Verify with browser screenshot of styled fixture HTML.
@@ -18,9 +19,11 @@ Simplify `skills/atag/companion/atag-callouts.css` so it works as progressive en
 
 - HTML fixture rendered through local browser at `/private/tmp/atag-html-active.png`.
 - Obsidian fixture rendered through temporary vault note/snippet at `/private/tmp/atag-obsidian-active.png`; temp note/snippet removed after capture.
+- Obsidian validation temporarily disabled the older `comment-threads` snippet so this file was tested without old selector interference; `comment-threads` was restored after capture.
 - Obsidian computed styles confirmed active/done colors, dividers, and speaker label display.
-- `diff -qr -x dev skills/atag claude-plugins/atag/skills/atag` passed.
-- `diff -qr -x dev skills/atag codex-plugins/atag/skills/atag` passed.
+- `rg data-callout-fold skills/atag/companion/atag-callouts.css ...` returned no matches.
+- CSS copies matched between canonical, Claude plugin, and Codex plugin.
+- Full tree drift checks were skipped on the follow-up selector change because `skills/atag/scripts/atag-poll.sh` had unrelated in-flight changes.
 
 ## Open Questions
 
