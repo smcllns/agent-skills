@@ -44,7 +44,7 @@ Claude Cowork provides a nice UI for managing scheduled tasks and you can pause/
 
 ### Terminal polling
 
-For technical local use, run the foreground poller from a terminal. It scans every 60 seconds, prints a startup line with the watched triggers and path, then stays quiet when there is no work unless `--debug` is set. Closing the terminal or pressing `Ctrl-C` stops the loop.
+For technical local use, run the foreground poller from a terminal. It scans every 60 seconds, prints a startup line with the watched triggers and path, then stays quiet when there is no work unless `--debug` is set. It only invokes Claude for actionable inline tags, unsealed `[!DONE]-` follow-ups, or `[!NOTE]+` threads where the human replied after the agent yielded. Closing the terminal or pressing `Ctrl-C` stops the loop.
 
 ```bash
 skills/atag/scripts/atag-poll.sh --dir /path/to/notes
@@ -63,6 +63,8 @@ Pass regular Claude CLI args after `--`:
 skills/atag/scripts/atag-poll.sh --dir /path/to/notes -- --max-budget-usd 1
 ```
 
+Use `--response-style terminal` or `--response-style markdown` to force Claude's final output style. The default `auto` uses terminal plain text for interactive terminals and Markdown for piped/redirected callers.
+
 ## Obsidian styling (optional)
 
 For a nicer look in Obsidian Reading mode, the repo ships a CSS snippet at `skills/atag/companion/atag-callouts.css`. Copy it into your vault's `.obsidian/snippets/`, then enable it via Settings → Appearance → CSS snippets. Renders amber for active threads, green for resolved.
@@ -71,7 +73,7 @@ For a nicer look in Obsidian Reading mode, the repo ships a CSS snippet at `skil
 
 Two test harnesses live under `skills/atag/reference/`:
 
-**Spec test** — verifies the scan regex in `SKILL.md` against the fixture catalog in `markdown-agent-tags.spec.md`. Requires `bun >= 1.3`.
+**Spec test** — verifies the scan commands in `SKILL.md` against the fixture catalog in `markdown-agent-tags.spec.md`. Requires `bun >= 1.3`.
 
 ```bash
 bun test skills/atag/reference/markdown-agent-tags.spec.test.ts

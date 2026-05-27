@@ -76,6 +76,97 @@ describe("atag-poll", () => {
     expect(log).toContain("Use the atag skill");
   });
 
+  it("does not invoke Claude when active NOTE threads are waiting on the human", async () => {
+    await installClaudeStub();
+    await writeFile(
+      join(fixtureDir, "note.md"),
+      [
+        "> [!NOTE]+ awaiting direction",
+        ">",
+        "> @claude make this better",
+        ">",
+        "> `claude`: Which direction should I take it? <!--atag:eot-->",
+        "",
+        "> [!NOTE]+ legacy agent-last thread",
+        ">",
+        "> @claude draft a headline",
+        ">",
+        "> `claude`: What benefit should the headline emphasize?",
+        "",
+      ].join("\n"),
+    );
+
+    const result = runPoll(["--once", "--debug", "--dir", fixtureDir]);
+
+    expect(result.exitCode).toBe(0);
+    expect(result.stdout).toMatch(/\[[0-9]{2}:[0-9]{2}\]  No @agent, @claude, @codex agent tags detected\n?$/);
+    expect(result.stderr).toBe("");
+    expect(await readLog()).toBe("");
+  });
+
+  it("invokes Claude when a human replies after an active NOTE agent turn", async () => {
+    await installClaudeStub({ stdout: "note scan\n" });
+    await writeFile(
+      join(fixtureDir, "note.md"),
+      [
+        "> [!NOTE]+ awaiting direction",
+        ">",
+        "> @claude make this better",
+        ">",
+        "> `claude`: Which direction should I take it? <!--atag:eot-->",
+        ">",
+        "> *`sam`*: make it more concrete",
+        "",
+      ].join("\n"),
+    );
+
+    const result = runPoll(["--once", "--dir", fixtureDir]);
+
+    expect(result.exitCode).toBe(0);
+    expect(result.stdout).toContain("note scan\n");
+    expect(await readLog()).toContain("note.md");
+  });
+
+  it("does not invoke custom-trigger runs for default-trigger active NOTE threads", async () => {
+    await installClaudeStub();
+    await writeFile(
+      join(fixtureDir, "note.md"),
+      [
+        "> [!NOTE]+ waiting on codex",
+        ">",
+        "> @codex please help",
+        ">",
+        "> *`sam`*: one more thing",
+        "",
+      ].join("\n"),
+    );
+
+    const result = runPoll(["--once", "--dir", fixtureDir, "@pi"]);
+
+    expect(result.exitCode).toBe(0);
+    expect(await readLog()).toBe("");
+  });
+
+  it("adds terminal response-style instructions when requested", async () => {
+    await installClaudeStub();
+    await writeFile(join(fixtureDir, "note.md"), "@codex please help\n");
+
+    const result = runPoll(["--once", "--dir", fixtureDir, "--response-style", "terminal"]);
+
+    expect(result.exitCode).toBe(0);
+    expect(await readLog()).toContain("Response style: terminal plain text");
+  });
+
+  it("adds markdown response-style instructions when requested", async () => {
+    await installClaudeStub();
+    await writeFile(join(fixtureDir, "note.md"), "@codex please help\n");
+
+    const result = runPoll(["--once", "--dir", fixtureDir, "--response-style", "markdown"]);
+
+    expect(result.exitCode).toBe(0);
+    expect(await readLog()).toContain("Response style: Markdown");
+  });
+
   it("separates debug match and invocation output with blank lines", async () => {
     await installClaudeStub({ stdout: "claude output\n" });
     await writeFile(join(fixtureDir, "note.md"), "@codex please help\n");

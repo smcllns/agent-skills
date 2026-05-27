@@ -5,8 +5,8 @@ Each section below is one fixture: prose explains the pattern, and the fenced
 block holds the markdown content. The fence's info string tells the runner
 whether the scan should pick this file up:
 
-- info `md @test:match` — scan should find this file
-- info `md @test:nomatch` — scan should skip this file
+- info `md @test:match` — unresolved scan should find this file
+- info `md @test:nomatch` — unresolved scan should skip this file
 - info `md @done:match` — DONE seal scan should find this file
 - info `md @done:nomatch` — DONE seal scan should skip this file
 - any other info string (or no fenced block) — ignored by the runner, free for
@@ -15,10 +15,10 @@ whether the scan should pick this file up:
 The test also auto-generates one fixture per agent name in the documented
 agent list. Add a name there → the fixture set extends automatically.
 
-The fast grep scan catches **two** kinds of thing: `@agent` tags that haven't
-been wrapped yet, and `[!NOTE]+` callouts (active agent threads). The DONE seal
-scan catches `[!DONE]-` callouts whose latest nonblank quoted line does not end
-with `<!--atag:eot-->`.
+The unresolved scan catches **three** kinds of thing: `@agent` tags that have
+not been wrapped yet, active `[!NOTE]+` callouts where the human needs another
+agent turn, and `[!DONE]-` callouts whose latest nonblank quoted line does not
+end with `<!--atag:eot-->`.
 
 The marker is the protocol signal: only `+` on `[!NOTE]` and `-` on `[!DONE]`
 indicate an agent thread. Bare `[!NOTE]`, `[!NOTE]-`, `[!DONE]`, and `[!DONE]+`
@@ -31,7 +31,8 @@ the token, without a blank quoted separator or speaker label, and the thread
 becomes unresolved until an agent inspects it and reseals the final reply.
 
 Inside callouts, `@name` is only for the original trigger tag. Agent replies use
-plain inline-code speaker labels (`` `claude`:``). Human replies use emphasized
+plain inline-code speaker labels (`` `claude`:``) and end with
+`<!--atag:eot-->` after yielding the turn. Human replies use emphasized
 inline-code speaker labels (``*`sam`*:``).
 
 ---
@@ -45,8 +46,49 @@ Discussion threads spawned from an `@agent` tag use two markers:
 
 The only marker form that triggers the scan as an agent thread.
 
-```md @test:match @done:nomatch
+```md @test:match
 > [!NOTE]+ @claude tighten the intro
+```
+
+### Active agent thread — sealed agent reply
+
+The agent already replied and yielded the turn, so the scanner skips it until
+the human replies.
+
+```md @test:nomatch
+> [!NOTE]+ awaiting direction
+>
+> @claude make this better
+>
+> `claude`: Which direction should I take it? <!--atag:eot-->
+```
+
+### Active agent thread — legacy agent-last reply
+
+Older active threads may not have the seal yet. If the latest nonblank quoted
+line is an agent speaker label, the scanner treats it as waiting on the human.
+
+```md @test:nomatch
+> [!NOTE]+ awaiting direction
+>
+> @claude make this better
+>
+> `claude`: Which direction should I take it?
+```
+
+### Active agent thread — human reply after agent turn
+
+Once the human replies after the sealed agent turn, the thread is actionable
+again.
+
+```md @test:match
+> [!NOTE]+ awaiting direction
+>
+> @claude make this better
+>
+> `claude`: Which direction should I take it? <!--atag:eot-->
+>
+> *`sam`*: make it more concrete
 ```
 
 ### Bare `[!NOTE]` — plain markdown, not an agent thread
@@ -55,7 +97,7 @@ A `[!NOTE]` without `+` is a regular Obsidian note callout. The scan skips it
 even though it looks like a callout, because the protocol uses `+` to mark
 "agent thread, active."
 
-```md @test:nomatch @done:nomatch
+```md @test:nomatch
 > [!NOTE] Just a regular note callout, not for the agent
 ```
 
@@ -63,7 +105,7 @@ even though it looks like a callout, because the protocol uses `+` to mark
 
 Same rule: only `+` indicates an agent thread.
 
-```md @test:nomatch @done:nomatch
+```md @test:nomatch
 > [!NOTE]- A collapsed note callout — still plain markdown
 ```
 
@@ -74,6 +116,8 @@ agent-authored quoted line with `<!--atag:eot-->`.
 
 ```md @test:nomatch @done:nomatch
 > [!DONE]- resolved agent thread
+>
+> @claude already handled
 >
 > `claude`: done. <!--atag:eot-->
 ```
@@ -102,7 +146,7 @@ line makes the inline-tag regex skip it (the regex requires a non-`>`
 line start). The DONE seal scan still reports this callout unless the latest
 nonblank quoted line ends with `<!--atag:eot-->`.
 
-```md @test:nomatch @done:match
+```md @test:match @done:match
 > [!DONE]- @claude already wrapped
 ```
 
@@ -111,7 +155,7 @@ nonblank quoted line ends with `<!--atag:eot-->`.
 The grep scan skips this, but the DONE seal scan reports the callout because the
 human wrote after the seal.
 
-```md @test:nomatch @done:match
+```md @test:match @done:match
 > [!DONE]- tightened intro
 >
 > @claude tighten the intro
@@ -140,12 +184,16 @@ the seal token.
 
 Any unsealed DONE callout in a file makes the file actionable.
 
-```md @test:nomatch @done:match
+```md @test:match @done:match
 > [!DONE]- first
+>
+> @claude first task
 >
 > `claude`: done. <!--atag:eot-->
 
 > [!DONE]- second
+>
+> @codex second task
 >
 > `codex`: done.
 ```
@@ -267,6 +315,15 @@ line-start or whitespace before `@`.
 
 ```md @test:nomatch
 reach me at contact@claude.com if needed
+```
+
+### Literal `[!NOTE]+` in prose
+
+Plain prose or code-like text mentioning the marker is not an agent callout. The
+callout scan requires a blockquoted callout start.
+
+```md @test:nomatch
+The literal marker [!NOTE]+ should not trigger outside a blockquote callout.
 ```
 
 ---

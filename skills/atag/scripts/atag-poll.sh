@@ -6,6 +6,7 @@ target_dir="$PWD"
 debug=0
 once=0
 timeout_seconds=1800
+response_style=auto
 
 trigger_tokens=()
 triggers=()
@@ -21,6 +22,7 @@ Options:
   --once                Run one scan cycle and exit.
   --debug               Print one-line no-match status and match diagnostics.
   --timeout SECONDS     Kill Claude after this many seconds. Default: 1800.
+  --response-style MODE Claude output style: auto, terminal, or markdown. Default: auto.
   --claude-arg ARG      Pass one argument to Claude. Prefer -- for many args.
   -h, --help            Show this help.
 EOF
@@ -67,6 +69,18 @@ while [[ $# -gt 0 ]]; do
       require_value "$1" "${2:-}"
       positive_integer "$2" || die_usage "--timeout must be a positive integer"
       timeout_seconds="$2"
+      shift 2
+      ;;
+    --response-style)
+      require_value "$1" "${2:-}"
+      case "$2" in
+        auto|terminal|markdown)
+          response_style="$2"
+          ;;
+        *)
+          die_usage "--response-style must be auto, terminal, or markdown"
+          ;;
+      esac
       shift 2
       ;;
     --claude-arg)
@@ -133,34 +147,72 @@ for trigger in "${triggers[@]}"; do
   trigger_display+="@${trigger}"
 done
 
+resolved_response_style="$response_style"
+if [[ "$resolved_response_style" == "auto" ]]; then
+  if [[ -t 1 ]]; then
+    resolved_response_style=terminal
+  else
+    resolved_response_style=markdown
+  fi
+fi
+
 echo "Watching for ${trigger_display} agent tags in ${target_dir}..."
 echo ""
-scan_regex="(\\[!NOTE\\]\\+|^([^>]*[[:space:]])?@(${trigger_alt})([^[:alnum:]_]|$))"
+inline_scan_regex="^([^>]*[[:space:]])?@(${trigger_alt})([^[:alnum:]_]|$)"
 
-done_scan_awk='function finish_done() {
-  if (in_done && !sealed) print callout_file ":" start
-  in_done = 0
+callout_scan_awk='BEGIN {
+  trigger_re = "(^|[[:space:]])@(" trigger_alt ")([^[:alnum:]_]|$)"
+  agent_re = "^[[:space:]]*`(" trigger_alt ")`[[:space:]]*:"
+}
+function finish_callout() {
+  if (in_callout && has_trigger) {
+    if (callout_type == "note" && !sealed && !agent_last) print callout_file ":" start
+    if (callout_type == "done" && !sealed) print callout_file ":" start
+  }
+  in_callout = 0
+  callout_type = ""
+  has_trigger = 0
   sealed = 0
+  agent_last = 0
   callout_file = ""
 }
-FNR == 1 && NR > 1 { finish_done() }
-/^[[:space:]]*>[[:space:]]*\[!DONE\]-/ {
-  finish_done()
-  in_done = 1
+function start_callout(type) {
+  in_callout = 1
+  callout_type = type
+  has_trigger = 0
   sealed = 0
+  agent_last = 0
   callout_file = FILENAME
   start = FNR
 }
-!in_done { next }
-$0 !~ /^[[:space:]]*>/ { finish_done(); next }
-{
+function process_quoted_line() {
   line = $0
   sub(/^[[:space:]]*>[[:space:]]*/, "", line)
+  if (line ~ trigger_re) has_trigger = 1
   if (line !~ /^[[:space:]]*$/) {
     sealed = (line ~ /<!--atag:eot-->[[:space:]]*$/)
+    agent_last = (line ~ agent_re)
   }
 }
-END { finish_done() }'
+FNR == 1 && NR > 1 { finish_callout() }
+/^[[:space:]]*>[[:space:]]*\[!NOTE\]\+/ {
+  finish_callout()
+  start_callout("note")
+  process_quoted_line()
+  next
+}
+/^[[:space:]]*>[[:space:]]*\[!DONE\]-/ {
+  finish_callout()
+  start_callout("done")
+  process_quoted_line()
+  next
+}
+!in_callout { next }
+$0 !~ /^[[:space:]]*>/ { finish_callout(); next }
+{
+  process_quoted_line()
+}
+END { finish_callout() }'
 
 cleanup_files=()
 
@@ -189,18 +241,18 @@ new_temp() {
 
 scan_matches() {
   local output="$1"
-  local grep_matches done_matches unique_matches mtime_matches
-  grep_matches="$(new_temp)"
-  done_matches="$(new_temp)"
+  local inline_matches callout_matches unique_matches mtime_matches
+  inline_matches="$(new_temp)"
+  callout_matches="$(new_temp)"
   unique_matches="$(new_temp)"
   mtime_matches="$(new_temp)"
 
-  : > "$grep_matches"
-  : > "$done_matches"
+  : > "$inline_matches"
+  : > "$callout_matches"
   : > "$output"
 
   set +e
-  grep -rlnE --include='*.md' "$scan_regex" "$target_dir" > "$grep_matches"
+  grep -rlnE --include='*.md' "$inline_scan_regex" "$target_dir" > "$inline_matches"
   local grep_status=$?
   set -e
   if [[ "$grep_status" -ne 0 && "$grep_status" -ne 1 ]]; then
@@ -208,10 +260,10 @@ scan_matches() {
     return "$grep_status"
   fi
 
-  find "$target_dir" -name '*.md' -exec awk "$done_scan_awk" {} + > "$done_matches"
+  find "$target_dir" -name '*.md' -exec awk -v trigger_alt="$trigger_alt" "$callout_scan_awk" {} + > "$callout_matches"
 
-  cat "$grep_matches" > "$unique_matches"
-  awk '{ sub(/:[0-9]+$/, ""); print }' "$done_matches" >> "$unique_matches"
+  cat "$inline_matches" > "$unique_matches"
+  awk '{ sub(/:[0-9]+$/, ""); print }' "$callout_matches" >> "$unique_matches"
   sort -u "$unique_matches" > "$mtime_matches"
 
   : > "$output"
@@ -228,11 +280,19 @@ scan_matches() {
 build_prompt() {
   local matches="$1"
   local files
+  local response_instruction
   files="$(sed "s#^${target_dir}/##; s#^#- #" "$matches")"
+  if [[ "$resolved_response_style" == "terminal" ]]; then
+    response_instruction="Response style: terminal plain text. Do not use Markdown tables. Output only changes made, active threads left unchanged, and changes you could not make."
+  else
+    response_instruction="Response style: Markdown. Output only changes made, active threads left unchanged, and changes you could not make."
+  fi
   cat <<EOF
 Use the atag skill in the current working directory.
 
 Trigger set: ${trigger_display}
+
+${response_instruction}
 
 The cheap pre-scan found unresolved tag work in:
 ${files}

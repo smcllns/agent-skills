@@ -23,19 +23,17 @@
 ## Follow-up items from terminal testing
 
 - Done in this branch: debug no-match now prints `[HH:MM]  No @triggers agent tags detected`; debug match output has a blank line before `atag-poll: match ...` and after `atag-poll: invoking ...`.
-- Terminal-vs-Markdown output is unresolved. Suggested simple design: add `--response-style auto|terminal|markdown`; `auto` checks `[[ -t 1 ]]`, terminal mode tells Claude to avoid Markdown tables/links and use plain text, future UI/menu-bar callers can force Markdown.
-- Tighten `SKILL.md` final output so Claude reports only changes made, active threads left unchanged, or changes it could not make. It should not summarize already sealed `[!DONE]-` threads or false positives unless they matter to the requested result.
-- Bigger spec issue: `[!NOTE]+` grep is too broad for polling. It spawns Claude even when Claude was the last speaker and the thread is waiting on the human. Fresh-agent options to evaluate:
-  - richer pre-scan that only reports `[!NOTE]+` threads whose latest speaker is human or original inline tag has no agent reply;
-  - seal every agent reply, not only `[!DONE]-`, then update scan logic;
-  - keep file grep but add a second scanner that suppresses all-agent-last files before invoking Claude.
-- After fixing active-thread scanning, rerun `skills/atag/dev/fixture.md` to verify whether L8 is truly causing Claude to spawn or only gets mentioned because other tags caused the file to be read.
+- Done in this branch: `--response-style auto|terminal|markdown`; `auto` checks `[[ -t 1 ]]`, terminal mode asks Claude for plain text with no Markdown tables, and future UI/menu-bar callers can force Markdown.
+- Done in this branch: `SKILL.md` final output now reports only changes made, active threads left unchanged, or changes it could not make. It should not summarize already sealed `[!DONE]-` threads or false positives unless they matter to the requested result.
+- Done in this branch: `[!NOTE]+` detection moved out of raw grep and into a callout-aware scanner. `<!--atag:eot-->` now means the agent yielded the turn on every agent response, not only `[!DONE]-`; legacy active threads whose latest line is an agent speaker label are skipped too.
+- Verified against `skills/atag/dev/fixture.md`: after the temporary CSS scratch text was removed, L8 does not trigger either scan; L5/L6 are skipped because Claude is the last speaker, so the poller does not invoke Claude.
 
 ## Verification
 
 - `bash -n skills/atag/scripts/atag-poll.sh`
-- `bun test skills/atag/reference/markdown-agent-tags.spec.test.ts skills/atag/reference/atag-poll.test.ts claude-plugins/atag/skills/atag/reference/atag-poll.test.ts codex-plugins/atag/skills/atag/reference/atag-poll.test.ts` — 156 pass, 0 fail
+- `bun test skills/atag/reference/markdown-agent-tags.spec.test.ts skills/atag/reference/atag-poll.test.ts claude-plugins/atag/skills/atag/reference/markdown-agent-tags.spec.test.ts claude-plugins/atag/skills/atag/reference/atag-poll.test.ts codex-plugins/atag/skills/atag/reference/markdown-agent-tags.spec.test.ts codex-plugins/atag/skills/atag/reference/atag-poll.test.ts` — 174 pass, 0 fail
 - `diff -qr -x dev skills/atag claude-plugins/atag/skills/atag`
 - `diff -qr -x dev skills/atag codex-plugins/atag/skills/atag`
 - `git diff --check`
-- Live smoke: `skills/atag/scripts/atag-poll.sh --once --debug --dir /Users/smcllns/Projects/skills/skills/atag/dev -- --max-budget-usd 5` resolved four tags in the ignored dev fixture.
+- Earlier live smoke: `skills/atag/scripts/atag-poll.sh --once --debug --dir /Users/smcllns/Projects/skills/skills/atag/dev -- --max-budget-usd 5` resolved four tags in the ignored dev fixture.
+- Latest live no-op check: `skills/atag/scripts/atag-poll.sh --once --debug --dir skills/atag/dev --timeout 1 -- --max-budget-usd 0.01` printed `[HH:MM]  No @agent, @claude, @codex agent tags detected` and did not invoke Claude.

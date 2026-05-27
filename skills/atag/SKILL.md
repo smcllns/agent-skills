@@ -35,8 +35,8 @@ The original tag is preserved verbatim as the first body line. The title is the 
 |---|---|---|---|
 | `@agent`, `@claude`, `@codex` | New | Picks up | New tag, action required. |
 | `@<custom>` | New | Picks up if the caller specified custom triggers | New tag, action required. |
-| `[!NOTE]+` | Active thread | Picks up | If the human spoke last, act. If the agent spoke last, leave it. |
-| `[!DONE]-` | Resolved thread | Grep skips; DONE seal scan checks | If the thread is not sealed with `<!--atag:eot-->`, inspect and reseal. |
+| `[!NOTE]+` | Active thread | Picks up only when unsealed | If the human spoke last, act. If the agent yielded last, leave it. |
+| `[!DONE]-` | Resolved thread | Picks up only when unsealed | If the thread is not sealed with `<!--atag:eot-->`, inspect and reseal. |
 
 The `+/-` marker is load-bearing:
 - `[!NOTE]+` distinguishes agent threads from regular callouts.
@@ -48,17 +48,17 @@ Inside an active callout, separate turns with a **single blank `>` line** — on
 
 Use `@name` only for trigger tags. Speaker labels use inline code:
 
-- Agent turn: `` `claude`: reply``.
+- Agent turn: `` `claude`: reply <!--atag:eot-->``.
 - Human turn: ``*`sam`*: reply``.
 
-In `[!DONE]-` threads, a human can add follow-up text directly after the `<!--atag:eot-->` token; the next agent pass will inspect and reseal.
+`<!--atag:eot-->` means the agent yielded the turn. End every agent response with it, including `[!NOTE]+` questions and partial answers. In `[!DONE]-` threads, a human can add follow-up text directly after the token; the next agent pass will inspect and reseal.
 
 ```markdown
 > [!DONE]- tightened introduction
 >
 > @claude tighten the intro
 >
-> `claude`: trimmed to 3 sentences — does that read OK or want to go shorter?
+> `claude`: trimmed to 3 sentences — does that read OK or want to go shorter? <!--atag:eot-->
 >
 > *`sam`*: shorter please, ~1 sentence
 >
@@ -72,7 +72,7 @@ For a soft line break inside a single turn, use two trailing spaces.
 
 A tag is unresolved when any of:
 
-- An open `> [!NOTE]+ ...` callout whose last reply is from the user.
+- An open `> [!NOTE]+ ...` callout whose latest nonblank quoted line is not a sealed agent turn.
 - A valid inline tag for a recognized trigger not yet processed into a callout.
 - A resolved `> [!DONE]- ...` callout whose latest nonblank quoted line does not end with `<!--atag:eot-->`.
 
@@ -87,7 +87,9 @@ For each unresolved tag:
 - If the tag sits on a task item, update the checkbox too.
 - **Never remove or modify the original tag.** It must appear verbatim as the first body line of the resulting callout, in both `[!DONE]-` and `[!NOTE]+` cases.
 
-**Conclude** with `[!DONE]-` and a one-line outcome summary as the title (past-tense action + scope, ≤~60 chars) once the work is genuinely complete. End the final agent reply with `<!--atag:eot-->`.
+End every agent reply with `<!--atag:eot-->` so cheap pollers can skip threads waiting on the human without invoking an agent.
+
+**Conclude** with `[!DONE]-` and a one-line outcome summary as the title (past-tense action + scope, ≤~60 chars) once the work is genuinely complete.
 
 **Take a turn** with `[!NOTE]+` if completion requires further input from the human, so the thread stays visually open.
 
@@ -100,49 +102,78 @@ When the tag is ambiguous, missing context, or non-actionable, **don't guess**. 
 >
 > @claude tighten the wording above
 >
-> `claude`: the wording above stretches back 12,000 words but your request sounds smaller. Confirm: (1) the last paragraph, (2) the last 4 paragraphs on this topic, or (3) the full doc.
+> `claude`: the wording above stretches back 12,000 words but your request sounds smaller. Confirm: (1) the last paragraph, (2) the last 4 paragraphs on this topic, or (3) the full doc. <!--atag:eot-->
 ```
 
 ## Scanning for unresolved tags
 
 Scan in two passes. Sort matched files by mtime descending before capping.
 
-1. **Grep for new and active threads** — cheap single-line scan for inline tags and `[!NOTE]+` callouts.
+1. **Grep for new inline tags** — cheap single-line scan for unwrapped inline tags.
 
 ```sh
-grep -rlnE --include='*.md' '(\[!NOTE\]\+|^([^>]*[[:space:]])?@(agent|claude|codex)([^[:alnum:]_]|$))' <path>
+grep -rlnE --include='*.md' '^([^>]*[[:space:]])?@(agent|claude|codex)([^[:alnum:]_]|$)' <path>
 ```
 
-Default agent names are `agent claude codex`. For custom triggers, replace `?@(agent|claude|codex)` with the custom alternation, e.g. `?@(nora|hermes)`.
+Default agent names are `agent claude codex`. For custom triggers, replace the `agent|claude|codex` alternation with the custom alternation, e.g. `nora|hermes`.
 
-2. **Inline awk to check DONE threads for missing seals** — multiline scan for `[!DONE]-` callouts whose latest nonblank quoted line does not end with `<!--atag:eot-->`.
+2. **Inline awk for callout threads** — multiline scan for actionable `[!NOTE]+` and unsealed `[!DONE]-` callouts. Pass `trigger_alt` as the same alternation used above, e.g. `agent|claude|codex`.
 
 ```sh
-find <path> -name '*.md' -exec awk '
-function finish_done() {
-  if (in_done && !sealed) print callout_file ":" start
-  in_done = 0
+find <path> -name '*.md' -exec awk -v trigger_alt='agent|claude|codex' '
+BEGIN {
+  trigger_re = "(^|[[:space:]])@(" trigger_alt ")([^[:alnum:]_]|$)"
+  agent_re = "^[[:space:]]*`(" trigger_alt ")`[[:space:]]*:"
+}
+function finish_callout() {
+  if (in_callout && has_trigger) {
+    if (callout_type == "note" && !sealed && !agent_last) print callout_file ":" start
+    if (callout_type == "done" && !sealed) print callout_file ":" start
+  }
+  in_callout = 0
+  callout_type = ""
+  has_trigger = 0
   sealed = 0
+  agent_last = 0
   callout_file = ""
 }
-FNR == 1 && NR > 1 { finish_done() }
-/^[[:space:]]*>[[:space:]]*\[!DONE\]-/ {
-  finish_done()
-  in_done = 1
+function start_callout(type) {
+  in_callout = 1
+  callout_type = type
+  has_trigger = 0
   sealed = 0
+  agent_last = 0
   callout_file = FILENAME
   start = FNR
 }
-!in_done { next }
-$0 !~ /^[[:space:]]*>/ { finish_done(); next }
-{
+function process_quoted_line() {
   line = $0
   sub(/^[[:space:]]*>[[:space:]]*/, "", line)
+  if (line ~ trigger_re) has_trigger = 1
   if (line !~ /^[[:space:]]*$/) {
     sealed = (line ~ /<!--atag:eot-->[[:space:]]*$/)
+    agent_last = (line ~ agent_re)
   }
 }
-END { finish_done() }
+FNR == 1 && NR > 1 { finish_callout() }
+/^[[:space:]]*>[[:space:]]*\[!NOTE\]\+/ {
+  finish_callout()
+  start_callout("note")
+  process_quoted_line()
+  next
+}
+/^[[:space:]]*>[[:space:]]*\[!DONE\]-/ {
+  finish_callout()
+  start_callout("done")
+  process_quoted_line()
+  next
+}
+!in_callout { next }
+$0 !~ /^[[:space:]]*>/ { finish_callout(); next }
+{
+  process_quoted_line()
+}
+END { finish_callout() }
 ' {} +
 ```
 
@@ -159,8 +190,9 @@ Defaults:
 - Polls every 60 seconds until the terminal closes or you press `Ctrl-C`.
 - Prints one startup line: `Watching for @agent, @claude, @codex agent tags in /path/to/notes...`
 - Prints nothing on no-match unless `--debug` is set.
-- With `--debug`, no-match prints: `no @agent, @claude, @codex agent tags detected`.
+- With `--debug`, no-match prints: `[HH:MM]  No @agent, @claude, @codex agent tags detected`.
 - Runs Claude from the target directory with `claude -p --model sonnet --permission-mode acceptEdits`.
+- Defaults `--response-style auto`: terminal stdout requests plain terminal text; piped/redirected/UI callers get Markdown. Use `--response-style terminal` or `--response-style markdown` to force it.
 - Uses a 30-minute timeout around Claude as a runaway guard.
 
 Useful options:
@@ -168,6 +200,7 @@ Useful options:
 ```sh
 skills/atag/scripts/atag-poll.sh --once --dir /path/to/notes
 skills/atag/scripts/atag-poll.sh --debug --interval 30 --dir /path/to/notes
+skills/atag/scripts/atag-poll.sh --response-style terminal --dir /path/to/notes
 skills/atag/scripts/atag-poll.sh --dir /path/to/notes @pi
 skills/atag/scripts/atag-poll.sh --dir /path/to/notes '@agento, @pi' -- --max-budget-usd 1
 ```
@@ -188,11 +221,17 @@ By default, keep the last assistant message brief and easy to override.
 
 If there are no changes, use one line: `Scanned N files in <path>. No open unresolved @<triggers> tags detected.`
 
-If there are changes or human input is required, provide a clear, concise executive update with links to changed files and line numbers/anchors when available. Follow any user-specified summary format over this default.
+If there are changes or human input is required, output only:
+
+- Changes made.
+- Active threads left unchanged because the agent is waiting on the human.
+- Changes that should have happened but could not.
+
+Do not summarize already sealed `[!DONE]-` threads, skipped false positives, or previous work unless it directly explains a requested failure. Follow any user-specified summary format over this default. If the caller requests terminal plain text, do not use Markdown tables.
 
 ## Best practices
 
-**Scheduled runs should exit asap.** When wrapping this skill in a scheduled task, gate the run on the Scanning grep and exit immediately if it returns empty — don't invoke the skill on no-op runs.
+**Scheduled runs should exit asap.** When wrapping this skill in a scheduled task, gate the run on the Scanning commands and exit immediately if they return empty — don't invoke the skill on no-op runs.
 
 **Don't prematurely limit results.** Actionable threads cluster in recently-touched files — sort matches by file mtime descending. If you must, cap after sorting.
 

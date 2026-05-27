@@ -18,7 +18,7 @@ or invoke it explicitly:
 Use atag on /path/to/notes
 ```
 
-See `skills/atag/SKILL.md` for the protocol details: tag shapes, `[!NOTE]+` / `[!DONE]-` markers, scan regex, and discussion thread format.
+See `skills/atag/SKILL.md` for the protocol details: tag shapes, `[!NOTE]+` / `[!DONE]-` markers, scan commands, poller options, and discussion thread format.
 
 ## Obsidian styling (optional)
 

@@ -12,8 +12,8 @@
 //   - Consistency tests assert SKILL.md contains them verbatim, so editing
 //     SKILL.md without updating the test (or vice versa) fails loud.
 //   - Fixtures live in `markdown-agent-tags.spec.md`. Each section's fenced
-//     block can opt into the grep scan with `@test:match` / `@test:nomatch`, and
-//     into the DONE seal scan with `@done:match` / `@done:nomatch`.
+//     block can opt into the unresolved scan with `@test:match` / `@test:nomatch`,
+//     and into the DONE callout scan with `@done:match` / `@done:nomatch`.
 //   - Per-agent fixtures (one bare `@<agent>` tag per name) are
 //     generated programmatically from AGENTS.
 
@@ -24,33 +24,65 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 // ─── single source of truth (TS side) ─────────────────────────────────────
-const SCAN_REGEX = String.raw`(\[!NOTE\]\+|^([^>]*[[:space:]])?@(agent|claude|codex)([^[:alnum:]_]|$))`;
+const INLINE_SCAN_REGEX = String.raw`^([^>]*[[:space:]])?@(agent|claude|codex)([^[:alnum:]_]|$)`;
 const AGENTS = ["agent", "claude", "codex"] as const;
 const DONE_EOT = "<!--atag:eot-->";
-const DONE_SCAN_AWK = String.raw`function finish_done() {
-  if (in_done && !sealed) print callout_file ":" start
-  in_done = 0
-  sealed = 0
-  callout_file = ""
-}
-FNR == 1 && NR > 1 { finish_done() }
-/^[[:space:]]*>[[:space:]]*\[!DONE\]-/ {
-  finish_done()
-  in_done = 1
-  sealed = 0
-  callout_file = FILENAME
-  start = FNR
-}
-!in_done { next }
-$0 !~ /^[[:space:]]*>/ { finish_done(); next }
-{
-  line = $0
-  sub(/^[[:space:]]*>[[:space:]]*/, "", line)
-  if (line !~ /^[[:space:]]*$/) {
-    sealed = (line ~ /<!--atag:eot-->[[:space:]]*$/)
-  }
-}
-END { finish_done() }`;
+const TRIGGER_ALT = AGENTS.join("|");
+const CALLOUT_SCAN_AWK = [
+  'BEGIN {',
+  '  trigger_re = "(^|[[:space:]])@(" trigger_alt ")([^[:alnum:]_]|$)"',
+  '  agent_re = "^[[:space:]]*`(" trigger_alt ")`[[:space:]]*:"',
+  '}',
+  'function finish_callout() {',
+  '  if (in_callout && has_trigger) {',
+  '    if (callout_type == "note" && !sealed && !agent_last) print callout_file ":" start',
+  '    if (callout_type == "done" && !sealed) print callout_file ":" start',
+  '  }',
+  '  in_callout = 0',
+  '  callout_type = ""',
+  '  has_trigger = 0',
+  '  sealed = 0',
+  '  agent_last = 0',
+  '  callout_file = ""',
+  '}',
+  'function start_callout(type) {',
+  '  in_callout = 1',
+  '  callout_type = type',
+  '  has_trigger = 0',
+  '  sealed = 0',
+  '  agent_last = 0',
+  '  callout_file = FILENAME',
+  '  start = FNR',
+  '}',
+  'function process_quoted_line() {',
+  '  line = $0',
+  '  sub(/^[[:space:]]*>[[:space:]]*/, "", line)',
+  '  if (line ~ trigger_re) has_trigger = 1',
+  '  if (line !~ /^[[:space:]]*$/) {',
+  '    sealed = (line ~ /<!--atag:eot-->[[:space:]]*$/)',
+  '    agent_last = (line ~ agent_re)',
+  '  }',
+  '}',
+  'FNR == 1 && NR > 1 { finish_callout() }',
+  '/^[[:space:]]*>[[:space:]]*\\[!NOTE\\]\\+/ {',
+  '  finish_callout()',
+  '  start_callout("note")',
+  '  process_quoted_line()',
+  '  next',
+  '}',
+  '/^[[:space:]]*>[[:space:]]*\\[!DONE\\]-/ {',
+  '  finish_callout()',
+  '  start_callout("done")',
+  '  process_quoted_line()',
+  '  next',
+  '}',
+  '!in_callout { next }',
+  '$0 !~ /^[[:space:]]*>/ { finish_callout(); next }',
+  '{',
+  '  process_quoted_line()',
+  '}',
+  'END { finish_callout() }',
+].join("\n");
 
 const SKILL_PATH = new URL("../SKILL.md", import.meta.url);
 const SPEC_PATH = new URL("./markdown-agent-tags.spec.md", import.meta.url);
@@ -107,69 +139,71 @@ const AGENT_FIXTURES: Fixture[] = AGENTS.map((agent) => ({
 const ALL_FIXTURES = [...SPEC_FIXTURES, ...AGENT_FIXTURES];
 
 // ─── harness ──────────────────────────────────────────────────────────────
-let grepMatched: Set<string>;
+let scanMatched: Set<string>;
 let doneMatched: Set<string>;
-let grepTempDir = "";
+let scanTempDir = "";
 let doneTempDir = "";
 
 beforeAll(async () => {
-  const grepScan = await writeFixtures(ALL_FIXTURES, "markdown-agent-tags-grep-");
-  grepTempDir = grepScan.tempDir;
+  const scan = await writeFixtures(ALL_FIXTURES, "markdown-agent-tags-scan-");
+  scanTempDir = scan.tempDir;
 
-  const proc = Bun.spawnSync({
-    cmd: ["grep", "-rlnE", "--include=*.md", SCAN_REGEX, grepTempDir],
+  const inlineProc = Bun.spawnSync({
+    cmd: ["grep", "-rlnE", "--include=*.md", INLINE_SCAN_REGEX, scanTempDir],
     stdout: "pipe",
     stderr: "pipe",
   });
   // grep exits 1 when no matches — not an error for us.
-  if (proc.exitCode !== 0 && proc.exitCode !== 1) {
-    throw new Error(`grep failed (exit ${proc.exitCode}): ${new TextDecoder().decode(proc.stderr)}`);
+  if (inlineProc.exitCode !== 0 && inlineProc.exitCode !== 1) {
+    throw new Error(`grep failed (exit ${inlineProc.exitCode}): ${new TextDecoder().decode(inlineProc.stderr)}`);
   }
-  grepMatched = new Set(
-    new TextDecoder().decode(proc.stdout)
-      .trim().split("\n").filter(Boolean)
-      .map((p) => p.replace(`${grepTempDir}/`, "").replace(/\.md$/, "")),
-  );
+
+  const calloutProc = Bun.spawnSync({
+    cmd: ["awk", "-v", `trigger_alt=${TRIGGER_ALT}`, CALLOUT_SCAN_AWK, ...scan.paths],
+    stdout: "pipe",
+    stderr: "pipe",
+  });
+  if (calloutProc.exitCode !== 0) {
+    throw new Error(`callout scan failed (exit ${calloutProc.exitCode}): ${new TextDecoder().decode(calloutProc.stderr)}`);
+  }
+
+  scanMatched = new Set([
+    ...pathsToFixtureNames(new TextDecoder().decode(inlineProc.stdout), scanTempDir),
+    ...calloutLinesToFixtureNames(new TextDecoder().decode(calloutProc.stdout), scanTempDir),
+  ]);
 
   const doneScan = await writeFixtures(DONE_FIXTURES, "markdown-agent-tags-done-");
   doneTempDir = doneScan.tempDir;
 
   const doneProc = Bun.spawnSync({
-    cmd: ["awk", DONE_SCAN_AWK, ...doneScan.paths],
+    cmd: ["awk", "-v", `trigger_alt=${TRIGGER_ALT}`, CALLOUT_SCAN_AWK, ...doneScan.paths],
     stdout: "pipe",
     stderr: "pipe",
   });
   if (doneProc.exitCode !== 0) {
     throw new Error(`DONE scan failed (exit ${doneProc.exitCode}): ${new TextDecoder().decode(doneProc.stderr)}`);
   }
-  doneMatched = new Set(
-    new TextDecoder().decode(doneProc.stdout)
-      .trim().split("\n").filter(Boolean)
-      .map((line) => {
-        const path = line.slice(0, line.lastIndexOf(":"));
-        return path.replace(`${doneTempDir}/`, "").replace(/\.md$/, "");
-      }),
-  );
+  doneMatched = new Set(calloutLinesToFixtureNames(new TextDecoder().decode(doneProc.stdout), doneTempDir));
 
-  console.log(`Regex:    ${SCAN_REGEX}`);
+  console.log(`Inline:   ${INLINE_SCAN_REGEX}`);
   console.log(`DONE EOT: ${DONE_EOT}`);
   console.log(`Agents:   ${AGENTS.join(" ")}`);
-  console.log(`Fixtures: ${SPEC_FIXTURES.length} grep from spec + ${AGENT_FIXTURES.length} generated = ${ALL_FIXTURES.length}; ${DONE_FIXTURES.length} DONE`);
+  console.log(`Fixtures: ${SPEC_FIXTURES.length} scan from spec + ${AGENT_FIXTURES.length} generated = ${ALL_FIXTURES.length}; ${DONE_FIXTURES.length} DONE`);
 });
 
 afterAll(async () => {
-  if (grepTempDir) await rm(grepTempDir, { recursive: true, force: true });
+  if (scanTempDir) await rm(scanTempDir, { recursive: true, force: true });
   if (doneTempDir) await rm(doneTempDir, { recursive: true, force: true });
 });
 
 // ─── tests ────────────────────────────────────────────────────────────────
 describe("SKILL.md ⇄ test constants are in sync", () => {
-  it("SKILL.md contains the scan regex verbatim", () => {
-    expect(SKILL).toContain(SCAN_REGEX);
+  it("SKILL.md contains the inline scan regex verbatim", () => {
+    expect(SKILL).toContain(INLINE_SCAN_REGEX);
   });
-  it("SKILL.md contains the DONE seal token and inline awk verbatim", () => {
+  it("SKILL.md contains the DONE seal token and callout awk verbatim", () => {
     expect(SKILL).toContain(DONE_EOT);
-    expect(SKILL).toContain(DONE_SCAN_AWK);
+    expect(SKILL).toContain(CALLOUT_SCAN_AWK);
   });
   it("SKILL.md mentions every agent name", () => {
     for (const agent of AGENTS) expect(SKILL).toContain(agent);
@@ -189,16 +223,16 @@ describe("spec.md fixtures", () => {
   });
 });
 
-describe("grep scan picks up exactly the expected fixtures", () => {
+describe("unresolved scan picks up exactly the expected fixtures", () => {
   for (const fx of ALL_FIXTURES) {
     const verb = fx.expect === "match" ? "matches" : "skips";
     it(`${verb}: ${fx.name}`, () => {
-      expect(grepMatched.has(slugify(fx.name))).toBe(fx.expect === "match");
+      expect(scanMatched.has(slugify(fx.name))).toBe(fx.expect === "match");
     });
   }
 });
 
-describe("DONE seal scan picks up exactly the expected fixtures", () => {
+describe("callout scan picks up exactly the expected DONE fixtures", () => {
   for (const fx of DONE_FIXTURES) {
     const verb = fx.expect === "match" ? "matches" : "skips";
     it(`${verb}: ${fx.name}`, () => {
@@ -226,4 +260,19 @@ async function writeFixtures(fixtures: Fixture[], prefix: string): Promise<{ tem
 
 function slugify(s: string): string {
   return s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+}
+
+function pathsToFixtureNames(output: string, tempDir: string): string[] {
+  return output
+    .trim().split("\n").filter(Boolean)
+    .map((p) => p.replace(`${tempDir}/`, "").replace(/\.md$/, ""));
+}
+
+function calloutLinesToFixtureNames(output: string, tempDir: string): string[] {
+  return output
+    .trim().split("\n").filter(Boolean)
+    .map((line) => {
+      const path = line.slice(0, line.lastIndexOf(":"));
+      return path.replace(`${tempDir}/`, "").replace(/\.md$/, "");
+    });
 }
