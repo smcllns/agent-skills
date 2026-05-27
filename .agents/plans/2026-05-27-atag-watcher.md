@@ -18,10 +18,6 @@ Add a standalone `atag` watcher that checks markdown files cheaply and only invo
 - Existing model-comparison harness invokes Claude with prose: `claude -p "Run the atag skill ..."` rather than a slash command.
 - Canonical skill files live in `skills/atag/`; plugin copies are derived by `scripts/sync-skills.sh`.
 
-## Missing requirements to settle
-
-- Custom triggers: confirm "provided triggers replace defaults" rather than "extend defaults". Recommendation: replace, matching `SKILL.md`.
-
 ## Resolved decisions from 2026-05-27 discussion
 
 - Runtime model: foreground terminal-bound polling loop. The script runs cheap scans every minute and blocks while `claude -p` runs.
@@ -33,6 +29,7 @@ Add a standalone `atag` watcher that checks markdown files cheaply and only invo
 - Claude passthrough: support normal Claude CLI args so callers can override model, budget, permission mode, max turns, etc.
 - Runaway guard: set a default max-turns cap if Claude CLI exposes a suitable flag; otherwise add a timeout wrapper around the Claude subprocess.
 - Scan scope: do not skip directories. Use the documented recursive scan exactly.
+- Custom triggers replace defaults. Example: passing `@pi` scans only for `@pi`, not `agent claude codex pi`.
 - Dev test folder: `/Users/smcllns/Projects/skills/skills/atag/dev`.
 
 ## Implementation plan
@@ -82,4 +79,4 @@ Add a standalone `atag` watcher that checks markdown files cheaply and only invo
 
 ## Open questions
 
-- Should provided custom triggers replace defaults, or add to `agent claude codex`?
+- None.
