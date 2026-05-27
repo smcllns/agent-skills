@@ -3,7 +3,7 @@
 ## What changed
 
 - Added `skills/atag/scripts/atag-poll.sh`, a foreground polling loop that runs cheap markdown scans every 60 seconds and invokes `claude -p` only when unresolved tags exist.
-- Added `skills/atag/reference/atag-poll.test.ts` with stubbed-Claude coverage for quiet no-match, debug no-match, custom trigger parsing, DONE follow-ups, passthrough args, target cwd, and Claude failure propagation.
+- Added `skills/atag/reference/atag-poll.test.ts` with stubbed-Claude coverage for startup output, quiet no-match, debug no-match, custom trigger parsing, DONE follow-ups, passthrough args, target cwd, and Claude failure propagation.
 - Documented terminal polling in `skills/atag/SKILL.md` and `claude-plugins/atag/README.md`; synced canonical skill copies into Claude and Codex plugin trees.
 
 ## Decisions

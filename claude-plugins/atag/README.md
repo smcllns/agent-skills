@@ -44,7 +44,7 @@ Claude Cowork provides a nice UI for managing scheduled tasks and you can pause/
 
 ### Terminal polling
 
-For technical local use, run the foreground poller from a terminal. It scans every 60 seconds, prints nothing when there is no work, and only invokes Claude when unresolved tags exist. Closing the terminal or pressing `Ctrl-C` stops the loop.
+For technical local use, run the foreground poller from a terminal. It scans every 60 seconds, prints a startup line with the watched triggers and path, then stays quiet when there is no work unless `--debug` is set. Closing the terminal or pressing `Ctrl-C` stops the loop.
 
 ```bash
 skills/atag/scripts/atag-poll.sh --dir /path/to/notes

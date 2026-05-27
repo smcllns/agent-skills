@@ -25,28 +25,33 @@ afterEach(async () => {
 });
 
 describe("atag-poll", () => {
-  it("prints nothing and does not invoke Claude when no tags match", async () => {
+  it("prints the startup line and does not invoke Claude when no tags match", async () => {
     await installClaudeStub();
     await writeFile(join(fixtureDir, "note.md"), "plain markdown\n");
 
     const result = runPoll(["--once", "--dir", fixtureDir]);
 
     expect(result.exitCode).toBe(0);
-    expect(result.stdout).toBe("");
+    expect(result.stdout).toBe(`Watching for @agent, @claude, @codex agent tags in ${realpathSync(fixtureDir)}...\n`);
     expect(result.stderr).toBe("");
     expect(await readLog()).toBe("");
   });
 
-  it("prints one debug status line on no-match", async () => {
+  it("prints one debug no-match status line after startup", async () => {
     await installClaudeStub();
     await writeFile(join(fixtureDir, "note.md"), "plain markdown\n");
 
     const result = runPoll(["--once", "--debug", "--dir", fixtureDir]);
 
     expect(result.exitCode).toBe(0);
-    expect(result.stdout).toBe("");
-    expect(result.stderr.trim().split("\n")).toHaveLength(1);
-    expect(result.stderr).toContain("no unresolved tags");
+    expect(result.stdout).toBe(
+      [
+        `Watching for @agent, @claude, @codex agent tags in ${realpathSync(fixtureDir)}...`,
+        "no @agent, @claude, @codex agent tags detected",
+        "",
+      ].join("\n"),
+    );
+    expect(result.stderr).toBe("");
     expect(await readLog()).toBe("");
   });
 
@@ -57,7 +62,7 @@ describe("atag-poll", () => {
     const result = runPoll(["--once", "--dir", fixtureDir]);
 
     expect(result.exitCode).toBe(0);
-    expect(result.stdout).toBe("claude output\n");
+    expect(result.stdout).toBe(`Watching for @agent, @claude, @codex agent tags in ${realpathSync(fixtureDir)}...\nclaude output\n`);
     const log = await readLog();
     expect(log).toContain(`cwd=${realpathSync(fixtureDir)}`);
     expect(log).toContain("arg=-p");
@@ -75,7 +80,7 @@ describe("atag-poll", () => {
     const result = runPoll(["--once", "--dir", fixtureDir, "@pi"]);
 
     expect(result.exitCode).toBe(0);
-    expect(result.stdout).toBe("");
+    expect(result.stdout).toBe(`Watching for @pi agent tags in ${realpathSync(fixtureDir)}...\n`);
     expect(result.stderr).toBe("");
     expect(await readLog()).toBe("");
   });
@@ -87,7 +92,7 @@ describe("atag-poll", () => {
     const result = runPoll(["--once", "--dir", fixtureDir, "@agento,", "@pi"]);
 
     expect(result.exitCode).toBe(0);
-    expect(result.stdout).toBe("matched\n");
+    expect(result.stdout).toBe(`Watching for @agento, @pi agent tags in ${realpathSync(fixtureDir)}...\nmatched\n`);
     expect(await readLog()).toContain("@agento, @pi");
   });
 
@@ -119,7 +124,7 @@ describe("atag-poll", () => {
     const result = runPoll(["--once", "--dir", fixtureDir]);
 
     expect(result.exitCode).toBe(0);
-    expect(result.stdout).toBe("done scan\n");
+    expect(result.stdout).toBe(`Watching for @agent, @claude, @codex agent tags in ${realpathSync(fixtureDir)}...\ndone scan\n`);
     expect(await readLog()).toContain("note.md");
   });
 
@@ -143,7 +148,7 @@ describe("atag-poll", () => {
     const result = runPoll(["--once", "--dir", fixtureDir]);
 
     expect(result.exitCode).toBe(7);
-    expect(result.stdout).toBe("partial\n");
+    expect(result.stdout).toBe(`Watching for @agent, @claude, @codex agent tags in ${realpathSync(fixtureDir)}...\npartial\n`);
     expect(result.stderr).toBe("boom\n");
   });
 });

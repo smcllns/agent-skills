@@ -132,6 +132,8 @@ for trigger in "${triggers[@]}"; do
   fi
   trigger_display+="@${trigger}"
 done
+
+echo "Watching for ${trigger_display} agent tags in ${target_dir}..."
 scan_regex="(\\[!NOTE\\]\\+|^([^>]*[[:space:]])?@(${trigger_alt})([^[:alnum:]_]|$))"
 
 done_scan_awk='function finish_done() {
@@ -298,7 +300,7 @@ run_once() {
 
   if [[ ! -s "$matches" ]]; then
     if [[ "$debug" -eq 1 ]]; then
-      echo "atag-poll: no unresolved tags in $target_dir for ${trigger_display}" >&2
+      echo "no ${trigger_display} agent tags detected"
     fi
     return 0
   fi

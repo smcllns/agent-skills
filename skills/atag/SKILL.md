@@ -157,8 +157,9 @@ skills/atag/scripts/atag-poll.sh --dir /path/to/notes
 Defaults:
 
 - Polls every 60 seconds until the terminal closes or you press `Ctrl-C`.
-- Prints nothing when no unresolved tags match.
-- With `--debug`, prints one no-match status line to stderr.
+- Prints one startup line: `Watching for @agent, @claude, @codex agent tags in /path/to/notes...`
+- Prints nothing on no-match unless `--debug` is set.
+- With `--debug`, no-match prints: `no @agent, @claude, @codex agent tags detected`.
 - Runs Claude from the target directory with `claude -p --model sonnet --permission-mode acceptEdits`.
 - Uses a 30-minute timeout around Claude as a runaway guard.
 

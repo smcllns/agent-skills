@@ -43,7 +43,8 @@ Add a standalone `atag` watcher that checks markdown files cheaply and only invo
   - Reject whitespace-only trigger lists like `@agento @pi`.
   - Default dir: current working directory.
   - Default triggers: `agent claude codex`.
-  - No match: print nothing and sleep until next interval; with `--debug`, print one status line to stderr.
+  - Startup: print `Watching for @triggers agent tags in /path...`.
+  - No match: print nothing and sleep until next interval; with `--debug`, print `no @triggers agent tags detected`.
   - Match: `cd` to target dir, invoke Claude, pass through Claude stdout/stderr, then sleep until next interval.
   - Claude command defaults: `claude -p --model sonnet --permission-mode acceptEdits`.
   - `--once`: perform one scan/invocation cycle, then exit with the scan/Claude result; used for tests and scheduler-agnostic future wrappers.
@@ -51,12 +52,12 @@ Add a standalone `atag` watcher that checks markdown files cheaply and only invo
   - Signal handling: trap INT/TERM/HUP and exit cleanly so terminal close or Ctrl-C stops the loop.
 - [x] Add `skills/atag/reference/atag-poll.test.ts`.
   - Use temp fixtures and a stub `claude` on `PATH`.
-  - Test no-match quiet behavior.
+  - Test startup line plus no-match quiet behavior.
   - Test default trigger match invokes Claude once.
   - Test custom trigger parsing accepted/rejected cases.
   - Test `--dir` changes cwd for Claude.
   - Test unsealed `[!DONE]-` match invokes Claude.
-  - Test debug no-match output is a single status line on stderr.
+  - Test debug no-match output is a single concise status line.
   - Test Claude failure propagates.
 - [x] Update `skills/atag/SKILL.md`.
   - Add a short "Watcher script" section.
