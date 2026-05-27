@@ -20,25 +20,32 @@ Add a standalone `atag` watcher that checks markdown files cheaply and only invo
 ## Missing requirements to settle
 
 - Custom triggers: confirm "provided triggers replace defaults" rather than "extend defaults". Recommendation: replace, matching `SKILL.md`.
-- Runtime mode: confirm default behavior. Recommendation: one-shot by default, with `--watch --interval 60` for long-running local use. That keeps launchd/cron/test usage deterministic.
-- Claude permissions: unattended runs need a non-interactive edit mode. Recommendation: support `--claude-arg ...` / `ATAG_CLAUDE_ARGS`, and local setup can use `--permission-mode acceptEdits` if Sam wants unattended edits.
-- Claude model/budget: decide whether watcher should pass a default model or leave Claude defaults alone. Recommendation: leave defaults alone, allow `ATAG_CLAUDE_ARGS`.
-- Scan exclusions: decide exact documented scan vs skipping common heavy dirs like `.git` or `node_modules`. Recommendation: exact documented scan first; only add excludes after evidence.
-- Concurrency: if a run takes over a minute, avoid overlapping Claude processes. Recommendation: per-dir lock with stale-PID cleanup.
+- Concurrency: if a run takes over a minute, avoid overlapping Claude processes. Need pick between scheduler-level serialization and script-level lock.
+
+## Resolved decisions from 2026-05-27 discussion
+
+- Runtime model: one-shot script only. External scheduler runs it every minute. Do not add an internal `--watch` loop.
+- Claude invocation: invoke the installed skill, not the plugin. Local verification passed after copying `atag` into `/Users/smcllns/Projects/dotfiles/skills/atag`.
+- Claude defaults: use `--permission-mode acceptEdits`, latest Sonnet alias, no default budget.
+- Claude passthrough: support normal Claude CLI args so callers can override model, budget, permission mode, max turns, etc.
+- Runaway guard: set a default max-turns cap if Claude CLI exposes a suitable flag; otherwise add a timeout wrapper around the Claude subprocess.
+- Scan scope: do not skip directories. Use the documented recursive scan exactly.
+- Dev test folder: `/Users/smcllns/Projects/skills/skills/atag/dev`.
 
 ## Implementation plan
 
 - [ ] Add `skills/atag/scripts/atag-watch.sh`.
   - Bash, no new dependencies.
-  - Args: `--dir DIR`, `--debug`, `--watch`, `--interval SECONDS`, `--once`, `--claude-arg ARG`, optional trigger list.
+  - Args: `--dir DIR`, `--debug`, `--claude-arg ARG`, optional trigger list.
   - Accept triggers like `@pi`, `@agento,@pi`, `@agento, @pi`.
   - Reject whitespace-only trigger lists like `@agento @pi`.
   - Default dir: current working directory.
   - Default triggers: `agent claude codex`.
   - No match: exit 0 with no stdout.
   - Match: `cd` to target dir, invoke Claude, pass through Claude stdout/stderr and exit code.
+  - Claude command defaults: `claude -p --model sonnet --permission-mode acceptEdits`.
   - Debug: write scan path, triggers, matched files, and Claude command to stderr.
-  - Lock: skip or debug-report if another watcher run is active for the same dir.
+  - Overlap protection: implement the option selected after the concurrency discussion.
 - [ ] Add `skills/atag/reference/atag-watch.test.ts`.
   - Use temp fixtures and a stub `claude` on `PATH`.
   - Test no-match quiet behavior.
@@ -63,14 +70,12 @@ Add a standalone `atag` watcher that checks markdown files cheaply and only invo
   - `diff -qr skills/atag codex-plugins/atag/skills/atag`
   - `git diff --check`
 - [ ] Local machine setup.
-  - Install or load the Claude atag plugin.
+  - Copy or install the `atag` skill into Claude Code's effective skill directory.
   - Smoke test on a temp folder with `@codex`.
   - Smoke test quiet no-op on a temp folder with no tags.
-  - Start long-running watcher or create a launchd job after the one-shot script is proven.
+  - Create a launchd job or other external scheduler after the one-shot script is proven.
 
 ## Open questions
 
 - Should provided custom triggers replace defaults, or add to `agent claude codex`?
-- Should the script default to one-shot or an every-minute loop?
-- What Claude args should the local unattended run use: default, `--permission-mode acceptEdits`, model, max budget?
-- Should the first version scan exactly like `SKILL.md`, or skip heavy dirs?
+- Which overlap protection should we choose?
