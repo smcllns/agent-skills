@@ -30,10 +30,11 @@ The DONE seal is deliberately append-friendly: a human can type directly after
 the token, without a blank quoted separator or speaker label, and the thread
 becomes unresolved until an agent inspects it and reseals the final reply.
 
-Inside callouts, `@name` is only for the original trigger tag. Agent replies use
-plain inline-code speaker labels (`` `claude`:``) and end with
-`<!--atag:eot-->` after yielding the turn. Human replies use emphasized
-inline-code speaker labels (``*`sam`*:``).
+Inside callouts, `@name` is only for the original trigger tag. Speaker labels
+are inline-code sender/from fields with no trailing colon or punctuation. Agent
+replies start with a plain inline-code label like `` `claude` reply`` and end
+with `<!--atag:eot-->` after yielding the turn. Human replies start with an
+emphasized inline-code label like ``*`sam`* reply``.
 
 ---
 
@@ -60,13 +61,27 @@ the human replies.
 >
 > @claude make this better
 >
-> `claude`: Which direction should I take it? <!--atag:eot-->
+> `claude` Which direction should I take it? <!--atag:eot-->
 ```
 
 ### Active agent thread — legacy agent-last reply
 
 Older active threads may not have the seal yet. If the latest nonblank quoted
 line is an agent speaker label, the scanner treats it as waiting on the human.
+
+```md @test:nomatch
+> [!NOTE]+ awaiting direction
+>
+> @claude make this better
+>
+> `claude` Which direction should I take it?
+```
+
+### Active agent thread — legacy colon speaker label
+
+New output omits the colon after speaker labels, but the scanner still accepts
+older colon-form agent replies so existing notes do not become actionable
+forever.
 
 ```md @test:nomatch
 > [!NOTE]+ awaiting direction
@@ -86,9 +101,9 @@ again.
 >
 > @claude make this better
 >
-> `claude`: Which direction should I take it? <!--atag:eot-->
+> `claude` Which direction should I take it? <!--atag:eot-->
 >
-> *`sam`*: make it more concrete
+> *`sam`* make it more concrete
 ```
 
 ### Bare `[!NOTE]` — plain markdown, not an agent thread
@@ -119,7 +134,7 @@ agent-authored quoted line with `<!--atag:eot-->`.
 >
 > @claude already handled
 >
-> `claude`: done. <!--atag:eot-->
+> `claude` done. <!--atag:eot-->
 ```
 
 ### Bare `[!DONE]` — plain markdown
@@ -160,7 +175,7 @@ human wrote after the seal.
 >
 > @claude tighten the intro
 >
-> `claude`: done, tightened it. <!--atag:eot-->
+> `claude` done, tightened it. <!--atag:eot-->
 > one more tweak please
 ```
 
@@ -174,10 +189,10 @@ the seal token.
 >
 > @claude tighten the intro
 >
-> `claude`: done, tightened it. <!--atag:eot-->
+> `claude` done, tightened it. <!--atag:eot-->
 > one more tweak please
 >
-> `claude`: done, tightened it again. <!--atag:eot-->
+> `claude` done, tightened it again. <!--atag:eot-->
 ```
 
 ### Multiple DONE callouts with one unsealed
@@ -189,13 +204,13 @@ Any unsealed DONE callout in a file makes the file actionable.
 >
 > @claude first task
 >
-> `claude`: done. <!--atag:eot-->
+> `claude` done. <!--atag:eot-->
 
 > [!DONE]- second
 >
 > @codex second task
 >
-> `codex`: done.
+> `codex` done.
 ```
 
 ### Tag inside an indented blockquote
@@ -260,6 +275,22 @@ Sam's case from 2026-05-19 — tag at the end of a sentence.
 
 ```md @test:match
 tell me my options please @claude
+```
+
+### Resolved inline task tag
+
+When a tag was inline on a task item, the resolved body task should no longer
+contain the live trigger. The original task line is preserved verbatim inside
+the sealed callout immediately after the affected block.
+
+```md @test:nomatch @done:nomatch
+- [x] brainstorm a `config.yml` shaped joke
+
+> [!DONE]- drafted config.yml joke
+>
+> - [ ] brainstorm a `config.yml` shaped joke @claude do this pls
+>
+> `claude` done — joke above. <!--atag:eot-->
 ```
 
 ---

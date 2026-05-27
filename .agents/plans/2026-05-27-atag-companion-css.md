@@ -10,6 +10,7 @@ Simplify `skills/atag/companion/atag-callouts.css` so it works as progressive en
 - [x] Replace overspecified Obsidian-only selectors with portable callout styling.
 - [x] Remove redundant Obsidian `data-callout-fold` selectors; `note` and `done` are the protocol states.
 - [x] Remove rounded full-border card treatment; keep square state strip and stronger human-label border.
+- [x] Make no-colon speaker labels the canonical atag thread format and keep scanner compatibility for legacy colon labels.
 - [x] Keep active/done color, turn dividers, and speaker-label styling.
 - [x] Sync CSS to Claude and Codex plugin copies.
 - [x] Verify with browser screenshot of styled fixture HTML.
@@ -24,7 +25,8 @@ Simplify `skills/atag/companion/atag-callouts.css` so it works as progressive en
 - Obsidian computed styles confirmed active/done colors, dividers, and speaker label display.
 - `rg data-callout-fold skills/atag/companion/atag-callouts.css ...` returned no matches.
 - CSS copies matched between canonical, Claude plugin, and Codex plugin.
-- Browser recheck confirmed square callout edges and accent-bordered human speaker labels.
+- Browser recheck confirmed square callout edges, no literal speaker-label colons, and matching inline-block label boxes for human/agent labels.
+- Added ADR `docs/adrs/2026-05-27-atag-speaker-labels.md`.
 - Full tree drift checks were skipped on the follow-up selector change because `skills/atag/scripts/atag-poll.sh` had unrelated in-flight changes.
 
 ## Open Questions

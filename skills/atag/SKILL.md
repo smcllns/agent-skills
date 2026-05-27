@@ -24,7 +24,7 @@ After the agent acts:
 >
 > @codex can you clean up that formatting pls
 >
-> `codex`: done — removed broken newlines and added missing periods. No changes to text content. <!--atag:eot-->
+> `codex` done — removed broken newlines and added missing periods. No changes to text content. <!--atag:eot-->
 ```
 
 The original tag is preserved verbatim as the first body line. The title is the outcome summary.
@@ -46,10 +46,10 @@ The `+/-` marker is load-bearing:
 
 Inside an active callout, separate turns with a **single blank `>` line** — one paragraph per turn.
 
-Use `@name` only for trigger tags. Speaker labels use inline code:
+Use `@name` only for trigger tags. Speaker labels use inline code as the sender/from field. Do not add a colon or other punctuation after the label:
 
-- Agent turn: `` `claude`: reply <!--atag:eot-->``.
-- Human turn: ``*`sam`*: reply``.
+- Agent turn: `` `claude` reply <!--atag:eot-->``.
+- Human turn: ``*`sam`* reply``.
 
 `<!--atag:eot-->` means the agent yielded the turn. End every agent response with it, including `[!NOTE]+` questions and partial answers. In `[!DONE]-` threads, a human can add follow-up text directly after the token; the next agent pass will inspect and reseal.
 
@@ -58,11 +58,11 @@ Use `@name` only for trigger tags. Speaker labels use inline code:
 >
 > @claude tighten the intro
 >
-> `claude`: trimmed to 3 sentences — does that read OK or want to go shorter? <!--atag:eot-->
+> `claude` trimmed to 3 sentences — does that read OK or want to go shorter? <!--atag:eot-->
 >
-> *`sam`*: shorter please, ~1 sentence
+> *`sam`* shorter please, ~1 sentence
 >
-> `claude`: done — single sentence. <!--atag:eot-->
+> `claude` done — single sentence. <!--atag:eot-->
 > no, make it sharper
 ```
 
@@ -85,7 +85,7 @@ For each unresolved tag:
 - Do the requested work when it is concrete — edit the **document body**, not the callout. The callout gets a one-line acknowledgement; the actual change goes where the user asked for it.
 - For discussion-only tags (no doc change requested), answer concisely inside the callout.
 - If the tag sits on a task item, update the checkbox too.
-- **Never remove or modify the original tag.** It must appear verbatim as the first body line of the resulting callout, in both `[!DONE]-` and `[!NOTE]+` cases.
+- **In general, preserve the original tag/request verbatim inside the callout** as the first body line. Modify, remove, or rewrite the body occurrence only when: (1) the tag was inline, such as on a task list item or inside a table cell; in that case, create a new callout immediately after the affected block, copy the original line verbatim into the callout, and remove the live trigger from the body, (2) prepending the user's speaker label for callout ergonomics, or (3) the user explicitly asks you to.
 
 End every agent reply with `<!--atag:eot-->` so cheap pollers can skip threads waiting on the human without invoking an agent.
 
@@ -102,7 +102,7 @@ When the tag is ambiguous, missing context, or non-actionable, **don't guess**. 
 >
 > @claude tighten the wording above
 >
-> `claude`: the wording above stretches back 12,000 words but your request sounds smaller. Confirm: (1) the last paragraph, (2) the last 4 paragraphs on this topic, or (3) the full doc. <!--atag:eot-->
+> `claude` the wording above stretches back 12,000 words but your request sounds smaller. Confirm: (1) the last paragraph, (2) the last 4 paragraphs on this topic, or (3) the full doc. <!--atag:eot-->
 ```
 
 ## Scanning for unresolved tags
@@ -123,7 +123,7 @@ Default agent names are `agent claude codex`. For custom triggers, replace the `
 find <path> -name '*.md' -exec awk -v trigger_alt='agent|claude|codex' '
 BEGIN {
   trigger_re = "(^|[[:space:]])@(" trigger_alt ")([^[:alnum:]_]|$)"
-  agent_re = "^[[:space:]]*`(" trigger_alt ")`[[:space:]]*:"
+  agent_re = "^[[:space:]]*`(" trigger_alt ")`([[:space:]]|:|$)"
 }
 function finish_callout() {
   if (in_callout && has_trigger) {
@@ -237,8 +237,8 @@ Do not summarize already sealed `[!DONE]-` threads, skipped false positives, or 
 
 **Callout is for discussion, not the work.** Edits go in the **document body**; the callout is a side thread for discussion and one-line acknowledgements of the changes made. Don't paste rewritten paragraphs, drafted sections, or new code into the reply — that belongs in the body. Discussion-only tags (e.g. `@claude why did we pick X?`) have no body edit, so the answer is the reply.
 
-**Proactively correct formatting.** Allow the human to write shorthand imperfectly, and normalize speaker labels to the inline-code format when you touch a thread.
+**Proactively correct formatting.** Allow the human to write shorthand imperfectly, and normalize speaker labels to the inline-code no-colon format when you touch a thread.
 
-**Reply using familiar agent name.** Use the agent name the user expects in your context (`` `claude`: ...``, `` `codex`: ...``, `` `pi`: ...``, `` `hermes`: ...``, etc).
+**Reply using familiar agent name.** Use the agent name the user expects in your context (`` `claude` ...``, `` `codex` ...``, `` `pi` ...``, `` `hermes` ...``, etc).
 
-**Don't self-reply.** If the most recent speaker label in a `[!NOTE]+` thread is your agent label (for example `` `claude`:``), the thread is waiting on the human. Leave it. If the same thread keeps showing up across scans with no human movement, mention it to the user.
+**Don't self-reply.** If the most recent speaker label in a `[!NOTE]+` thread is your agent label (for example `` `claude` reply``), the thread is waiting on the human. Leave it. If the same thread keeps showing up across scans with no human movement, mention it to the user.

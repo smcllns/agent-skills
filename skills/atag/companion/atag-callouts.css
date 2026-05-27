@@ -97,11 +97,14 @@ body[for="html-export"] .callout:is([data-callout="note"], [data-callout="done"]
   font-style: normal;
 }
 
-.markdown-rendered .callout:is([data-callout="note"], [data-callout="done"]) > .callout-content > p > :is(code:first-child, em:first-child > code:first-child),
-.markdown-preview .callout:is([data-callout="note"], [data-callout="done"]) > p > :is(code:first-child, em:first-child > code:first-child),
-body[for="html-export"] .callout:is([data-callout="note"], [data-callout="done"]) > p > :is(code:first-child, em:first-child > code:first-child) {
+.markdown-rendered .callout:is([data-callout="note"], [data-callout="done"]) > .callout-content > p > code:first-child,
+.markdown-rendered .callout:is([data-callout="note"], [data-callout="done"]) > .callout-content > p > em:first-child > code:first-child,
+.markdown-preview .callout:is([data-callout="note"], [data-callout="done"]) > p > code:first-child,
+.markdown-preview .callout:is([data-callout="note"], [data-callout="done"]) > p > em:first-child > code:first-child,
+body[for="html-export"] .callout:is([data-callout="note"], [data-callout="done"]) > p > code:first-child,
+body[for="html-export"] .callout:is([data-callout="note"], [data-callout="done"]) > p > em:first-child > code:first-child {
   display: inline-block;
-  margin-right: 0.25rem;
+  margin-right: 0.4rem;
   padding: 0.08rem 0.35rem 0.12rem;
   border: 1px solid var(--background-modifier-border, rgba(148, 163, 184, 0.45));
   border-radius: 4px;
@@ -122,9 +125,13 @@ body[for="html-export"] .callout:is([data-callout="note"], [data-callout="done"]
   background: rgba(var(--atag-title), 0.55);
 }
 
-.markdown-preview .callout:is([data-callout="note"], [data-callout="done"]) > p > :is(code:first-child, em:first-child > code:first-child)::before,
-.markdown-preview .callout:is([data-callout="note"], [data-callout="done"]) > p > :is(code:first-child, em:first-child > code:first-child)::after,
-body[for="html-export"] .callout:is([data-callout="note"], [data-callout="done"]) > p > :is(code:first-child, em:first-child > code:first-child)::before,
-body[for="html-export"] .callout:is([data-callout="note"], [data-callout="done"]) > p > :is(code:first-child, em:first-child > code:first-child)::after {
+.markdown-preview .callout:is([data-callout="note"], [data-callout="done"]) > p > code:first-child::before,
+.markdown-preview .callout:is([data-callout="note"], [data-callout="done"]) > p > code:first-child::after,
+.markdown-preview .callout:is([data-callout="note"], [data-callout="done"]) > p > em:first-child > code:first-child::before,
+.markdown-preview .callout:is([data-callout="note"], [data-callout="done"]) > p > em:first-child > code:first-child::after,
+body[for="html-export"] .callout:is([data-callout="note"], [data-callout="done"]) > p > code:first-child::before,
+body[for="html-export"] .callout:is([data-callout="note"], [data-callout="done"]) > p > code:first-child::after,
+body[for="html-export"] .callout:is([data-callout="note"], [data-callout="done"]) > p > em:first-child > code:first-child::before,
+body[for="html-export"] .callout:is([data-callout="note"], [data-callout="done"]) > p > em:first-child > code:first-child::after {
   content: none;
 }

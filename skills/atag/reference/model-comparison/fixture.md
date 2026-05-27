@@ -58,9 +58,9 @@ A passage of writing precedes this tag. The writing is fine but could be many th
 >
 > @claude give me a headline for this section
 >
-> `claude`: how about "Three reasons to switch to v2"?
+> `claude` how about "Three reasons to switch to v2"?
 >
-> *`sam`*: closer but make it more concrete — mention the actual benefit
+> *`sam`* closer but make it more concrete — mention the actual benefit
 
 ---
 
@@ -70,7 +70,7 @@ A passage of writing precedes this tag. The writing is fine but could be many th
 >
 > @claude fix the typo
 >
-> `claude`: done — replaced "teh" with "the". <!--atag:eot-->
+> `claude` done — replaced "teh" with "the". <!--atag:eot-->
 
 ---
 

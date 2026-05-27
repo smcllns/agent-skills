@@ -111,12 +111,12 @@ Add a standalone `atag` watcher that checks markdown files cheaply and only invo
 
 ## Current task list after run-2 testing
 
-- [ ] Align on the exact `SKILL.md` wording for inline body tags.
+- [x] Align on the exact `SKILL.md` wording for inline body tags.
   - Current decision shape: keep "preserve the original tag/request verbatim inside the callout" as the default invariant.
   - Narrow exception: if the tag was inline, such as on a task list item or inside a table cell, create a new callout immediately after the affected block, copy the original line verbatim into the callout, and remove the live trigger from the body.
   - Also allow modifying the original when prepending the user's speaker label for callout ergonomics, or when the user explicitly asks.
-- [ ] Patch `skills/atag/SKILL.md` with the agreed wording.
-- [ ] Add/update regression fixtures for inline task tags.
+- [x] Patch `skills/atag/SKILL.md` with the agreed wording.
+- [x] Add/update regression fixtures for inline task tags.
   - Example: checked task item should no longer keep a live `@claude` in the body after resolution.
   - Keep the cheap scanner simple; do not add historical body-vs-callout matching unless we explicitly decide the protocol cannot avoid it.
 - [ ] Patch poller terminal UX.
@@ -128,10 +128,10 @@ Add a standalone `atag` watcher that checks markdown files cheaply and only invo
   - Trace found first run was about 88s, mostly one long thinking block.
   - Candidate first tweak: add `--effort low` to poller Claude defaults.
   - Defer model switch to Haiku until we see whether low effort is enough.
-- [ ] Run verification and sync.
+- [x] Run verification and sync for the run-3 protocol update.
   - `bash -n skills/atag/scripts/atag-poll.sh`
-  - `bun test skills/atag/reference/markdown-agent-tags.spec.test.ts skills/atag/reference/atag-poll.test.ts`
+  - `bun test skills/atag/reference/markdown-agent-tags.spec.test.ts skills/atag/reference/atag-poll.test.ts claude-plugins/atag/skills/atag/reference/markdown-agent-tags.spec.test.ts claude-plugins/atag/skills/atag/reference/atag-poll.test.ts codex-plugins/atag/skills/atag/reference/markdown-agent-tags.spec.test.ts codex-plugins/atag/skills/atag/reference/atag-poll.test.ts` passed: 183 pass, 0 fail.
   - `scripts/sync-skills.sh`
   - `diff -qr -x dev skills/atag claude-plugins/atag/skills/atag`
   - `diff -qr -x dev skills/atag codex-plugins/atag/skills/atag`
-  - Copy/sync the active Claude skill path after repo verification.
+  - Synced active local copies: `/Users/smcllns/Projects/dotfiles/skills/atag` and `/Users/smcllns/.agents/skills/atag`.

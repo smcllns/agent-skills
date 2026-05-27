@@ -31,7 +31,7 @@ const TRIGGER_ALT = AGENTS.join("|");
 const CALLOUT_SCAN_AWK = [
   'BEGIN {',
   '  trigger_re = "(^|[[:space:]])@(" trigger_alt ")([^[:alnum:]_]|$)"',
-  '  agent_re = "^[[:space:]]*`(" trigger_alt ")`[[:space:]]*:"',
+  '  agent_re = "^[[:space:]]*`(" trigger_alt ")`([[:space:]]|:|$)"',
   '}',
   'function finish_callout() {',
   '  if (in_callout && has_trigger) {',
