@@ -82,13 +82,30 @@ Add a standalone `atag` watcher that checks markdown files cheaply and only invo
 ## Verification results
 
 - `bash -n skills/atag/scripts/atag-poll.sh` passed.
-- `bun test skills/atag/reference/markdown-agent-tags.spec.test.ts skills/atag/reference/atag-poll.test.ts claude-plugins/atag/skills/atag/reference/atag-poll.test.ts codex-plugins/atag/skills/atag/reference/atag-poll.test.ts` passed: 153 pass, 0 fail.
+- `bun test skills/atag/reference/markdown-agent-tags.spec.test.ts skills/atag/reference/atag-poll.test.ts claude-plugins/atag/skills/atag/reference/atag-poll.test.ts codex-plugins/atag/skills/atag/reference/atag-poll.test.ts` passed: 156 pass, 0 fail.
 - `diff -qr -x dev skills/atag claude-plugins/atag/skills/atag` passed.
 - `diff -qr -x dev skills/atag codex-plugins/atag/skills/atag` passed.
 - `git diff --check` passed.
 - Quiet no-op smoke passed against a temp folder.
 - Live smoke passed against `skills/atag/dev`: poller found `fixture.md`, invoked `claude -p`, and Claude resolved four tags.
 
-## Open questions
+## Follow-up backlog from terminal testing
 
-- None.
+- [x] Prefix `--debug` no-match heartbeat with local time: `[HH:MM]  No @triggers agent tags detected`.
+- [x] Add readable blank lines before `atag-poll: match ...` and after the `atag-poll: invoking ...` debug command.
+- [ ] Decide terminal-vs-markdown response style for Claude output.
+  - Problem: skill output is useful Markdown by default, but noisy in a terminal.
+  - Simple likely approach: add script arg like `--response-style auto|terminal|markdown`; `auto` can use `[[ -t 1 ]]` and tell Claude to use terminal-appropriate plain text when stdout is a TTY.
+  - Keep UI/menu-bar future use in mind: callers should be able to force Markdown.
+- [ ] Tighten `SKILL.md` final-output contract.
+  - Output only: changes made, active threads left unchanged, or changes that should have happened but could not.
+  - Do not mention already sealed `[!DONE]-` threads or false-positive text like L8 unless they blocked or explain a requested failure.
+  - Avoid Markdown tables in terminal mode.
+- [ ] Fix active `[!NOTE]+` scan false positives before more poller testing.
+  - Current problem: cheap grep flags every `[!NOTE]+` file even when Claude was the last speaker, so the poller keeps spawning Claude for threads waiting on the human.
+  - Fresh-agent task: evaluate options before changing the protocol.
+  - Options to consider:
+    - Add a richer pre-scan that only reports `[!NOTE]+` threads whose latest speaker is human or whose original inline tag has no agent reply.
+    - Add an `<!--atag:eot-->`-style seal to every agent reply, not only `[!DONE]-`; this likely changes grep/AWK behavior and the callout protocol.
+    - Keep cheap file-level grep but have the poller suppress Claude if a second scanner says all active threads are agent-last.
+  - After fixing active-thread scanning, rerun `skills/atag/dev/fixture.md` to determine whether L8 is actually spawning Claude or only being commented on because other tags caused the file to be read.
