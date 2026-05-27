@@ -1,0 +1,80 @@
+# atag speaker-label prefill handoff
+
+## Context
+
+`atag` is moving toward clean callout threads where every turn has a speaker label:
+
+```md
+> *`sam`* @claude make this more concrete
+>
+> `claude` Which direction should I take it? <!--atag:eot-->
+```
+
+This renders well and gives agents a consistent turn structure. The UX problem: humans should not have to manually type ``> *`sam`* `` or learn that syntax just to reply.
+
+## Current state
+
+- Run-3 is ready to test the inline-tag protocol change separately.
+- Do not mix this project into run-3.
+- Current skill wording already allows prepending the user's speaker label for callout ergonomics, but it does not yet provide a clean authoring affordance.
+
+## Project goal
+
+When an agent leaves an active thread waiting on Sam, the markdown should already contain the next human speaker label so Sam can just type after it.
+
+Desired shape:
+
+```md
+> [!NOTE]+ awaiting direction
+>
+> *`sam`* @claude make this better
+>
+> `claude` Which direction should I take it? <!--atag:eot-->
+>
+> *`sam`* 
+```
+
+## Critical scanner issue
+
+A prefilled label-only line must not count as a human reply.
+
+If the scanner sees the above and immediately respawns Claude, the feature fails. The scanner needs to treat a quoted line that is only a human speaker label (plus whitespace) as placeholder/blank for turn-detection purposes.
+
+But once Sam types real content:
+
+```md
+> *`sam`* make it more concrete
+```
+
+the thread should become actionable again.
+
+## Recommended v1
+
+1. Keep scope to active `[!NOTE]+` threads.
+2. Agent responses that ask for human input should end with `<!--atag:eot-->`, then append:
+
+   ```md
+   >
+   > *`sam`* 
+   ```
+
+3. Update scanner logic and fixtures so label-only human placeholders are skipped.
+4. Update examples/docs so humans understand agents/tools provide or normalize labels; users are not expected to type raw markdown syntax.
+
+## Tests to add
+
+- `[!NOTE]+` with agent `<!--atag:eot-->` and trailing ``> *`sam`* `` is not matched.
+- `[!NOTE]+` with trailing ``> *`sam`* actual reply`` is matched.
+- Legacy colon-form agent labels still work if currently supported.
+- Existing no-second-spawn behavior for sealed `[!DONE]-` remains unchanged.
+
+## Suggested first commands
+
+```sh
+cd /Users/smcllns/Projects/skills
+git status --short --branch
+sed -n '45,95p' skills/atag/SKILL.md
+sed -n '1,230p' skills/atag/scripts/atag-poll.sh
+```
+
+Then write the fixtures first, watch them fail, patch scanner/docs, sync copies, and rerun the target tests.
