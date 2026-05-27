@@ -13,18 +13,21 @@ Add a standalone `atag` watcher that checks markdown files cheaply and only invo
 - Default triggers are `agent claude codex`.
 - Custom triggers replace the default alternation in the documented scan.
 - `/skill:atag` and `/skill atag` are not valid Claude Code commands on this machine.
-- `/atag` is not currently available because the local Claude plugin is not installed; `--plugin-dir claude-plugins/atag` reaches Claude execution, so loading/installing the plugin is part of local setup.
+- `/atag`, `/skill:atag`, and `/skill atag` are not Claude Code commands. Invoke the installed skill with prose via `claude -p`.
+- Local natural-language skill invocation passed after copying `atag` into Claude Code's effective skills dir at `/Users/smcllns/Projects/dotfiles/skills/atag`.
 - Existing model-comparison harness invokes Claude with prose: `claude -p "Run the atag skill ..."` rather than a slash command.
 - Canonical skill files live in `skills/atag/`; plugin copies are derived by `scripts/sync-skills.sh`.
 
 ## Missing requirements to settle
 
 - Custom triggers: confirm "provided triggers replace defaults" rather than "extend defaults". Recommendation: replace, matching `SKILL.md`.
-- Concurrency: if a run takes over a minute, avoid overlapping Claude processes. Need pick between scheduler-level serialization and script-level lock.
 
 ## Resolved decisions from 2026-05-27 discussion
 
-- Runtime model: one-shot script only. External scheduler runs it every minute. Do not add an internal `--watch` loop.
+- Runtime model: foreground terminal-bound polling loop. The script runs cheap scans every minute and blocks while `claude -p` runs.
+- No launchd/cron for v1. Closing the terminal should kill the loop.
+- No filesystem watcher. This is polling, not WatchPaths/fs-events.
+- Concurrency: no per-dir lock in v1. A single foreground loop cannot overlap with itself because it waits for `claude -p` to exit before sleeping and scanning again.
 - Claude invocation: invoke the installed skill, not the plugin. Local verification passed after copying `atag` into `/Users/smcllns/Projects/dotfiles/skills/atag`.
 - Claude defaults: use `--permission-mode acceptEdits`, latest Sonnet alias, no default budget.
 - Claude passthrough: support normal Claude CLI args so callers can override model, budget, permission mode, max turns, etc.
@@ -34,18 +37,20 @@ Add a standalone `atag` watcher that checks markdown files cheaply and only invo
 
 ## Implementation plan
 
-- [ ] Add `skills/atag/scripts/atag-watch.sh`.
+- [ ] Add `skills/atag/scripts/atag-poll.sh`.
   - Bash, no new dependencies.
-  - Args: `--dir DIR`, `--debug`, `--claude-arg ARG`, optional trigger list.
+  - Default behavior: run a foreground polling loop every 60 seconds.
+  - Args: `--dir DIR`, `--interval SECONDS`, `--once`, `--debug`, `--claude-arg ARG`, optional trigger list.
   - Accept triggers like `@pi`, `@agento,@pi`, `@agento, @pi`.
   - Reject whitespace-only trigger lists like `@agento @pi`.
   - Default dir: current working directory.
   - Default triggers: `agent claude codex`.
-  - No match: exit 0 with no stdout.
-  - Match: `cd` to target dir, invoke Claude, pass through Claude stdout/stderr and exit code.
+  - No match: print nothing and sleep until next interval.
+  - Match: `cd` to target dir, invoke Claude, pass through Claude stdout/stderr, then sleep until next interval.
   - Claude command defaults: `claude -p --model sonnet --permission-mode acceptEdits`.
+  - `--once`: perform one scan/invocation cycle, then exit with the scan/Claude result; used for tests and scheduler-agnostic future wrappers.
   - Debug: write scan path, triggers, matched files, and Claude command to stderr.
-  - Overlap protection: implement the option selected after the concurrency discussion.
+  - Signal handling: trap INT/TERM/HUP and exit cleanly so terminal close or Ctrl-C stops the loop.
 - [ ] Add `skills/atag/reference/atag-watch.test.ts`.
   - Use temp fixtures and a stub `claude` on `PATH`.
   - Test no-match quiet behavior.
@@ -73,9 +78,8 @@ Add a standalone `atag` watcher that checks markdown files cheaply and only invo
   - Copy or install the `atag` skill into Claude Code's effective skill directory.
   - Smoke test on a temp folder with `@codex`.
   - Smoke test quiet no-op on a temp folder with no tags.
-  - Create a launchd job or other external scheduler after the one-shot script is proven.
+  - Run the foreground polling script against `/Users/smcllns/Projects/skills/skills/atag/dev`.
 
 ## Open questions
 
 - Should provided custom triggers replace defaults, or add to `agent claude codex`?
-- Which overlap protection should we choose?
