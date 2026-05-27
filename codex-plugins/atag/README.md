@@ -30,4 +30,5 @@ Run the canonical spec test from the repo root:
 
 ```bash
 bun test skills/atag/reference/markdown-agent-tags.spec.test.ts
+bun test skills/atag/reference/atag-poll.test.ts
 ```

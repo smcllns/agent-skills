@@ -146,13 +146,40 @@ END { finish_done() }
 ' {} +
 ```
 
+## Foreground polling script
+
+For technical local use, `scripts/atag-poll.sh` runs the cheap scan in a foreground terminal loop and invokes Claude only when the scan finds work.
+
+```sh
+skills/atag/scripts/atag-poll.sh --dir /path/to/notes
+```
+
+Defaults:
+
+- Polls every 60 seconds until the terminal closes or you press `Ctrl-C`.
+- Prints nothing when no unresolved tags match.
+- With `--debug`, prints one no-match status line to stderr.
+- Runs Claude from the target directory with `claude -p --model sonnet --permission-mode acceptEdits`.
+- Uses a 30-minute timeout around Claude as a runaway guard.
+
+Useful options:
+
+```sh
+skills/atag/scripts/atag-poll.sh --once --dir /path/to/notes
+skills/atag/scripts/atag-poll.sh --debug --interval 30 --dir /path/to/notes
+skills/atag/scripts/atag-poll.sh --dir /path/to/notes @pi
+skills/atag/scripts/atag-poll.sh --dir /path/to/notes '@agento, @pi' -- --max-budget-usd 1
+```
+
+Custom triggers replace the defaults. Passing `@pi` scans for `@pi`, not `@agent`, `@claude`, or `@codex`.
+
 ## Tests
 
 [`reference/markdown-agent-tags.spec.md`](reference/markdown-agent-tags.spec.md) documents scan edge cases, accepted false positives, and test fixtures.
 
 **Smoke test after setup:** create a scratch `.md` file with a simple `@codex` tag, run the skill against that folder, and confirm the tag is wrapped in a sealed callout. Then add a human `> ...` follow-up after the `<!--atag:eot-->` token and run again; it should be picked up.
 
-Contributor regression test: run `bun test` after changing scan commands, agent defaults, callout markers, or files under `reference/`.
+Contributor regression tests: run `bun test` after changing scan commands, agent defaults, callout markers, files under `reference/`, or `scripts/atag-poll.sh`.
 
 ## Final message
 
