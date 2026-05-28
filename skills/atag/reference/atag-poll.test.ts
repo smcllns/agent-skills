@@ -71,7 +71,7 @@ describe("atag-poll", () => {
     expect(log).toContain(`cwd=${realpathSync(fixtureDir)}`);
     expect(log).toContain("arg=-p");
     expect(log).toContain("arg=--model");
-    expect(log).toContain("arg=sonnet");
+    expect(log).toContain("arg=opus");
     expect(log).toContain("arg=--permission-mode");
     expect(log).toContain("arg=acceptEdits");
     expect(log).toContain("arg=--effort");
@@ -570,7 +570,7 @@ describe("atag-poll", () => {
     expect(log).toContain("arg=1");
     expect(log).toContain("arg=haiku");
     expect(log).toContain("arg=low");
-    expect(log).not.toContain("arg=sonnet");
+    expect(log).not.toContain("arg=opus");
   });
 
   it("propagates Claude failures", async () => {

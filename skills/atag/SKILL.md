@@ -218,7 +218,7 @@ Defaults:
 - In regular mode, Claude startup prints `[HH:MM]  atag-poll: spawning claude agent to resolve...`.
 - In `--debug`, the full Claude command/prompt line is also printed with a `[DEBUG]` prefix, and a heartbeat prints every 15 seconds while Claude is still running.
 - On `Ctrl-C`, exits with a one-line interruption warning; if Claude had started editing, the markdown file may be partially updated.
-- Runs Claude from the target directory with `claude -p --model sonnet --permission-mode acceptEdits --effort low`. Pass Claude CLI args after `--` to override the default model or effort.
+- Runs Claude from the target directory with `claude -p --model opus --permission-mode acceptEdits --effort low`. This is an interim default from [ADR 2026-05-28](../../docs/adrs/2026-05-28-atag-poller-opus-low-default.md); pass Claude CLI args after `--` to override the default model or effort.
 - Defaults `--response-style auto`: terminal stdout requests plain terminal text; piped/redirected/UI callers get Markdown. Use `--response-style terminal` or `--response-style markdown` to force it.
 - Resolves the human speaker label from `--name`/`--user-name`, then `git config user.name`, GitHub user name, Unix username, and finally a non-colliding generic label, usually `user`.
 - Uses a 30-minute timeout around Claude as a runaway guard.
@@ -234,6 +234,7 @@ skills/atag/scripts/atag-poll.sh --debug --interval 30 --dir /path/to/notes
 skills/atag/scripts/atag-poll.sh --response-style terminal --dir /path/to/notes
 skills/atag/scripts/atag-poll.sh --dir /path/to/notes @pi
 skills/atag/scripts/atag-poll.sh --dir /path/to/notes '@agento, @pi' -- --effort medium --max-budget-usd 1
+skills/atag/scripts/atag-poll.sh --dir /path/to/notes -- --model sonnet --effort low --max-budget-usd 1
 skills/atag/scripts/atag-poll.sh --dir /path/to/notes -- --model haiku --effort low --max-budget-usd 1
 ```
 

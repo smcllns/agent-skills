@@ -515,7 +515,7 @@ run_claude() {
   local prompt="$1"
   local cmd=(claude -p)
   if ! has_claude_option "--model"; then
-    cmd+=(--model sonnet)
+    cmd+=(--model opus)
   fi
   cmd+=(--permission-mode acceptEdits)
   if ! has_claude_option "--effort"; then
