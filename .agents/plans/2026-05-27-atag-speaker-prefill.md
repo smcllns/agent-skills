@@ -56,19 +56,19 @@ Current callout scanning would treat the `*sam*` line as the latest nonblank hum
 
 ## Review and launch gate
 
-- [ ] Open a PR for the completed change.
-- [ ] Get an adversarial independent review before merge.
+- [x] Open a PR for the completed change.
+- [x] Get an adversarial independent review before merge.
   - Ask the reviewer to find launch blockers, regressions, and edge cases.
   - Require the review to split findings into "blocking before merge" and "nice to have / acceptable experiment risk".
-- [ ] Update this plan or the PR description with the decision on every review finding.
+- [x] Update this plan or the PR description with the decision on every review finding.
   - It is valid to skip non-blocking items to launch the experiment.
   - If skipping something, explicitly record why it is acceptable for this experiment and what would make it blocking later.
 - [ ] Merge only after blocking findings are fixed or explicitly reclassified with rationale.
 
 ## Implementation status — 2026-05-27
 
-- [x] Added source fixtures proving label-only ``*`sam`*`` placeholders are skipped and typed replies after the label are actionable.
-- [x] Added poller tests for a trailing-space placeholder and real typed reply.
+- [x] Added source fixtures proving label-only ``*`sam`*`` placeholders are skipped and typed replies after or below the label are actionable.
+- [x] Added poller tests for a trailing-space placeholder, a real same-line typed reply, and a next-line typed reply.
 - [x] Patched `skills/atag/scripts/atag-poll.sh` to ignore emphasized inline-code label-only human placeholder lines for latest-turn detection.
 - [x] Updated `skills/atag/SKILL.md` and `skills/atag/reference/markdown-agent-tags.spec.md` so agents/tools prefill or normalize labels and humans are not expected to type raw syntax.
 - [x] Ran `scripts/sync-skills.sh`; plugin copies match canonical.
@@ -79,13 +79,30 @@ Current callout scanning would treat the `*sam*` line as the latest nonblank hum
 Verification passed:
 
 - `bash -n skills/atag/scripts/atag-poll.sh`
-- `bun test skills/atag/reference/markdown-agent-tags.spec.test.ts skills/atag/reference/atag-poll.test.ts` — 195 pass, 0 fail
+- `bun test skills/atag/reference/markdown-agent-tags.spec.test.ts skills/atag/reference/atag-poll.test.ts` — 201 pass, 0 fail
 - `scripts/sync-skills.sh`
 - `diff -qr -x dev skills/atag claude-plugins/atag/skills/atag`
 - `diff -qr -x dev skills/atag codex-plugins/atag/skills/atag`
 - `diff -qr -x dev skills/atag /Users/smcllns/Projects/dotfiles/skills/atag`
 - `diff -qr -x dev skills/atag /Users/smcllns/.agents/skills/atag`
 - `git diff --check`
+- `git diff --check 44fc87b..HEAD`
+
+## Independent review — 2026-05-27
+
+Adversarial review completed.
+
+Blocking before merge:
+
+- PR #29 was originally opened against `main`, so the PR diff included older atag poller/run-3-adjacent commits instead of only this speaker-prefill change.
+  - Decision: fixed by pushing `codex/atag-poller-base` at the handoff base commit `44fc87b` and retargeting PR #29 to that branch. The PR diff now isolates this speaker-prefill change from prior branch history.
+
+Nice to have / acceptable experiment risk:
+
+- Reviewer noted `git diff --check origin/main...origin/codex/atag-poller` failed on older handoff-example trailing spaces outside this change.
+  - Decision: fixed by scoping the PR to `codex/atag-poller-base`; `git diff --check 44fc87b..HEAD` is the relevant check for this stacked PR and passes.
+- Reviewer noted coverage did not include the case where the placeholder label remains and the human replies on the next quoted line.
+  - Decision: fixed with an added spec fixture and poller regression test.
 
 ## Non-goals
 

@@ -95,8 +95,8 @@ The goal is transparency, not perfection. It is valid to skip non-blocking findi
 Implemented on `codex/atag-poller`:
 
 - `skills/atag/scripts/atag-poll.sh` now treats emphasized inline-code label-only human lines like ``*`sam`*`` as placeholders for latest-turn detection.
-- `skills/atag/reference/markdown-agent-tags.spec.md` has fixtures for skipped placeholders and actionable typed replies after a prefilled label.
-- `skills/atag/reference/atag-poll.test.ts` covers both the trailing-space placeholder and the real typed reply.
+- `skills/atag/reference/markdown-agent-tags.spec.md` has fixtures for skipped placeholders, same-line replies after a prefilled label, and next-line replies after a prefilled label.
+- `skills/atag/reference/atag-poll.test.ts` covers the trailing-space placeholder, same-line typed reply, and next-line typed reply.
 - `skills/atag/SKILL.md` says agents/tools prefill or normalize human labels; humans should not have to type raw speaker-label markdown.
 - `skills/atag/reference/markdown-agent-tags.spec.test.ts` stays in sync with the documented awk scanner.
 - Plugin copies were regenerated with `scripts/sync-skills.sh`.
@@ -107,16 +107,32 @@ Implemented on `codex/atag-poller`:
 Verification passed:
 
 - `bash -n skills/atag/scripts/atag-poll.sh`
-- `bun test skills/atag/reference/markdown-agent-tags.spec.test.ts skills/atag/reference/atag-poll.test.ts` — 195 pass, 0 fail
+- `bun test skills/atag/reference/markdown-agent-tags.spec.test.ts skills/atag/reference/atag-poll.test.ts` — 201 pass, 0 fail
 - `scripts/sync-skills.sh`
 - `diff -qr -x dev skills/atag claude-plugins/atag/skills/atag`
 - `diff -qr -x dev skills/atag codex-plugins/atag/skills/atag`
 - `diff -qr -x dev skills/atag /Users/smcllns/Projects/dotfiles/skills/atag`
 - `diff -qr -x dev skills/atag /Users/smcllns/.agents/skills/atag`
 - `git diff --check`
+- `git diff --check 44fc87b..HEAD`
 
 Still required before merge:
 
-- Commit, push, and open the PR.
-- Run adversarial independent review and classify findings into blockers vs acceptable experiment risk.
-- Fix blockers or record explicit reclassification rationale.
+- Keep PR #29 scoped to the stacked base branch `codex/atag-poller-base` unless deliberately expanding the merge unit.
+- Merge only after Sam approves the stacked PR shape.
+
+## Independent review result — 2026-05-27
+
+Adversarial review completed for PR #29.
+
+Blocking before merge:
+
+- Finding: PR #29 was originally opened against `main`, so the visible PR diff included earlier atag poller/run-3-adjacent history instead of only the speaker-prefill change.
+- Resolution: pushed `codex/atag-poller-base` at handoff commit `44fc87b` and retargeted PR #29 to that base. This makes the PR review surface the standalone speaker-prefill delta.
+
+Nice to have / acceptable experiment risk:
+
+- Finding: `git diff --check origin/main...origin/codex/atag-poller` failed on older trailing-space examples outside this speaker-prefill delta.
+- Resolution: retargeted the PR; the relevant stacked diff check is `git diff --check 44fc87b..HEAD`.
+- Finding: automated coverage did not include leaving the placeholder label in place and typing the reply on the next quoted line.
+- Resolution: added source fixture and poller test for that case.

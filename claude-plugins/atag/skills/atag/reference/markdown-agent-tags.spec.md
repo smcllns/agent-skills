@@ -137,6 +137,23 @@ actionable again.
 > *`sam`* make it more concrete
 ```
 
+### Active agent thread — human reply on line after prefilled label
+
+If the human leaves the prefilled label alone and types on the next quoted
+line, the placeholder is ignored and the typed line still makes the thread
+actionable.
+
+```md @test:match
+> [!NOTE]+ awaiting direction
+>
+> *`sam`* @claude make this better
+>
+> `claude` Which direction should I take it? <!--atag:eot-->
+>
+> *`sam`*
+> make it more concrete
+```
+
 ### Bare `[!NOTE]` — plain markdown, not an agent thread
 
 A `[!NOTE]` without `+` is a regular Obsidian note callout. The scan skips it
