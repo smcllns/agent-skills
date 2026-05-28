@@ -12,7 +12,7 @@
 - HTML exports do not include Obsidian's `data-callout-fold`, so the HTML fallback styles all `note` and `done` callouts under `.markdown-preview` / `body[for="html-export"]`.
 - Callout frames intentionally avoid rounded full-border card styling. The useful state marker is the square left accent strip plus active/done background.
 - Human speaker labels use the same label shape and spacing as agent labels, with a stronger state-accent border.
-- Speaker labels are now sender/from fields without trailing colons: `` `claude` reply`` and ``*`sam`* reply``. See `docs/adrs/2026-05-27-atag-speaker-labels.md`.
+- Speaker labels are sender/from fields without trailing colons. Current raw syntax is emphasized agent labels and bare human labels: ``*`claude`* reply`` and `` `sam` reply``. See `docs/adrs/2026-05-27-atag-speaker-labels.md`.
 - The CSS keeps section divider comments only; the implementation comments were removed.
 
 ## Verification

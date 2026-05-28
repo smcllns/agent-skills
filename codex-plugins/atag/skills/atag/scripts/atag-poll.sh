@@ -162,7 +162,8 @@ inline_scan_regex="^([^>]*[[:space:]])?@(${trigger_alt})([^[:alnum:]_]|$)"
 
 callout_scan_awk='BEGIN {
   trigger_re = "(^|[[:space:]])@(" trigger_alt ")([^[:alnum:]_]|$)"
-  agent_re = "^[[:space:]]*`(" trigger_alt ")`([[:space:]]|:|$)"
+  agent_re = "^[[:space:]]*(\\*`(" trigger_alt ")`\\*|`(" trigger_alt ")`)([[:space:]]|:|$)"
+  human_placeholder_re = "^[[:space:]]*(\\*`sam`\\*|`sam`):?[[:space:]]*$"
 }
 function finish_callout() {
   if (in_callout && has_trigger) {
@@ -189,7 +190,7 @@ function process_quoted_line() {
   line = $0
   sub(/^[[:space:]]*>[[:space:]]*/, "", line)
   if (line ~ trigger_re) has_trigger = 1
-  if (line !~ /^[[:space:]]*$/) {
+  if (line !~ /^[[:space:]]*$/ && line !~ human_placeholder_re) {
     sealed = (line ~ /<!--atag:eot-->[[:space:]]*$/)
     agent_last = (line ~ agent_re)
   }

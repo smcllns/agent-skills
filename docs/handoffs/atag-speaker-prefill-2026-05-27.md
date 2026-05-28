@@ -5,12 +5,12 @@
 `atag` is moving toward clean callout threads where every turn has a speaker label:
 
 ```md
-> *`sam`* @claude make this more concrete
+> `sam` @claude make this more concrete
 >
-> `claude` Which direction should I take it? <!--atag:eot-->
+> *`claude`* Which direction should I take it? <!--atag:eot-->
 ```
 
-This renders well and gives agents a consistent turn structure. The UX problem: humans should not have to manually type ``> *`sam`* `` or learn that syntax just to reply.
+This renders well and gives agents a consistent turn structure. The UX problem: humans should not have to manually type ``> `sam` `` or learn that syntax just to reply.
 
 ## Current state
 
@@ -27,11 +27,11 @@ Desired shape:
 ```md
 > [!NOTE]+ awaiting direction
 >
-> *`sam`* @claude make this better
+> `sam` @claude make this better
 >
-> `claude` Which direction should I take it? <!--atag:eot-->
+> *`claude`* Which direction should I take it? <!--atag:eot-->
 >
-> *`sam`* 
+> `sam`
 ```
 
 ## Critical scanner issue
@@ -43,7 +43,7 @@ If the scanner sees the above and immediately respawns Claude, the feature fails
 But once Sam types real content:
 
 ```md
-> *`sam`* make it more concrete
+> `sam` make it more concrete
 ```
 
 the thread should become actionable again.
@@ -55,16 +55,16 @@ the thread should become actionable again.
 
    ```md
    >
-   > *`sam`* 
+   > `sam`
    ```
 
-3. Update scanner logic and fixtures so label-only human placeholders are skipped.
+3. Update scanner logic and fixtures so label-only Sam placeholders are skipped.
 4. Update examples/docs so humans understand agents/tools provide or normalize labels; users are not expected to type raw markdown syntax.
 
 ## Tests to add
 
-- `[!NOTE]+` with agent `<!--atag:eot-->` and trailing ``> *`sam`* `` is not matched.
-- `[!NOTE]+` with trailing ``> *`sam`* actual reply`` is matched.
+- `[!NOTE]+` with agent `<!--atag:eot-->` and trailing ``> `sam` `` is not matched.
+- `[!NOTE]+` with trailing ``> `sam` actual reply`` is matched.
 - Legacy colon-form agent labels still work if currently supported.
 - Existing no-second-spawn behavior for sealed `[!DONE]-` remains unchanged.
 
@@ -89,3 +89,66 @@ Before merge, get an adversarial independent review that tries to find launch bl
 - Nice to have / acceptable experiment risk
 
 The goal is transparency, not perfection. It is valid to skip non-blocking findings to launch the experiment, but the PR or plan must record the decision and rationale for every skipped item.
+
+## Implementation update — 2026-05-27
+
+Implemented on `codex/atag-poller`:
+
+- `skills/atag/scripts/atag-poll.sh` now treats bare inline-code label-only Sam lines like `` `sam` `` as placeholders for latest-turn detection, while still skipping legacy emphasized Sam placeholders.
+- `skills/atag/reference/markdown-agent-tags.spec.md` has fixtures for skipped placeholders, same-line replies after a prefilled label, and next-line replies after a prefilled label.
+- `skills/atag/reference/atag-poll.test.ts` covers the trailing-space placeholder, same-line typed reply, and next-line typed reply.
+- `skills/atag/SKILL.md` says agents/tools prefill or normalize human labels; humans should not have to type raw speaker-label markdown.
+- `skills/atag/reference/markdown-agent-tags.spec.test.ts` stays in sync with the documented awk scanner.
+- Plugin copies were regenerated with `scripts/sync-skills.sh`.
+- Active local copies were synced:
+  - `/Users/smcllns/Projects/dotfiles/skills/atag`
+  - `/Users/smcllns/.agents/skills/atag`
+
+Follow-up label swap in the same PR:
+
+- Current human labels are bare inline code, e.g. `` `sam` reply``.
+- Current agent labels are emphasized inline code, e.g. ``*`claude`* reply``.
+- Companion CSS moved the accented rendered style to bare inline-code labels, so the human label keeps its previous visual treatment after the raw markdown swap.
+- The scanner still recognizes legacy bare and colon-form agent labels, and still skips legacy emphasized label-only Sam placeholders.
+
+Verification passed:
+
+- `bash -n skills/atag/scripts/atag-poll.sh`
+- `bun test skills/atag/reference/markdown-agent-tags.spec.test.ts skills/atag/reference/atag-poll.test.ts` — 216 pass, 0 fail
+- `scripts/sync-skills.sh`
+- `diff -qr -x dev skills/atag claude-plugins/atag/skills/atag`
+- `diff -qr -x dev skills/atag codex-plugins/atag/skills/atag`
+- `diff -qr -x dev skills/atag /Users/smcllns/Projects/dotfiles/skills/atag`
+- `diff -qr -x dev skills/atag /Users/smcllns/.agents/skills/atag`
+- `git diff --check`
+- `git diff --check 44fc87b..HEAD`
+
+Still required before merge:
+
+- Keep PR #29 scoped to the stacked base branch `codex/atag-poller-base` unless deliberately expanding the merge unit.
+- Merge only after Sam approves the stacked PR shape.
+
+## Independent review result — 2026-05-27
+
+Adversarial review completed for PR #29.
+
+Blocking before merge:
+
+- Finding: PR #29 was originally opened against `main`, so the visible PR diff included earlier atag poller/run-3-adjacent history instead of only the speaker-prefill change.
+- Resolution: pushed `codex/atag-poller-base` at handoff commit `44fc87b` and retargeted PR #29 to that base. This makes the PR review surface the standalone speaker-prefill delta.
+
+Nice to have / acceptable experiment risk:
+
+- Finding: `git diff --check origin/main...origin/codex/atag-poller` failed on older trailing-space examples outside this speaker-prefill delta.
+- Resolution: retargeted the PR; the relevant stacked diff check is `git diff --check 44fc87b..HEAD`.
+- Finding: automated coverage did not include leaving the placeholder label in place and typing the reply on the next quoted line.
+- Resolution: added source fixture and poller test for that case.
+
+Follow-up review after the label swap found no blockers.
+
+Nice to have / acceptable experiment risk:
+
+- Finding: the placeholder regex was too broad and skipped a code-only reply like `` `bun` `` after a prefilled label.
+- Resolution: limited placeholder detection to bare/legacy-emphasized `sam` labels and added source/poller coverage for the code-only reply case.
+- Finding: stale handoff prose still showed the previous raw label contract.
+- Resolution: updated stale handoff examples and companion CSS handoff wording.
