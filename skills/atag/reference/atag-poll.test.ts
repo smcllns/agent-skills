@@ -503,6 +503,17 @@ describe("atag-poll", () => {
     expect(result.stdout).toContain("slow output\n");
   });
 
+  it("times out the Claude subprocess", async () => {
+    await installClaudeStub({ sleepSeconds: 10 });
+    await writeFile(join(fixtureDir, "note.md"), "@codex please help\n");
+
+    const result = runPoll(["--once", "--dir", fixtureDir, "--timeout", "1"]);
+
+    expect(result.exitCode).toBe(124);
+    expect(result.stderr).toContain("atag-poll: claude timed out after 1s");
+    expect(await readLog()).toContain("arg=opus");
+  });
+
   it("lets custom triggers replace the default triggers", async () => {
     await installClaudeStub();
     await writeFile(join(fixtureDir, "note.md"), "@codex default only\n");

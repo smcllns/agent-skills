@@ -442,7 +442,7 @@ run_with_timeout() {
 
   (
     cd "$target_dir"
-    "$@"
+    exec "$@"
   ) &
   local pid=$!
   current_child_pid=$pid
