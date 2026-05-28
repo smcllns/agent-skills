@@ -22,6 +22,17 @@ Then from within Claude Code or Cowork:
 
 ## Usage
 
+### Commands
+
+Claude Code exposes an ergonomic command:
+
+```text
+/agent-tags check --dir /path/to/notes
+/agent-tags sweep /path/to/notes --resolved --trace
+```
+
+`check` finds actionable `@agent` tags and active threads. `sweep` archives resolved threads out of the reading flow; by default it sweeps sealed `[!DONE]-` threads and leaves a markdown footnote trace.
+
 ### Manual usage
 
 In **Claude Cowork** on desktop, set the folder you can explicitly type the skill to trigger it
