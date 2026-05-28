@@ -14,6 +14,7 @@ Some are standalone skills. Some are plugin wrappers or MCP tools for Codex, Cla
 |---|---|---|
 | `atag` | Resolve `@agent` tags in markdown files and record the exchange in callout threads. | [Markdown Agent Tags skill](skills/atag/SKILL.md) |
 | `obsidian-html-docs` | Author `.html` docs for the Obsidian HTML Docs plugin within its sandbox and asset constraints. | [obsidian-html-docs skill](skills/obsidian-html-docs/SKILL.md) |
+| `preserve-spike` | Preserve unfinished spike or proof-of-concept work with pushed annotated tags instead of merging it into product history. | [preserve-spike skill](skills/preserve-spike/SKILL.md) |
 | `token-count` | Count tokens with Anthropic, Gemini, and OpenAI server-side endpoints for prompt budgeting. | [token-count skill](skills/token-count/SKILL.md) |
 
 ## Install Skills
