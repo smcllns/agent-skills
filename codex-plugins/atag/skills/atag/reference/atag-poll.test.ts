@@ -163,6 +163,53 @@ describe("atag-poll", () => {
     expect(await readLog()).toBe("");
   });
 
+  it("does not invoke Claude for a configured human-label placeholder", async () => {
+    await installClaudeStub();
+    await writeFile(
+      join(fixtureDir, "note.md"),
+      [
+        "> [!NOTE]+ awaiting direction",
+        ">",
+        "> `maya` @claude make this better",
+        ">",
+        "> *`claude`* Which direction should I take it? <!--atag:eot-->",
+        ">",
+        "> `maya` ",
+        "",
+      ].join("\n"),
+    );
+
+    const result = runPoll(["--once", "--debug", "--dir", fixtureDir, "--human-label", "maya"]);
+
+    expect(result.exitCode).toBe(0);
+    expect(result.stdout).toMatch(/\[[0-9]{2}:[0-9]{2}\]  No @agent, @claude, @codex agent tags detected\n?$/);
+    expect(result.stderr).toBe("");
+    expect(await readLog()).toBe("");
+  });
+
+  it("invokes Claude when a configured human label has reply text", async () => {
+    await installClaudeStub({ stdout: "configured human reply scan\n" });
+    await writeFile(
+      join(fixtureDir, "note.md"),
+      [
+        "> [!NOTE]+ awaiting direction",
+        ">",
+        "> `maya` @claude make this better",
+        ">",
+        "> *`claude`* Which direction should I take it? <!--atag:eot-->",
+        ">",
+        "> `maya` make it more concrete",
+        "",
+      ].join("\n"),
+    );
+
+    const result = runPoll(["--once", "--dir", fixtureDir, "--human-label", "maya"]);
+
+    expect(result.exitCode).toBe(0);
+    expect(result.stdout).toContain("configured human reply scan\n");
+    expect(await readLog()).toContain("Human speaker label: `maya`");
+  });
+
   it("does not invoke Claude for a legacy emphasized label-only human reply line", async () => {
     await installClaudeStub();
     await writeFile(
@@ -184,6 +231,16 @@ describe("atag-poll", () => {
     expect(result.exitCode).toBe(0);
     expect(result.stdout).toMatch(/\[[0-9]{2}:[0-9]{2}\]  No @agent, @claude, @codex agent tags detected\n?$/);
     expect(result.stderr).toBe("");
+    expect(await readLog()).toBe("");
+  });
+
+  it("rejects invalid human labels", async () => {
+    await installClaudeStub();
+
+    const result = runPoll(["--once", "--dir", fixtureDir, "--human-label", "not-simple!"]);
+
+    expect(result.exitCode).toBe(2);
+    expect(result.stderr).toContain("--human-label must be a simple label");
     expect(await readLog()).toBe("");
   });
 

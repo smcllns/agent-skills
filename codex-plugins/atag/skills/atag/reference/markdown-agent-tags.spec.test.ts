@@ -26,13 +26,14 @@ import { join } from "node:path";
 // ─── single source of truth (TS side) ─────────────────────────────────────
 const INLINE_SCAN_REGEX = String.raw`^([^>]*[[:space:]])?@(agent|claude|codex)([^[:alnum:]_]|$)`;
 const AGENTS = ["agent", "claude", "codex"] as const;
+const HUMAN_LABEL = "sam";
 const DONE_EOT = "<!--atag:eot-->";
 const TRIGGER_ALT = AGENTS.join("|");
 const CALLOUT_SCAN_AWK = [
   'BEGIN {',
   '  trigger_re = "(^|[[:space:]])@(" trigger_alt ")([^[:alnum:]_]|$)"',
   '  agent_re = "^[[:space:]]*(\\\\*`(" trigger_alt ")`\\\\*|`(" trigger_alt ")`)([[:space:]]|:|$)"',
-  '  human_placeholder_re = "^[[:space:]]*(\\\\*`sam`\\\\*|`sam`):?[[:space:]]*$"',
+  '  human_placeholder_re = "^[[:space:]]*(\\\\*`" human_label "`\\\\*|`" human_label "`):?[[:space:]]*$"',
   '}',
   'function finish_callout() {',
   '  if (in_callout && has_trigger) {',
@@ -160,7 +161,7 @@ beforeAll(async () => {
   }
 
   const calloutProc = Bun.spawnSync({
-    cmd: ["awk", "-v", `trigger_alt=${TRIGGER_ALT}`, CALLOUT_SCAN_AWK, ...scan.paths],
+    cmd: ["awk", "-v", `trigger_alt=${TRIGGER_ALT}`, "-v", `human_label=${HUMAN_LABEL}`, CALLOUT_SCAN_AWK, ...scan.paths],
     stdout: "pipe",
     stderr: "pipe",
   });
@@ -177,7 +178,7 @@ beforeAll(async () => {
   doneTempDir = doneScan.tempDir;
 
   const doneProc = Bun.spawnSync({
-    cmd: ["awk", "-v", `trigger_alt=${TRIGGER_ALT}`, CALLOUT_SCAN_AWK, ...doneScan.paths],
+    cmd: ["awk", "-v", `trigger_alt=${TRIGGER_ALT}`, "-v", `human_label=${HUMAN_LABEL}`, CALLOUT_SCAN_AWK, ...doneScan.paths],
     stdout: "pipe",
     stderr: "pipe",
   });

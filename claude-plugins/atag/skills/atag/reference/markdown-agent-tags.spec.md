@@ -37,9 +37,11 @@ replies start with an emphasized inline-code label like ``*`claude`* reply``
 and end with `<!--atag:eot-->` after yielding the turn. Human replies start
 with a bare inline-code label like `` `sam` reply``.
 
-Agents/tools may prefill a bare `sam` label in active `[!NOTE]+` threads so Sam
-can just type the reply text. Label-only `sam` lines are placeholders; other
-code-only quoted lines remain real replies.
+Throughout this spec, `sam` is the example configured human speaker label.
+Replace it with the human's preferred short label and pass that same label to
+the poller. Agents/tools may prefill that bare human label in active `[!NOTE]+`
+threads so the human can just type the reply text. Label-only human-label lines
+are placeholders; other code-only quoted lines remain real replies.
 
 ---
 
@@ -189,8 +191,8 @@ actionable.
 
 ### Active agent thread — code-only human reply after prefilled label
 
-Only the prefilled Sam label is a placeholder. If the human replies on the next
-line with a code-only token, the thread is actionable.
+Only the configured human label is a placeholder. If the human replies on the
+next line with a code-only token, the thread is actionable.
 
 ```md @test:match
 > [!NOTE]+ awaiting direction
@@ -368,7 +370,7 @@ see @claude for the rule (mid-line)
 
 ### Trailing tag
 
-Sam's case from 2026-05-19 — tag at the end of a sentence.
+A tag at the end of a sentence is still actionable.
 
 ```md @test:match
 tell me my options please @claude

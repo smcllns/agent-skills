@@ -51,7 +51,9 @@ Use `@name` only for trigger tags. Speaker labels use inline code as the sender/
 - Agent turn: ``*`claude`* reply <!--atag:eot-->``.
 - Human turn: `` `sam` reply``.
 
-Humans are not expected to type the speaker-label markdown by hand. Agents and tools should prefill or normalize the Sam label in active threads, so the human can just type the reply text after the label.
+Throughout this skill, `sam` is the example human speaker label. Replace it with the human's preferred short label, and pass the same value to the poller with `--human-label`. Keep the label simple: ASCII letters, digits, and underscores, starting with a letter.
+
+Humans are not expected to type the speaker-label markdown by hand. Agents and tools should prefill or normalize the human label in active threads, so the human can just type the reply text after the label.
 
 `<!--atag:eot-->` means the agent yielded the turn. End every agent response with it, including `[!NOTE]+` questions and partial answers. In `[!DONE]-` threads, a human can add follow-up text directly after the token; the next agent pass will inspect and reseal. Do not prefill `[!DONE]-` follow-up lines in v1.
 
@@ -78,7 +80,7 @@ A tag is unresolved when any of:
 - A valid inline tag for a recognized trigger not yet processed into a callout.
 - A resolved `> [!DONE]- ...` callout whose latest nonblank quoted line does not end with `<!--atag:eot-->`.
 
-A bare inline-code Sam label with no reply text, such as ``> `sam` ``, is a placeholder, not a turn. Legacy emphasized label-only Sam placeholders are also skipped so old prefilled threads do not retrigger. This skip is intentionally Sam-specific in v1; other code-only quoted lines remain real replies.
+A bare inline-code human label with no reply text, such as ``> `sam` ``, is a placeholder, not a turn. Legacy emphasized label-only human placeholders are also skipped so old prefilled threads do not retrigger. This skip applies only to the configured human label; other code-only quoted lines remain real replies.
 
 ## Resolution contract
 
@@ -129,14 +131,14 @@ grep -rlnE --include='*.md' '^([^>]*[[:space:]])?@(agent|claude|codex)([^[:alnum
 
 Default agent names are `agent claude codex`. For custom triggers, replace the `agent|claude|codex` alternation with the custom alternation, e.g. `nora|hermes`.
 
-2. **Inline awk for callout threads** — multiline scan for actionable `[!NOTE]+` and unsealed `[!DONE]-` callouts. Pass `trigger_alt` as the same alternation used above, e.g. `agent|claude|codex`.
+2. **Inline awk for callout threads** — multiline scan for actionable `[!NOTE]+` and unsealed `[!DONE]-` callouts. Pass `trigger_alt` as the same alternation used above, e.g. `agent|claude|codex`, and `human_label` as the configured human speaker label, e.g. `sam`.
 
 ```sh
-find <path> -name '*.md' -exec awk -v trigger_alt='agent|claude|codex' '
+find <path> -name '*.md' -exec awk -v trigger_alt='agent|claude|codex' -v human_label='sam' '
 BEGIN {
   trigger_re = "(^|[[:space:]])@(" trigger_alt ")([^[:alnum:]_]|$)"
   agent_re = "^[[:space:]]*(\\*`(" trigger_alt ")`\\*|`(" trigger_alt ")`)([[:space:]]|:|$)"
-  human_placeholder_re = "^[[:space:]]*(\\*`sam`\\*|`sam`):?[[:space:]]*$"
+  human_placeholder_re = "^[[:space:]]*(\\*`" human_label "`\\*|`" human_label "`):?[[:space:]]*$"
 }
 function finish_callout() {
   if (in_callout && has_trigger) {
@@ -206,6 +208,7 @@ Defaults:
 - With `--debug`, no-match prints: `[HH:MM]  No @agent, @claude, @codex agent tags detected`.
 - Runs Claude from the target directory with `claude -p --model sonnet --permission-mode acceptEdits`.
 - Defaults `--response-style auto`: terminal stdout requests plain terminal text; piped/redirected/UI callers get Markdown. Use `--response-style terminal` or `--response-style markdown` to force it.
+- Defaults `--human-label sam`: label-only `` `sam` `` lines are placeholders. Use `--human-label <label>` when the human label is different.
 - Uses a 30-minute timeout around Claude as a runaway guard.
 
 Useful options:
@@ -213,6 +216,7 @@ Useful options:
 ```sh
 skills/atag/scripts/atag-poll.sh --once --dir /path/to/notes
 skills/atag/scripts/atag-poll.sh --debug --interval 30 --dir /path/to/notes
+skills/atag/scripts/atag-poll.sh --human-label maya --dir /path/to/notes
 skills/atag/scripts/atag-poll.sh --response-style terminal --dir /path/to/notes
 skills/atag/scripts/atag-poll.sh --dir /path/to/notes @pi
 skills/atag/scripts/atag-poll.sh --dir /path/to/notes '@agento, @pi' -- --max-budget-usd 1

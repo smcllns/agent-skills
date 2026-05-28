@@ -1,0 +1,1 @@
+{"timestamp":"2026-05-27T20:26:55-07:00","situation":"Reusable atag docs overfit the human speaker label to Sam after PR #30","learning":"In reusable skill/protocol docs, define the human speaker label as the user's preferred short label first; use Sam only as the local example and say to replace it."}
