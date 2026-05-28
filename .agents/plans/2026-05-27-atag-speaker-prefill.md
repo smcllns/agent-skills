@@ -4,7 +4,7 @@
 
 Make agent-tag callouts ergonomic for humans: users should not have to manually type markdown speaker-label syntax like ``> `sam` `` before replying.
 
-In this plan, `sam` is the local example human label. Replace it with the human's preferred short label and pass that same label to the poller with `--human-label`.
+In this plan, `sam` is the local example human label. When adapting the skill for another human, replace `sam` in the examples and prefilled human-label convention with that human's preferred short label.
 
 ## Problem
 
@@ -31,7 +31,7 @@ Current callout scanning would treat the human label line as the latest nonblank
 - [x] Update the `atag` callout protocol so every real turn starts with a speaker label.
 - [x] For active `[!NOTE]+` threads where the agent is explicitly waiting on the human, prefill a trailing human speaker line:
   - quoted blank separator
-  - quoted configured human label line, e.g. ``> `sam` ``
+  - quoted human label line, e.g. ``> `sam` ``
   - cursor/user can type directly after the trailing space.
 - [x] Update the scanner to ignore human-label-only placeholder lines when deciding whether the human has replied.
 - [x] Do not prefill completed `[!DONE]-` threads in v1 unless there is a clear follow-up prompt. Keep v1 narrow.
@@ -109,7 +109,7 @@ Nice to have / acceptable experiment risk:
   - Decision: fixed with an added spec fixture and poller regression test.
 - Follow-up review of the label-swap commit found no blockers.
 - Follow-up reviewer noted the placeholder regex was too broad and could skip a code-only reply like `` `bun` `` after a prefilled label.
-  - Decision: fixed by limiting placeholder detection to the configured human label and adding source/poller coverage for the code-only reply case.
+  - Decision: fixed by limiting placeholder detection to the skill's human label and adding source/poller coverage for the code-only reply case.
 - Follow-up reviewer noted stale handoff prose still showed the previous raw label contract.
   - Decision: fixed the stale handoff examples and companion CSS handoff wording.
 
@@ -122,9 +122,9 @@ Nice to have / acceptable experiment risk:
 ## Decisions closed after PR #29
 
 - [x] Human speaker name:
-  - Decision: v1 uses a configured human label, defaulting to `sam` for this local workflow.
-  - Why: reusable docs need to say "replace `sam` with the user's label"; the poller must support that instead of hardcoding one human name.
-  - Revisit if: labels need spaces, punctuation, or multiple humans in one thread.
+  - Decision: v1 names `sam` once as the example human label for this skill copy.
+  - Why: the reusable convention is documentation-level: replace `sam` with the human's preferred short label when adapting the skill.
+  - Revisit if: labels need runtime configurability, spaces, punctuation, or multiple humans in one thread.
 - [x] `[!DONE]-` prefill:
   - Decision: do not prefill `[!DONE]-` follow-up lines in v1.
   - Why: DONE threads are already append-friendly after `<!--atag:eot-->`; prefill belongs to active `[!NOTE]+` turns where the agent is explicitly waiting on the human.
@@ -141,13 +141,13 @@ No open v1 speaker-prefill questions remain after these decisions.
 
 PR #30 follow-up after review:
 
-- [x] Added `--human-label`, defaulting to `sam`, so reusable docs can truthfully say to replace `sam` with the user's preferred short label.
-- [x] Added poller coverage for a configured non-Sam label-only placeholder, a configured non-Sam real reply, and invalid label validation.
+- [x] Clarified that `sam` is the example human label for this skill copy.
+- [x] Kept the poller simple: no runtime human-label option in v1.
 
 Fast-follow verification passed:
 
 - `bash -n skills/atag/scripts/atag-poll.sh`
-- `bun test skills/atag/reference/markdown-agent-tags.spec.test.ts skills/atag/reference/atag-poll.test.ts` - 225 pass, 0 fail
+- `bun test skills/atag/reference/markdown-agent-tags.spec.test.ts skills/atag/reference/atag-poll.test.ts` - 216 pass, 0 fail
 - `scripts/sync-skills.sh`
 - `diff -qr -x dev skills/atag claude-plugins/atag/skills/atag`
 - `diff -qr -x dev skills/atag codex-plugins/atag/skills/atag`

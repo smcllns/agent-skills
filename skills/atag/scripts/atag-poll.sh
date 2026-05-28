@@ -7,7 +7,6 @@ debug=0
 once=0
 timeout_seconds=1800
 response_style=auto
-human_label=sam
 
 trigger_tokens=()
 triggers=()
@@ -24,7 +23,6 @@ Options:
   --debug               Print one-line no-match status and match diagnostics.
   --timeout SECONDS     Kill Claude after this many seconds. Default: 1800.
   --response-style MODE Claude output style: auto, terminal, or markdown. Default: auto.
-  --human-label NAME    Human speaker label to treat as a placeholder. Default: sam.
   --claude-arg ARG      Pass one argument to Claude. Prefer -- for many args.
   -h, --help            Show this help.
 EOF
@@ -44,10 +42,6 @@ require_value() {
 
 positive_integer() {
   [[ "$1" =~ ^[0-9]+$ ]] && [[ "$1" -gt 0 ]]
-}
-
-valid_label() {
-  [[ "$1" =~ ^[A-Za-z][A-Za-z0-9_]*$ ]]
 }
 
 while [[ $# -gt 0 ]]; do
@@ -87,12 +81,6 @@ while [[ $# -gt 0 ]]; do
           die_usage "--response-style must be auto, terminal, or markdown"
           ;;
       esac
-      shift 2
-      ;;
-    --human-label)
-      require_value "$1" "${2:-}"
-      valid_label "$2" || die_usage "--human-label must be a simple label like sam or alex_2"
-      human_label="$2"
       shift 2
       ;;
     --claude-arg)
@@ -175,7 +163,7 @@ inline_scan_regex="^([^>]*[[:space:]])?@(${trigger_alt})([^[:alnum:]_]|$)"
 callout_scan_awk='BEGIN {
   trigger_re = "(^|[[:space:]])@(" trigger_alt ")([^[:alnum:]_]|$)"
   agent_re = "^[[:space:]]*(\\*`(" trigger_alt ")`\\*|`(" trigger_alt ")`)([[:space:]]|:|$)"
-  human_placeholder_re = "^[[:space:]]*(\\*`" human_label "`\\*|`" human_label "`):?[[:space:]]*$"
+  human_placeholder_re = "^[[:space:]]*(\\*`sam`\\*|`sam`):?[[:space:]]*$"
 }
 function finish_callout() {
   if (in_callout && has_trigger) {
@@ -273,7 +261,7 @@ scan_matches() {
     return "$grep_status"
   fi
 
-  find "$target_dir" -name '*.md' -exec awk -v trigger_alt="$trigger_alt" -v human_label="$human_label" "$callout_scan_awk" {} + > "$callout_matches"
+  find "$target_dir" -name '*.md' -exec awk -v trigger_alt="$trigger_alt" "$callout_scan_awk" {} + > "$callout_matches"
 
   cat "$inline_matches" > "$unique_matches"
   awk '{ sub(/:[0-9]+$/, ""); print }' "$callout_matches" >> "$unique_matches"
@@ -304,7 +292,6 @@ build_prompt() {
 Use the atag skill in the current working directory.
 
 Trigger set: ${trigger_display}
-Human speaker label: \`${human_label}\`
 
 ${response_instruction}
 

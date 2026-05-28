@@ -12,7 +12,7 @@
 
 This renders well and gives agents a consistent turn structure. The UX problem: humans should not have to manually type ``> `sam` `` or learn that syntax just to reply.
 
-In this handoff, `sam` is the local example human label. Replace it with the human's preferred short label and pass that same label to the poller with `--human-label`.
+In this handoff, `sam` is the local example human label. When adapting the skill for another human, replace `sam` in the examples and prefilled human-label convention with that human's preferred short label.
 
 ## Current state
 
@@ -151,7 +151,7 @@ Follow-up review after the label swap found no blockers.
 Nice to have / acceptable experiment risk:
 
 - Finding: the placeholder regex was too broad and skipped a code-only reply like `` `bun` `` after a prefilled label.
-- Resolution: limited placeholder detection to the configured human label and added source/poller coverage for the code-only reply case.
+- Resolution: limited placeholder detection to the skill's human label and added source/poller coverage for the code-only reply case.
 - Finding: stale handoff prose still showed the previous raw label contract.
 - Resolution: updated stale handoff examples and companion CSS handoff wording.
 
@@ -159,7 +159,7 @@ Nice to have / acceptable experiment risk:
 
 PR #29 merged with three settled-but-still-labeled "unresolved questions" in the plan. Fast-follow PR #30 records them as closed decisions:
 
-- Human speaker name: v1 uses a configured human label, defaulting to `sam` for this local workflow. This keeps code-only replies like `` `bun` `` actionable while making "replace `sam` with the user's label" true.
+- Human speaker name: v1 names `sam` once as the example human label for this skill copy. When adapting the skill, replace `sam` with the human's preferred short label.
 - `[!DONE]-` prefill: no v1 prefill for DONE follow-ups. DONE threads are already append-friendly after `<!--atag:eot-->`; prefill stays scoped to active `[!NOTE]+` turns waiting on the human.
 - Placeholder marker/comment: no explicit marker. A label-only human line is readable and sufficient; hidden comments would add protocol noise.
 - Legacy label support: keep scanning support for old bare/colon agent labels and legacy emphasized human-label placeholders so existing notes do not wake up due to the syntax migration.
@@ -168,13 +168,13 @@ No open v1 speaker-prefill questions remain after these decisions.
 
 PR #30 follow-up after review:
 
-- Added `--human-label`, defaulting to `sam`, so reusable docs can truthfully say to replace `sam` with the user's preferred short label.
-- Added poller coverage for a configured non-Sam label-only placeholder, a configured non-Sam real reply, and invalid label validation.
+- Clarified that `sam` is the example human label for this skill copy.
+- Kept the poller simple: no runtime human-label option in v1.
 
 Fast-follow verification passed:
 
 - `bash -n skills/atag/scripts/atag-poll.sh`
-- `bun test skills/atag/reference/markdown-agent-tags.spec.test.ts skills/atag/reference/atag-poll.test.ts` - 225 pass, 0 fail
+- `bun test skills/atag/reference/markdown-agent-tags.spec.test.ts skills/atag/reference/atag-poll.test.ts` - 216 pass, 0 fail
 - `scripts/sync-skills.sh`
 - `diff -qr -x dev skills/atag claude-plugins/atag/skills/atag`
 - `diff -qr -x dev skills/atag codex-plugins/atag/skills/atag`
