@@ -5,8 +5,9 @@ Each section below is one fixture: prose explains the pattern, and the fenced
 block holds the markdown content. The fence's info string tells the runner
 whether the scan should pick this file up:
 
-- info `md @test:match` — scan should find this file
-- info `md @test:nomatch` — scan should skip this file
+- info `md @test:match` — unresolved scan should find this file
+- info `md @test:nomatch` — unresolved scan should skip this file
+- optional `@human:<label>` — run this fixture with a non-`sam` human label
 - info `md @done:match` — DONE seal scan should find this file
 - info `md @done:nomatch` — DONE seal scan should skip this file
 - any other info string (or no fenced block) — ignored by the runner, free for
@@ -15,10 +16,10 @@ whether the scan should pick this file up:
 The test also auto-generates one fixture per agent name in the documented
 agent list. Add a name there → the fixture set extends automatically.
 
-The fast grep scan catches **two** kinds of thing: `@agent` tags that haven't
-been wrapped yet, and `[!NOTE]+` callouts (active agent threads). The DONE seal
-scan catches `[!DONE]-` callouts whose latest nonblank quoted line does not end
-with `<!--atag:eot-->`.
+The unresolved scan catches **three** kinds of thing: `@agent` tags that have
+not been wrapped yet, active `[!NOTE]+` callouts where the human needs another
+agent turn, and `[!DONE]-` callouts whose latest nonblank quoted line does not
+end with `<!--atag:eot-->`.
 
 The marker is the protocol signal: only `+` on `[!NOTE]` and `-` on `[!DONE]`
 indicate an agent thread. Bare `[!NOTE]`, `[!NOTE]-`, `[!DONE]`, and `[!DONE]+`
@@ -28,11 +29,34 @@ them.
 
 The DONE seal is deliberately append-friendly: a human can type directly after
 the token, without a blank quoted separator or speaker label, and the thread
-becomes unresolved until an agent inspects it and reseals the final reply.
+becomes unresolved until an agent inspects it and reseals the final reply. v1
+does not prefill `[!DONE]-` follow-up lines.
 
-Inside callouts, `@name` is only for the original trigger tag. Agent replies use
-plain inline-code speaker labels (`` `claude`:``). Human replies use emphasized
-inline-code speaker labels (``*`sam`*:``).
+Inside callouts, `@name` is only for the original trigger tag. Speaker labels
+are inline-code sender/from fields with no trailing colon or punctuation. Agent
+replies start with an emphasized inline-code label like ``*`claude`* reply``
+and end with `<!--atag:eot-->` after yielding the turn. Human replies start
+with a bare inline-code label like `` `sam` reply``.
+
+Throughout this spec, `sam` is the example human speaker label. When adapting
+the skill for another human, pass the agent's known name for that human with
+`atag-poll.sh --name <name>` or replace `sam` in the examples and prefilled
+human-label convention with that human's preferred short label. Agents/tools may
+prefill that bare human label in active `[!NOTE]+` threads so the human can just
+type the reply text. Label-only human-label lines are placeholders; other
+code-only quoted lines remain real replies. Poller-provided names are normalized
+to a simple lower-case label, using the first word for full names. Labels that
+collide with the active agent trigger set are invalid for `--name` and skipped
+during fallback; if the final fallback would collide, the poller uses the next
+non-colliding generic label.
+
+If no human name can be detected, agents/tools may use `user` or another
+non-colliding generic label and include this quoted comment at the bottom of the
+callout:
+
+```md
+> <!--atag:missing-human-name no human name detected; please ask the human what name agents should use and store it in AGENTS.md, git config user.name, or pass --name to atag-poll.sh.-->
+```
 
 ---
 
@@ -45,8 +69,171 @@ Discussion threads spawned from an `@agent` tag use two markers:
 
 The only marker form that triggers the scan as an agent thread.
 
-```md @test:match @done:nomatch
+```md @test:match
 > [!NOTE]+ @claude tighten the intro
+```
+
+### Active agent thread — sealed agent reply
+
+The agent already replied and yielded the turn, so the scanner skips it until
+the human replies.
+
+```md @test:nomatch
+> [!NOTE]+ awaiting direction
+>
+> @claude make this better
+>
+> *`claude`* Which direction should I take it? <!--atag:eot-->
+```
+
+### Active agent thread — agent-last reply
+
+Active threads may not have the seal yet. If the latest nonblank quoted line is
+an agent speaker label, the scanner treats it as waiting on the human.
+
+```md @test:nomatch
+> [!NOTE]+ awaiting direction
+>
+> @claude make this better
+>
+> *`claude`* Which direction should I take it?
+```
+
+### Active agent thread — legacy bare agent-last reply
+
+Older active threads used bare inline-code agent labels. The scanner still
+accepts them so existing notes do not become actionable forever.
+
+```md @test:nomatch
+> [!NOTE]+ awaiting direction
+>
+> @claude make this better
+>
+> `claude` Which direction should I take it?
+```
+
+### Active agent thread — legacy colon speaker label
+
+New output omits the colon after speaker labels, but the scanner still accepts
+older colon-form agent replies so existing notes do not become actionable
+forever.
+
+```md @test:nomatch
+> [!NOTE]+ awaiting direction
+>
+> @claude make this better
+>
+> `claude`: Which direction should I take it?
+```
+
+### Active agent thread — human reply after agent turn
+
+Once the human replies after the sealed agent turn, the thread is actionable
+again.
+
+```md @test:match
+> [!NOTE]+ awaiting direction
+>
+> @claude make this better
+>
+> *`claude`* Which direction should I take it? <!--atag:eot-->
+>
+> `sam` make it more concrete
+```
+
+### Active agent thread — prefilled human label placeholder
+
+Agents/tools may prefill the next human speaker label after yielding in an
+active thread. A label-only placeholder is not a reply yet, so the scanner
+skips it.
+
+```md @test:nomatch
+> [!NOTE]+ awaiting direction
+>
+> `sam` @claude make this better
+>
+> *`claude`* Which direction should I take it? <!--atag:eot-->
+>
+> `sam`
+```
+
+### Active agent thread — legacy emphasized human label placeholder
+
+The old prefilled human label form is still treated as a placeholder, not a
+reply, so existing prefilled threads do not retrigger.
+
+```md @test:nomatch
+> [!NOTE]+ awaiting direction
+>
+> `sam` @claude make this better
+>
+> *`claude`* Which direction should I take it? <!--atag:eot-->
+>
+> *`sam`*
+```
+
+### Active agent thread — missing human name placeholder comment
+
+When no human name can be detected, the fallback label and explanatory comment
+are both placeholders, not a reply.
+
+```md @test:nomatch @human:user
+> [!NOTE]+ awaiting direction
+>
+> `sam` @claude make this better
+>
+> *`claude`* Which direction should I take it? <!--atag:eot-->
+>
+> `user`
+> <!--atag:missing-human-name no human name detected; please ask the human what name agents should use and store it in AGENTS.md, git config user.name, or pass --name to atag-poll.sh.-->
+```
+
+### Active agent thread — human reply after prefilled label
+
+Once the human types real content after the prefilled label, the thread is
+actionable again.
+
+```md @test:match
+> [!NOTE]+ awaiting direction
+>
+> `sam` @claude make this better
+>
+> *`claude`* Which direction should I take it? <!--atag:eot-->
+>
+> `sam` make it more concrete
+```
+
+### Active agent thread — human reply on line after prefilled label
+
+If the human leaves the prefilled label alone and types on the next quoted
+line, the placeholder is ignored and the typed line still makes the thread
+actionable.
+
+```md @test:match
+> [!NOTE]+ awaiting direction
+>
+> `sam` @claude make this better
+>
+> *`claude`* Which direction should I take it? <!--atag:eot-->
+>
+> `sam`
+> make it more concrete
+```
+
+### Active agent thread — code-only human reply after prefilled label
+
+Only the skill's human label is a placeholder. If the human replies on the next
+line with a code-only token, the thread is actionable.
+
+```md @test:match
+> [!NOTE]+ awaiting direction
+>
+> `sam` @claude which command?
+>
+> *`claude`* Which command should I use? <!--atag:eot-->
+>
+> `sam`
+> `bun`
 ```
 
 ### Bare `[!NOTE]` — plain markdown, not an agent thread
@@ -55,7 +242,7 @@ A `[!NOTE]` without `+` is a regular Obsidian note callout. The scan skips it
 even though it looks like a callout, because the protocol uses `+` to mark
 "agent thread, active."
 
-```md @test:nomatch @done:nomatch
+```md @test:nomatch
 > [!NOTE] Just a regular note callout, not for the agent
 ```
 
@@ -63,7 +250,7 @@ even though it looks like a callout, because the protocol uses `+` to mark
 
 Same rule: only `+` indicates an agent thread.
 
-```md @test:nomatch @done:nomatch
+```md @test:nomatch
 > [!NOTE]- A collapsed note callout — still plain markdown
 ```
 
@@ -75,7 +262,9 @@ agent-authored quoted line with `<!--atag:eot-->`.
 ```md @test:nomatch @done:nomatch
 > [!DONE]- resolved agent thread
 >
-> `claude`: done. <!--atag:eot-->
+> @claude already handled
+>
+> *`claude`* done. <!--atag:eot-->
 ```
 
 ### Bare `[!DONE]` — plain markdown
@@ -102,7 +291,7 @@ line makes the inline-tag regex skip it (the regex requires a non-`>`
 line start). The DONE seal scan still reports this callout unless the latest
 nonblank quoted line ends with `<!--atag:eot-->`.
 
-```md @test:nomatch @done:match
+```md @test:match @done:match
 > [!DONE]- @claude already wrapped
 ```
 
@@ -111,12 +300,12 @@ nonblank quoted line ends with `<!--atag:eot-->`.
 The grep scan skips this, but the DONE seal scan reports the callout because the
 human wrote after the seal.
 
-```md @test:nomatch @done:match
+```md @test:match @done:match
 > [!DONE]- tightened intro
 >
 > @claude tighten the intro
 >
-> `claude`: done, tightened it. <!--atag:eot-->
+> *`claude`* done, tightened it. <!--atag:eot-->
 > one more tweak please
 ```
 
@@ -130,24 +319,28 @@ the seal token.
 >
 > @claude tighten the intro
 >
-> `claude`: done, tightened it. <!--atag:eot-->
+> *`claude`* done, tightened it. <!--atag:eot-->
 > one more tweak please
 >
-> `claude`: done, tightened it again. <!--atag:eot-->
+> *`claude`* done, tightened it again. <!--atag:eot-->
 ```
 
 ### Multiple DONE callouts with one unsealed
 
 Any unsealed DONE callout in a file makes the file actionable.
 
-```md @test:nomatch @done:match
+```md @test:match @done:match
 > [!DONE]- first
 >
-> `claude`: done. <!--atag:eot-->
+> @claude first task
+>
+> *`claude`* done. <!--atag:eot-->
 
 > [!DONE]- second
 >
-> `codex`: done.
+> @codex second task
+>
+> *`codex`* done.
 ```
 
 ### Tag inside an indented blockquote
@@ -208,10 +401,26 @@ see @claude for the rule (mid-line)
 
 ### Trailing tag
 
-Sam's case from 2026-05-19 — tag at the end of a sentence.
+A tag at the end of a sentence is still actionable.
 
 ```md @test:match
 tell me my options please @claude
+```
+
+### Resolved inline task tag
+
+When a tag was inline on a task item, the resolved body task should no longer
+contain the live trigger. The original task line is preserved verbatim inside
+the sealed callout immediately after the affected block.
+
+```md @test:nomatch @done:nomatch
+- [x] brainstorm a `config.yml` shaped joke
+
+> [!DONE]- drafted config.yml joke
+>
+> - [ ] brainstorm a `config.yml` shaped joke @claude do this pls
+>
+> *`claude`* done — joke above. <!--atag:eot-->
 ```
 
 ---
@@ -267,6 +476,15 @@ line-start or whitespace before `@`.
 
 ```md @test:nomatch
 reach me at contact@claude.com if needed
+```
+
+### Literal `[!NOTE]+` in prose
+
+Plain prose or code-like text mentioning the marker is not an agent callout. The
+callout scan requires a blockquoted callout start.
+
+```md @test:nomatch
+The literal marker [!NOTE]+ should not trigger outside a blockquote callout.
 ```
 
 ---

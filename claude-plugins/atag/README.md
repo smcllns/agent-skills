@@ -42,6 +42,29 @@ Schedule a task to run every 5 minutes that runs the atag skill on my notes fold
 
 Claude Cowork provides a nice UI for managing scheduled tasks and you can pause/delete there, or ask Claude if you want to run it on a different timer.
 
+### Terminal polling
+
+For technical local use, run the foreground poller from a terminal. It scans every 60 seconds, prints a startup line with the watched triggers and path, then stays quiet when there is no work unless `--debug` is set. It only invokes Claude for actionable inline tags, unsealed `[!DONE]-` follow-ups, or `[!NOTE]+` threads where the human replied after the agent yielded. Closing the terminal or pressing `Ctrl-C` stops the loop.
+
+```bash
+skills/atag/scripts/atag-poll.sh --dir /path/to/notes
+```
+
+Custom triggers replace the defaults:
+
+```bash
+skills/atag/scripts/atag-poll.sh --dir /path/to/notes @pi
+skills/atag/scripts/atag-poll.sh --debug --dir /path/to/notes '@agento, @pi'
+```
+
+Pass regular Claude CLI args after `--`:
+
+```bash
+skills/atag/scripts/atag-poll.sh --dir /path/to/notes -- --max-budget-usd 1
+```
+
+Use `--response-style terminal` or `--response-style markdown` to force Claude's final output style. The default `auto` uses terminal plain text for interactive terminals and Markdown for piped/redirected callers.
+
 ## Obsidian styling (optional)
 
 For a nicer look in Obsidian Reading mode, the repo ships a CSS snippet at `skills/atag/companion/atag-callouts.css`. Copy it into your vault's `.obsidian/snippets/`, then enable it via Settings → Appearance → CSS snippets. Renders amber for active threads, green for resolved.
@@ -50,10 +73,11 @@ For a nicer look in Obsidian Reading mode, the repo ships a CSS snippet at `skil
 
 Two test harnesses live under `skills/atag/reference/`:
 
-**Spec test** — verifies the scan regex in `SKILL.md` against the fixture catalog in `markdown-agent-tags.spec.md`. Requires `bun >= 1.3`.
+**Spec test** — verifies the scan commands in `SKILL.md` against the fixture catalog in `markdown-agent-tags.spec.md`. Requires `bun >= 1.3`.
 
 ```bash
 bun test skills/atag/reference/markdown-agent-tags.spec.test.ts
+bun test skills/atag/reference/atag-poll.test.ts
 ```
 
 **Model comparison** — runs the skill across multiple Claude models on a graded fixture, saves each result to `reference/model-comparison/results/<model>.md` (gitignored) for eyeball comparison.

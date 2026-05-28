@@ -10,8 +10,8 @@ Future ideas and resolved protocol notes for Markdown Agent Tags (`atag`).
 
 **Decision:** reserve `@name` for trigger tags. Inside callout threads, speaker labels use compact inline-code markdown:
 
-- `` `claude`: reply`` — agent turn, common/simple path
-- ``*`sam`*: reply`` — human turn, emphasized because it is rarer and usually means the thread needs another agent response
+- ``*`claude`* reply`` — current agent turn
+- `` `sam` reply`` — current human turn, bare because this is the prefilled label the human edits after
 
 **Example thread:**
 
@@ -20,15 +20,15 @@ Future ideas and resolved protocol notes for Markdown Agent Tags (`atag`).
 >
 > @claude this section is too wordy — can we simplify?
 >
-> `claude`: Can do — should I trim to 3 bullets, or fold the whole thing into the next paragraph?
+> *`claude`* Can do — should I trim to 3 bullets, or fold the whole thing into the next paragraph?
 >
-> *`sam`*: 3 bullets please
+> `sam` 3 bullets please
 >
-> `claude`: Done.
+> *`claude`* Done.
 ```
 
 **Why this resolved the wishlist item:**
 
-- Raw markdown now clearly separates trigger syntax (`@claude`) from speaker labels (`` `claude`:``).
-- Human turns are visually emphasized without making the common agent reply syntax noisy.
+- Raw markdown now clearly separates trigger syntax (`@claude`) from speaker labels (``*`claude`*`` and `` `sam` ``).
+- Human turns keep the accented rendered style while using the simplest raw placeholder for the human to edit.
 - Companion CSS can style `code:first-child` and `em:first-child > code:first-child` without HTML or non-portable markdown attributes.

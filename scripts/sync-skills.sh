@@ -33,7 +33,7 @@ for skill_dir in skills/*/; do
     [[ -d "$plugin_dir" ]] || continue
     target="$plugin_dir/skills/$name"
     mkdir -p "$target"
-    rsync -a --delete --exclude='.DS_Store' "$skill_dir" "$target/"
+    rsync -a --delete --exclude='.DS_Store' --exclude='dev/' "$skill_dir" "$target/"
     echo "synced  $skill_dir → $target/"
     synced=$((synced + 1))
   done
