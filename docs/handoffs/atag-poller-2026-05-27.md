@@ -11,7 +11,7 @@
 - No launchd/cron for v1. Closing the terminal kills the poller.
 - No lock file for v1. A single foreground loop blocks while Claude runs, then sleeps and scans again.
 - Custom triggers replace defaults. `@pi` means only `@pi`, not `agent claude codex pi`.
-- Default Claude command is `claude -p --model sonnet --permission-mode acceptEdits`; callers can pass normal Claude args after `--`.
+- Default Claude command is now `claude -p --model opus --permission-mode acceptEdits --effort low` as an interim default; callers can pass normal Claude args after `--`, including `--model sonnet --effort low` or `--model haiku --effort low` for speed checks.
 - Claude has no max-turns flag in current help output, so the script uses a 30-minute subprocess timeout.
 
 ## Gotchas
