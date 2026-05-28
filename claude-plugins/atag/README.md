@@ -60,10 +60,12 @@ skills/atag/scripts/atag-poll.sh --debug --dir /path/to/notes '@agento, @pi'
 Pass regular Claude CLI args after `--`:
 
 ```bash
-skills/atag/scripts/atag-poll.sh --dir /path/to/notes -- --max-budget-usd 1
+skills/atag/scripts/atag-poll.sh --dir /path/to/notes -- --effort medium --max-budget-usd 1
+skills/atag/scripts/atag-poll.sh --dir /path/to/notes -- --model sonnet --effort low --max-budget-usd 1
+skills/atag/scripts/atag-poll.sh --dir /path/to/notes -- --model haiku --effort low --max-budget-usd 1
 ```
 
-Use `--response-style terminal` or `--response-style markdown` to force Claude's final output style. The default `auto` uses terminal plain text for interactive terminals and Markdown for piped/redirected callers.
+The poller temporarily defaults to `--model opus --effort low` for mechanical tag sweeps based on the 2026-05-28 interim ADR; pass Claude CLI args after `--` to override them. Use `--response-style terminal` or `--response-style markdown` to force Claude's final output style. The default `auto` uses terminal plain text for interactive terminals and Markdown for piped/redirected callers.
 
 ## Obsidian styling (optional)
 

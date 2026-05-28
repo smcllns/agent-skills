@@ -33,7 +33,7 @@ describe("atag-poll", () => {
     const result = runPoll(["--once", "--dir", fixtureDir]);
 
     expect(result.exitCode).toBe(0);
-    expect(result.stdout).toBe(`Watching for @agent, @claude, @codex agent tags in ${realpathSync(fixtureDir)}...\n\n`);
+    expectStdoutWithStartup(result.stdout, "@agent, @claude, @codex");
     expect(result.stderr).toBe("");
     expect(await readLog()).toBe("");
   });
@@ -48,7 +48,7 @@ describe("atag-poll", () => {
     expect(result.stdout).toMatch(
       new RegExp(
         [
-          `^Watching for @agent, @claude, @codex agent tags in ${escapeRegExp(realpathSync(fixtureDir))}\\.\\.\\.`,
+          `^\\[[0-9]{2}:[0-9]{2}\\]  Watching for @agent, @claude, @codex agent tags in ${escapeRegExp(realpathSync(fixtureDir))}\\.\\.\\.`,
           "",
           "\\[[0-9]{2}:[0-9]{2}\\]  No @agent, @claude, @codex agent tags detected",
           "$",
@@ -66,14 +66,16 @@ describe("atag-poll", () => {
     const result = runPoll(["--once", "--dir", fixtureDir]);
 
     expect(result.exitCode).toBe(0);
-    expect(result.stdout).toBe(`Watching for @agent, @claude, @codex agent tags in ${realpathSync(fixtureDir)}...\n\nclaude output\n`);
+    expectStdoutWithStartup(result.stdout, "@agent, @claude, @codex", "claude output\n");
     const log = await readLog();
     expect(log).toContain(`cwd=${realpathSync(fixtureDir)}`);
     expect(log).toContain("arg=-p");
     expect(log).toContain("arg=--model");
-    expect(log).toContain("arg=sonnet");
+    expect(log).toContain("arg=opus");
     expect(log).toContain("arg=--permission-mode");
     expect(log).toContain("arg=acceptEdits");
+    expect(log).toContain("arg=--effort");
+    expect(log).toContain("arg=low");
     expect(log).toContain("Use the atag skill");
   });
 
@@ -454,16 +456,62 @@ describe("atag-poll", () => {
     expect(await readLog()).toBe("");
   });
 
-  it("separates debug match and invocation output with blank lines", async () => {
+  it("adds terminal response-style instructions when requested", async () => {
+    await installClaudeStub();
+    await writeFile(join(fixtureDir, "note.md"), "@codex please help\n");
+
+    const result = runPoll(["--once", "--dir", fixtureDir, "--response-style", "terminal"]);
+
+    expect(result.exitCode).toBe(0);
+    expect(await readLog()).toContain("Response style: terminal plain text");
+  });
+
+  it("adds markdown response-style instructions when requested", async () => {
+    await installClaudeStub();
+    await writeFile(join(fixtureDir, "note.md"), "@codex please help\n");
+
+    const result = runPoll(["--once", "--dir", fixtureDir, "--response-style", "markdown"]);
+
+    expect(result.exitCode).toBe(0);
+    expect(await readLog()).toContain("Response style: Markdown");
+  });
+
+  it("prints compact debug match output and hides the full prompt behind a DEBUG prefix", async () => {
     await installClaudeStub({ stdout: "claude output\n" });
     await writeFile(join(fixtureDir, "note.md"), "@codex please help\n");
 
     const result = runPoll(["--once", "--debug", "--dir", fixtureDir]);
 
     expect(result.exitCode).toBe(0);
-    expect(result.stderr).toContain(`for @agent, @claude, @codex\n\natag-poll: match ${realpathSync(fixtureDir)}/note.md\n`);
-    expect(result.stderr).toContain("\natag-poll: invoking claude ");
+    expect(result.stderr).toContain(`\n[`);
+    expect(result.stderr).toContain(`]  atag-poll: found 1 agent tag match (@agent, @claude, @codex) in fixture/note.md\n`);
+    expect(result.stderr).toContain("]  atag-poll: spawning claude agent to resolve...\n");
+    expect(result.stderr).toContain("]  [DEBUG] atag-poll: invoking claude ");
     expect(result.stderr).toEndWith("\n\n");
+  });
+
+  it("prints debug heartbeats while Claude is still running", async () => {
+    await installClaudeStub({ stdout: "slow output\n", sleepSeconds: 2 });
+    await writeFile(join(fixtureDir, "note.md"), "@codex please help\n");
+
+    const result = runPoll(["--once", "--debug", "--dir", fixtureDir], {
+      ATAG_POLL_HEARTBEAT_SECONDS: "1",
+    });
+
+    expect(result.exitCode).toBe(0);
+    expect(result.stderr).toMatch(/\[DEBUG\] atag-poll: claude still running \([0-9]+s elapsed\)/);
+    expect(result.stdout).toContain("slow output\n");
+  });
+
+  it("times out the Claude subprocess", async () => {
+    await installClaudeStub({ sleepSeconds: 10 });
+    await writeFile(join(fixtureDir, "note.md"), "@codex please help\n");
+
+    const result = runPoll(["--once", "--dir", fixtureDir, "--timeout", "1"]);
+
+    expect(result.exitCode).toBe(124);
+    expect(result.stderr).toContain("atag-poll: claude timed out after 1s");
+    expect(await readLog()).toContain("arg=opus");
   });
 
   it("lets custom triggers replace the default triggers", async () => {
@@ -473,7 +521,7 @@ describe("atag-poll", () => {
     const result = runPoll(["--once", "--dir", fixtureDir, "@pi"]);
 
     expect(result.exitCode).toBe(0);
-    expect(result.stdout).toBe(`Watching for @pi agent tags in ${realpathSync(fixtureDir)}...\n\n`);
+    expectStdoutWithStartup(result.stdout, "@pi");
     expect(result.stderr).toBe("");
     expect(await readLog()).toBe("");
   });
@@ -485,7 +533,7 @@ describe("atag-poll", () => {
     const result = runPoll(["--once", "--dir", fixtureDir, "@agento,", "@pi"]);
 
     expect(result.exitCode).toBe(0);
-    expect(result.stdout).toBe(`Watching for @agento, @pi agent tags in ${realpathSync(fixtureDir)}...\n\nmatched\n`);
+    expectStdoutWithStartup(result.stdout, "@agento, @pi", "matched\n");
     expect(await readLog()).toContain("@agento, @pi");
   });
 
@@ -517,21 +565,23 @@ describe("atag-poll", () => {
     const result = runPoll(["--once", "--dir", fixtureDir]);
 
     expect(result.exitCode).toBe(0);
-    expect(result.stdout).toBe(`Watching for @agent, @claude, @codex agent tags in ${realpathSync(fixtureDir)}...\n\ndone scan\n`);
+    expectStdoutWithStartup(result.stdout, "@agent, @claude, @codex", "done scan\n");
     expect(await readLog()).toContain("note.md");
   });
 
-  it("passes through Claude args after -- and lets them override defaults", async () => {
+  it("passes through Claude args and lets callers override default model and effort", async () => {
     await installClaudeStub();
     await writeFile(join(fixtureDir, "note.md"), "@codex please help\n");
 
-    const result = runPoll(["--once", "--dir", fixtureDir, "--", "--model", "opus", "--max-budget-usd", "1"]);
+    const result = runPoll(["--once", "--dir", fixtureDir, "--", "--model", "haiku", "--effort", "low", "--max-budget-usd", "1"]);
 
     expect(result.exitCode).toBe(0);
     const log = await readLog();
     expect(log).toContain("arg=--max-budget-usd");
     expect(log).toContain("arg=1");
-    expect(log).toContain("arg=opus");
+    expect(log).toContain("arg=haiku");
+    expect(log).toContain("arg=low");
+    expect(log).not.toContain("arg=opus");
   });
 
   it("propagates Claude failures", async () => {
@@ -541,18 +591,20 @@ describe("atag-poll", () => {
     const result = runPoll(["--once", "--dir", fixtureDir]);
 
     expect(result.exitCode).toBe(7);
-    expect(result.stdout).toBe(`Watching for @agent, @claude, @codex agent tags in ${realpathSync(fixtureDir)}...\n\npartial\n`);
-    expect(result.stderr).toBe("boom\n");
+    expectStdoutWithStartup(result.stdout, "@agent, @claude, @codex", "partial\n");
+    expect(result.stderr).toContain("atag-poll: spawning claude agent to resolve...");
+    expect(result.stderr).toContain("boom\n");
   });
 });
 
-function runPoll(args: string[]) {
+function runPoll(args: string[], env: Record<string, string> = {}) {
   const proc = Bun.spawnSync({
     cmd: [SCRIPT, ...args],
     env: {
       ...process.env,
       PATH: `${binDir}:${process.env.PATH ?? ""}`,
       ATAG_POLL_LOG: logPath,
+      ...env,
     },
     stdout: "pipe",
     stderr: "pipe",
@@ -564,16 +616,18 @@ function runPoll(args: string[]) {
   };
 }
 
-async function installClaudeStub(options: { stdout?: string; stderr?: string; exitCode?: number } = {}) {
+async function installClaudeStub(options: { stdout?: string; stderr?: string; exitCode?: number; sleepSeconds?: number } = {}) {
   const stdout = JSON.stringify(options.stdout ?? "");
   const stderr = JSON.stringify(options.stderr ?? "");
   const exitCode = options.exitCode ?? 0;
+  const sleepSeconds = options.sleepSeconds ?? 0;
   const stub = `#!/usr/bin/env bash
 set -euo pipefail
 {
   printf 'cwd=%s\\n' "$PWD"
   for arg in "$@"; do printf 'arg=%s\\n' "$arg"; done
 } >> "$ATAG_POLL_LOG"
+sleep ${sleepSeconds}
 printf '%b' ${stdout}
 printf '%b' ${stderr} >&2
 exit ${exitCode}
@@ -623,4 +677,16 @@ async function readLog(): Promise<string> {
 
 function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function expectStdoutWithStartup(stdout: string, triggers: string, suffix = "") {
+  expect(stdout).toMatch(
+    new RegExp(
+      [
+        `^\\[[0-9]{2}:[0-9]{2}\\]  Watching for ${escapeRegExp(triggers)} agent tags in ${escapeRegExp(realpathSync(fixtureDir))}\\.\\.\\.`,
+        "",
+        escapeRegExp(suffix) + "$",
+      ].join("\n"),
+    ),
+  );
 }

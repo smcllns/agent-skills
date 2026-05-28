@@ -114,7 +114,7 @@ End every agent reply with `<!--atag:eot-->` so cheap pollers can skip threads w
 
 ## If further human input required
 
-When the tag is ambiguous, missing context, or non-actionable, **don't guess**. Wrap with `[!NOTE]+`, keep the original tag as the first body line, and add a clarifying question:
+When the tag is ambiguous, missing context, or non-actionable, **don't guess**. Do not invent facts, benefits, metrics, names, dates, or other specifics that are not present in the document. If the human asks you to make something concrete but the concrete detail is missing, wrap with `[!NOTE]+`, keep the original tag as the first body line, and ask for the missing detail:
 
 ```
 > [!NOTE]+ awaiting clarification
@@ -211,10 +211,15 @@ skills/atag/scripts/atag-poll.sh --dir /path/to/notes
 Defaults:
 
 - Polls every 60 seconds until the terminal closes or you press `Ctrl-C`.
-- Prints one startup line: `Watching for @agent, @claude, @codex agent tags in /path/to/notes...`
+- Prints one timestamped startup line: `[HH:MM]  Watching for @agent, @claude, @codex agent tags in /path/to/notes...`
 - Prints nothing on no-match unless `--debug` is set.
 - With `--debug`, no-match prints: `[HH:MM]  No @agent, @claude, @codex agent tags detected`.
-- Runs Claude from the target directory with `claude -p --model sonnet --permission-mode acceptEdits`.
+- When a match is found, prints a compact status line like `[HH:MM]  atag-poll: found 1 agent tag match (@agent, @claude, @codex) in notes/file.md`.
+- In regular mode, Claude startup prints `[HH:MM]  atag-poll: spawning claude agent to resolve...`.
+- In `--debug`, the full Claude command/prompt line is also printed with a `[DEBUG]` prefix, and a heartbeat prints every 15 seconds while Claude is still running.
+- On `Ctrl-C`, exits with a one-line interruption warning; if Claude had started editing, the markdown file may be partially updated.
+- Runs Claude from the target directory with `claude -p --model opus --permission-mode acceptEdits --effort low`. This is an interim default from [ADR 2026-05-28](../../docs/adrs/2026-05-28-atag-poller-opus-low-default.md); pass Claude CLI args after `--` to override the default model or effort.
+- Defaults `--response-style auto`: terminal stdout requests plain terminal text; piped/redirected/UI callers get Markdown. Use `--response-style terminal` or `--response-style markdown` to force it.
 - Resolves the human speaker label from `--name`/`--user-name`, then `git config user.name`, GitHub user name, Unix username, and finally a non-colliding generic label, usually `user`.
 - Uses a 30-minute timeout around Claude as a runaway guard.
 
@@ -226,8 +231,11 @@ Useful options:
 skills/atag/scripts/atag-poll.sh --once --dir /path/to/notes
 skills/atag/scripts/atag-poll.sh --name Sam --dir /path/to/notes
 skills/atag/scripts/atag-poll.sh --debug --interval 30 --dir /path/to/notes
+skills/atag/scripts/atag-poll.sh --response-style terminal --dir /path/to/notes
 skills/atag/scripts/atag-poll.sh --dir /path/to/notes @pi
-skills/atag/scripts/atag-poll.sh --dir /path/to/notes '@agento, @pi' -- --max-budget-usd 1
+skills/atag/scripts/atag-poll.sh --dir /path/to/notes '@agento, @pi' -- --effort medium --max-budget-usd 1
+skills/atag/scripts/atag-poll.sh --dir /path/to/notes -- --model sonnet --effort low --max-budget-usd 1
+skills/atag/scripts/atag-poll.sh --dir /path/to/notes -- --model haiku --effort low --max-budget-usd 1
 ```
 
 Custom triggers replace the defaults. Passing `@pi` scans for `@pi`, not `@agent`, `@claude`, or `@codex`.
@@ -260,7 +268,7 @@ Do not summarize already sealed `[!DONE]-` threads, skipped false positives, or 
 
 **Don't prematurely limit results.** Actionable threads cluster in recently-touched files — sort matches by file mtime descending. If you must, cap after sorting.
 
-**Callout is for discussion, not the work.** Edits go in the **document body**; the callout is a side thread for discussion and one-line acknowledgements of the changes made. Don't paste rewritten paragraphs, drafted sections, or new code into the reply — that belongs in the body. Discussion-only tags (e.g. `@claude why did we pick X?`) have no body edit, so the answer is the reply.
+**Callout is for discussion, not the work.** If the request asks for content — a paragraph, headline, checklist, code block, or YAML-shaped joke — put it in the **document body**. Use the callout only for discussion or a one-line acknowledgement.
 
 **Proactively correct formatting.** Allow the human to write shorthand imperfectly, and normalize speaker labels to the inline-code no-colon format when you touch a thread.
 
