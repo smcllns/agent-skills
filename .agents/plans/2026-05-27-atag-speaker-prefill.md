@@ -63,7 +63,7 @@ Current callout scanning would treat the `sam` line as the latest nonblank human
 - [x] Update this plan or the PR description with the decision on every review finding.
   - It is valid to skip non-blocking items to launch the experiment.
   - If skipping something, explicitly record why it is acceptable for this experiment and what would make it blocking later.
-- [ ] Merge only after blocking findings are fixed or explicitly reclassified with rationale.
+- [x] Merge only after blocking findings are fixed or explicitly reclassified with rationale.
 
 ## Implementation status — 2026-05-27
 
@@ -117,8 +117,33 @@ Nice to have / acceptable experiment risk:
 - Do not broaden the scanner into a full markdown parser.
 - Do not block run-3; run-3 is for inline body-trigger cleanup and no-second-spawn behavior.
 
-## Unresolved questions
+## Decisions closed after PR #29
 
-- Human speaker name: v1 documents `sam`; scanner ignores bare and legacy emphasized label-only Sam placeholders. It intentionally does not skip every code-only line, so a reply like `` `bun` `` remains actionable.
-- `[!DONE]-` prefill: no v1 change; active `[!NOTE]+` only.
-- Placeholder marker/comment: no marker; "speaker label only" is enough for v1.
+- [x] Human speaker name:
+  - Decision: v1 is Sam-specific. The poller only treats bare and legacy-emphasized `sam` label-only lines as placeholders.
+  - Why: this avoids false negatives for code-only replies like `` `bun` `` and avoids adding configuration before another human label exists.
+  - Revisit if: another human label needs to be prefilled by a real caller.
+- [x] `[!DONE]-` prefill:
+  - Decision: do not prefill `[!DONE]-` follow-up lines in v1.
+  - Why: DONE threads are already append-friendly after `<!--atag:eot-->`; prefill belongs to active `[!NOTE]+` turns where the agent is explicitly waiting on Sam.
+  - Revisit if: humans routinely miss where to type DONE follow-ups.
+- [x] Placeholder marker/comment:
+  - Decision: no explicit marker/comment.
+  - Why: a label-only `sam` line is readable and sufficient; hidden comments would add protocol noise.
+  - Revisit if: tests show label-only placeholders are ambiguous in real notes.
+- [x] Legacy label support:
+  - Decision: keep scanning support for legacy bare/colon agent labels and legacy emphasized `sam` placeholders.
+  - Why: old notes should not wake up just because the syntax changed.
+
+No open v1 speaker-prefill questions remain after these decisions.
+
+Fast-follow verification passed:
+
+- `bash -n skills/atag/scripts/atag-poll.sh`
+- `bun test skills/atag/reference/markdown-agent-tags.spec.test.ts skills/atag/reference/atag-poll.test.ts` - 216 pass, 0 fail
+- `scripts/sync-skills.sh`
+- `diff -qr -x dev skills/atag claude-plugins/atag/skills/atag`
+- `diff -qr -x dev skills/atag codex-plugins/atag/skills/atag`
+- `diff -qr -x dev skills/atag /Users/smcllns/Projects/dotfiles/skills/atag`
+- `diff -qr -x dev skills/atag /Users/smcllns/.agents/skills/atag`
+- `git diff --check`

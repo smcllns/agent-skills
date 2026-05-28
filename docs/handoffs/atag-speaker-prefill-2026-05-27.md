@@ -152,3 +152,25 @@ Nice to have / acceptable experiment risk:
 - Resolution: limited placeholder detection to bare/legacy-emphasized `sam` labels and added source/poller coverage for the code-only reply case.
 - Finding: stale handoff prose still showed the previous raw label contract.
 - Resolution: updated stale handoff examples and companion CSS handoff wording.
+
+## Fast-follow decisions after PR #29
+
+PR #29 merged with three settled-but-still-labeled "unresolved questions" in the plan. Fast-follow PR #30 records them as closed decisions:
+
+- Human speaker name: v1 is Sam-specific. The poller only treats bare and legacy-emphasized `sam` label-only lines as placeholders. This keeps code-only replies like `` `bun` `` actionable and avoids adding configuration before another human label exists.
+- `[!DONE]-` prefill: no v1 prefill for DONE follow-ups. DONE threads are already append-friendly after `<!--atag:eot-->`; prefill stays scoped to active `[!NOTE]+` turns waiting on Sam.
+- Placeholder marker/comment: no explicit marker. A label-only `sam` line is readable and sufficient; hidden comments would add protocol noise.
+- Legacy label support: keep scanning support for old bare/colon agent labels and legacy emphasized `sam` placeholders so existing notes do not wake up due to the syntax migration.
+
+No open v1 speaker-prefill questions remain after these decisions.
+
+Fast-follow verification passed:
+
+- `bash -n skills/atag/scripts/atag-poll.sh`
+- `bun test skills/atag/reference/markdown-agent-tags.spec.test.ts skills/atag/reference/atag-poll.test.ts` - 216 pass, 0 fail
+- `scripts/sync-skills.sh`
+- `diff -qr -x dev skills/atag claude-plugins/atag/skills/atag`
+- `diff -qr -x dev skills/atag codex-plugins/atag/skills/atag`
+- `diff -qr -x dev skills/atag /Users/smcllns/Projects/dotfiles/skills/atag`
+- `diff -qr -x dev skills/atag /Users/smcllns/.agents/skills/atag`
+- `git diff --check`

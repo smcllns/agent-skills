@@ -28,13 +28,18 @@ them.
 
 The DONE seal is deliberately append-friendly: a human can type directly after
 the token, without a blank quoted separator or speaker label, and the thread
-becomes unresolved until an agent inspects it and reseals the final reply.
+becomes unresolved until an agent inspects it and reseals the final reply. v1
+does not prefill `[!DONE]-` follow-up lines.
 
 Inside callouts, `@name` is only for the original trigger tag. Speaker labels
 are inline-code sender/from fields with no trailing colon or punctuation. Agent
 replies start with an emphasized inline-code label like ``*`claude`* reply``
 and end with `<!--atag:eot-->` after yielding the turn. Human replies start
 with a bare inline-code label like `` `sam` reply``.
+
+Agents/tools may prefill a bare `sam` label in active `[!NOTE]+` threads so Sam
+can just type the reply text. Label-only `sam` lines are placeholders; other
+code-only quoted lines remain real replies.
 
 ---
 

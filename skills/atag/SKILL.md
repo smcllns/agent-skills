@@ -51,9 +51,9 @@ Use `@name` only for trigger tags. Speaker labels use inline code as the sender/
 - Agent turn: ``*`claude`* reply <!--atag:eot-->``.
 - Human turn: `` `sam` reply``.
 
-Humans are not expected to type the speaker-label markdown by hand. Agents and tools should prefill or normalize the human label in active threads, so the human can just type the reply text after the label.
+Humans are not expected to type the speaker-label markdown by hand. Agents and tools should prefill or normalize the Sam label in active threads, so the human can just type the reply text after the label.
 
-`<!--atag:eot-->` means the agent yielded the turn. End every agent response with it, including `[!NOTE]+` questions and partial answers. In `[!DONE]-` threads, a human can add follow-up text directly after the token; the next agent pass will inspect and reseal.
+`<!--atag:eot-->` means the agent yielded the turn. End every agent response with it, including `[!NOTE]+` questions and partial answers. In `[!DONE]-` threads, a human can add follow-up text directly after the token; the next agent pass will inspect and reseal. Do not prefill `[!DONE]-` follow-up lines in v1.
 
 ```markdown
 > [!DONE]- tightened introduction
@@ -78,7 +78,7 @@ A tag is unresolved when any of:
 - A valid inline tag for a recognized trigger not yet processed into a callout.
 - A resolved `> [!DONE]- ...` callout whose latest nonblank quoted line does not end with `<!--atag:eot-->`.
 
-A bare inline-code Sam label with no reply text, such as ``> `sam` ``, is a placeholder, not a turn. Legacy emphasized label-only Sam placeholders are also skipped so old prefilled threads do not retrigger.
+A bare inline-code Sam label with no reply text, such as ``> `sam` ``, is a placeholder, not a turn. Legacy emphasized label-only Sam placeholders are also skipped so old prefilled threads do not retrigger. This skip is intentionally Sam-specific in v1; other code-only quoted lines remain real replies.
 
 ## Resolution contract
 
