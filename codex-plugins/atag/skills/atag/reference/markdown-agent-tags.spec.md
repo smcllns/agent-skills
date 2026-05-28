@@ -106,6 +106,37 @@ again.
 > *`sam`* make it more concrete
 ```
 
+### Active agent thread — prefilled human label placeholder
+
+Agents/tools may prefill the next human speaker label after yielding in an
+active thread. A label-only placeholder is not a reply yet, so the scanner
+skips it.
+
+```md @test:nomatch
+> [!NOTE]+ awaiting direction
+>
+> *`sam`* @claude make this better
+>
+> `claude` Which direction should I take it? <!--atag:eot-->
+>
+> *`sam`*
+```
+
+### Active agent thread — human reply after prefilled label
+
+Once the human types real content after the prefilled label, the thread is
+actionable again.
+
+```md @test:match
+> [!NOTE]+ awaiting direction
+>
+> *`sam`* @claude make this better
+>
+> `claude` Which direction should I take it? <!--atag:eot-->
+>
+> *`sam`* make it more concrete
+```
+
 ### Bare `[!NOTE]` — plain markdown, not an agent thread
 
 A `[!NOTE]` without `+` is a regular Obsidian note callout. The scan skips it

@@ -89,3 +89,34 @@ Before merge, get an adversarial independent review that tries to find launch bl
 - Nice to have / acceptable experiment risk
 
 The goal is transparency, not perfection. It is valid to skip non-blocking findings to launch the experiment, but the PR or plan must record the decision and rationale for every skipped item.
+
+## Implementation update — 2026-05-27
+
+Implemented on `codex/atag-poller`:
+
+- `skills/atag/scripts/atag-poll.sh` now treats emphasized inline-code label-only human lines like ``*`sam`*`` as placeholders for latest-turn detection.
+- `skills/atag/reference/markdown-agent-tags.spec.md` has fixtures for skipped placeholders and actionable typed replies after a prefilled label.
+- `skills/atag/reference/atag-poll.test.ts` covers both the trailing-space placeholder and the real typed reply.
+- `skills/atag/SKILL.md` says agents/tools prefill or normalize human labels; humans should not have to type raw speaker-label markdown.
+- `skills/atag/reference/markdown-agent-tags.spec.test.ts` stays in sync with the documented awk scanner.
+- Plugin copies were regenerated with `scripts/sync-skills.sh`.
+- Active local copies were synced:
+  - `/Users/smcllns/Projects/dotfiles/skills/atag`
+  - `/Users/smcllns/.agents/skills/atag`
+
+Verification passed:
+
+- `bash -n skills/atag/scripts/atag-poll.sh`
+- `bun test skills/atag/reference/markdown-agent-tags.spec.test.ts skills/atag/reference/atag-poll.test.ts` — 195 pass, 0 fail
+- `scripts/sync-skills.sh`
+- `diff -qr -x dev skills/atag claude-plugins/atag/skills/atag`
+- `diff -qr -x dev skills/atag codex-plugins/atag/skills/atag`
+- `diff -qr -x dev skills/atag /Users/smcllns/Projects/dotfiles/skills/atag`
+- `diff -qr -x dev skills/atag /Users/smcllns/.agents/skills/atag`
+- `git diff --check`
+
+Still required before merge:
+
+- Commit, push, and open the PR.
+- Run adversarial independent review and classify findings into blockers vs acceptable experiment risk.
+- Fix blockers or record explicit reclassification rationale.

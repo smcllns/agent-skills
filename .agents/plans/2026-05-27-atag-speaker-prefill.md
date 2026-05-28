@@ -26,14 +26,14 @@ Current callout scanning would treat the `*sam*` line as the latest nonblank hum
 
 ## Proposed approach
 
-- [ ] Update the `atag` callout protocol so every real turn starts with a speaker label.
-- [ ] For active `[!NOTE]+` threads where the agent is explicitly waiting on the human, prefill a trailing human speaker line:
+- [x] Update the `atag` callout protocol so every real turn starts with a speaker label.
+- [x] For active `[!NOTE]+` threads where the agent is explicitly waiting on the human, prefill a trailing human speaker line:
   - quoted blank separator
-  - quoted user label line, e.g. ``> *`sam`* ``
+  - quoted user label line, e.g. ``> *`sam`*``
   - cursor/user can type directly after the trailing space.
-- [ ] Update the scanner to ignore human-label-only placeholder lines when deciding whether the human has replied.
-- [ ] Do not prefill completed `[!DONE]-` threads in v1 unless there is a clear follow-up prompt. Keep v1 narrow.
-- [ ] Keep raw markdown examples from making users feel they must type syntax manually. Skill docs should say agents/tools prefill or normalize labels for humans.
+- [x] Update the scanner to ignore human-label-only placeholder lines when deciding whether the human has replied.
+- [x] Do not prefill completed `[!DONE]-` threads in v1 unless there is a clear follow-up prompt. Keep v1 narrow.
+- [x] Keep raw markdown examples from making users feel they must type syntax manually. Skill docs should say agents/tools prefill or normalize labels for humans.
 
 ## Likely files
 
@@ -65,6 +65,28 @@ Current callout scanning would treat the `*sam*` line as the latest nonblank hum
   - If skipping something, explicitly record why it is acceptable for this experiment and what would make it blocking later.
 - [ ] Merge only after blocking findings are fixed or explicitly reclassified with rationale.
 
+## Implementation status — 2026-05-27
+
+- [x] Added source fixtures proving label-only ``*`sam`*`` placeholders are skipped and typed replies after the label are actionable.
+- [x] Added poller tests for a trailing-space placeholder and real typed reply.
+- [x] Patched `skills/atag/scripts/atag-poll.sh` to ignore emphasized inline-code label-only human placeholder lines for latest-turn detection.
+- [x] Updated `skills/atag/SKILL.md` and `skills/atag/reference/markdown-agent-tags.spec.md` so agents/tools prefill or normalize labels and humans are not expected to type raw syntax.
+- [x] Ran `scripts/sync-skills.sh`; plugin copies match canonical.
+- [x] Synced active local copies:
+  - `/Users/smcllns/Projects/dotfiles/skills/atag`
+  - `/Users/smcllns/.agents/skills/atag`
+
+Verification passed:
+
+- `bash -n skills/atag/scripts/atag-poll.sh`
+- `bun test skills/atag/reference/markdown-agent-tags.spec.test.ts skills/atag/reference/atag-poll.test.ts` — 195 pass, 0 fail
+- `scripts/sync-skills.sh`
+- `diff -qr -x dev skills/atag claude-plugins/atag/skills/atag`
+- `diff -qr -x dev skills/atag codex-plugins/atag/skills/atag`
+- `diff -qr -x dev skills/atag /Users/smcllns/Projects/dotfiles/skills/atag`
+- `diff -qr -x dev skills/atag /Users/smcllns/.agents/skills/atag`
+- `git diff --check`
+
 ## Non-goals
 
 - Do not solve editor/UI automation yet unless Sam explicitly asks. Start with agent-created placeholders plus scanner support.
@@ -73,6 +95,6 @@ Current callout scanning would treat the `*sam*` line as the latest nonblank hum
 
 ## Unresolved questions
 
-- Should the human speaker name always be `sam`, or should it be configurable per repo/user?
-- Should `[!DONE]-` threads ever prefill a reply line, or should only `[!NOTE]+` do that?
-- Should placeholder lines include an explicit marker/comment, or is "speaker label only" enough?
+- Human speaker name: v1 documents `sam`; scanner ignores any emphasized inline-code label-only placeholder so future names do not retrigger.
+- `[!DONE]-` prefill: no v1 change; active `[!NOTE]+` only.
+- Placeholder marker/comment: no marker; "speaker label only" is enough for v1.

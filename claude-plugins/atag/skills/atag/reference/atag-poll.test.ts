@@ -133,6 +133,53 @@ describe("atag-poll", () => {
     expect(await readLog()).toContain("note.md");
   });
 
+  it("does not invoke Claude for a label-only prefilled human reply line", async () => {
+    await installClaudeStub();
+    await writeFile(
+      join(fixtureDir, "note.md"),
+      [
+        "> [!NOTE]+ awaiting direction",
+        ">",
+        "> *`sam`* @claude make this better",
+        ">",
+        "> `claude` Which direction should I take it? <!--atag:eot-->",
+        ">",
+        "> *`sam`* ",
+        "",
+      ].join("\n"),
+    );
+
+    const result = runPoll(["--once", "--debug", "--dir", fixtureDir]);
+
+    expect(result.exitCode).toBe(0);
+    expect(result.stdout).toMatch(/\[[0-9]{2}:[0-9]{2}\]  No @agent, @claude, @codex agent tags detected\n?$/);
+    expect(result.stderr).toBe("");
+    expect(await readLog()).toBe("");
+  });
+
+  it("invokes Claude when a human types after a prefilled reply label", async () => {
+    await installClaudeStub({ stdout: "prefill reply scan\n" });
+    await writeFile(
+      join(fixtureDir, "note.md"),
+      [
+        "> [!NOTE]+ awaiting direction",
+        ">",
+        "> *`sam`* @claude make this better",
+        ">",
+        "> `claude` Which direction should I take it? <!--atag:eot-->",
+        ">",
+        "> *`sam`* make it more concrete",
+        "",
+      ].join("\n"),
+    );
+
+    const result = runPoll(["--once", "--dir", fixtureDir]);
+
+    expect(result.exitCode).toBe(0);
+    expect(result.stdout).toContain("prefill reply scan\n");
+    expect(await readLog()).toContain("note.md");
+  });
+
   it("does not invoke custom-trigger runs for default-trigger active NOTE threads", async () => {
     await installClaudeStub();
     await writeFile(
