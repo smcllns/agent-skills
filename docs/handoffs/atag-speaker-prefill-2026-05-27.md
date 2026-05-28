@@ -78,3 +78,14 @@ sed -n '1,230p' skills/atag/scripts/atag-poll.sh
 ```
 
 Then write the fixtures first, watch them fail, patch scanner/docs, sync copies, and rerun the target tests.
+
+## PR and review requirement
+
+End this project by opening a PR.
+
+Before merge, get an adversarial independent review that tries to find launch blockers and edge cases. The review should explicitly classify findings:
+
+- Blocking before merge
+- Nice to have / acceptable experiment risk
+
+The goal is transparency, not perfection. It is valid to skip non-blocking findings to launch the experiment, but the PR or plan must record the decision and rationale for every skipped item.

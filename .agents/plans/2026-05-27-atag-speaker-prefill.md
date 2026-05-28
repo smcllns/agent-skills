@@ -54,6 +54,17 @@ Current callout scanning would treat the `*sam*` line as the latest nonblank hum
   - `scripts/sync-skills.sh`
   - plugin drift checks.
 
+## Review and launch gate
+
+- [ ] Open a PR for the completed change.
+- [ ] Get an adversarial independent review before merge.
+  - Ask the reviewer to find launch blockers, regressions, and edge cases.
+  - Require the review to split findings into "blocking before merge" and "nice to have / acceptable experiment risk".
+- [ ] Update this plan or the PR description with the decision on every review finding.
+  - It is valid to skip non-blocking items to launch the experiment.
+  - If skipping something, explicitly record why it is acceptable for this experiment and what would make it blocking later.
+- [ ] Merge only after blocking findings are fixed or explicitly reclassified with rationale.
+
 ## Non-goals
 
 - Do not solve editor/UI automation yet unless Sam explicitly asks. Start with agent-created placeholders plus scanner support.
