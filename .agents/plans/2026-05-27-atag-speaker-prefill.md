@@ -122,7 +122,7 @@ Nice to have / acceptable experiment risk:
 ## Decisions closed after PR #29
 
 - [x] Human speaker name:
-  - Decision: v1 accepts the agent's known human name with `--name`/`--user-name`, then falls back to `git config user.name`, GitHub user name/login, Unix username, and finally `user`.
+  - Decision: v1 accepts the agent's known human name with `--name`/`--user-name`, then falls back to `git config user.name`, GitHub user name/login, Unix username, and finally a non-colliding generic label, usually `user`.
   - Why: agents should use the name they already use for the human when they know it, but startup should still work without making up a creepy label.
   - Revisit if: labels need spaces, punctuation, or multiple humans in one thread.
 - [x] `[!DONE]-` prefill:
@@ -130,7 +130,7 @@ Nice to have / acceptable experiment risk:
   - Why: DONE threads are already append-friendly after `<!--atag:eot-->`; prefill belongs to active `[!NOTE]+` turns where the agent is explicitly waiting on the human.
   - Revisit if: humans routinely miss where to type DONE follow-ups.
 - [x] Placeholder marker/comment:
-  - Decision: no explicit marker/comment for known human labels; only the final `user` fallback gets `<!--atag:missing-human-name ...-->`.
+  - Decision: no explicit marker/comment for known human labels; only the generic missing-name fallback gets `<!--atag:missing-human-name ...-->`.
   - Why: a label-only human line is readable and sufficient when the name is known; the `user` fallback needs visible recovery instructions because it is intentionally generic.
   - Revisit if: tests show label-only placeholders are ambiguous in real notes, or if multiple humans need durable per-thread identity.
 - [x] Legacy label support:
@@ -139,16 +139,17 @@ Nice to have / acceptable experiment risk:
 
 No open v1 speaker-prefill questions remain after these decisions.
 
-PR #30 follow-up after review:
+PR #30/31 follow-up after review:
 
 - [x] Added `--name`/`--user-name` for the agent's known human name.
-- [x] Added fallback identity resolution: git name, GitHub user name, Unix username, then `user`.
+- [x] Added fallback identity resolution: git name, GitHub user name, Unix username, then a non-colliding generic label, usually `user`.
 - [x] Added a scanner-ignored `<!--atag:missing-human-name ...-->` comment for the final fallback.
+- [x] Fixed the independent-review blocker where a human label colliding with an agent trigger, such as `codex`, could make a real human reply look like an agent-last line. Explicit colliding `--name` values now fail loud; fallback identities that collide with the trigger set are skipped.
 
 Fast-follow verification passed:
 
 - `bash -n skills/atag/scripts/atag-poll.sh`
-- `bun test skills/atag/reference/markdown-agent-tags.spec.test.ts skills/atag/reference/atag-poll.test.ts` - 234 pass, 0 fail
+- `bun test skills/atag/reference/markdown-agent-tags.spec.test.ts skills/atag/reference/atag-poll.test.ts` - 243 pass, 0 fail
 - `scripts/sync-skills.sh`
 - `diff -qr -x dev skills/atag claude-plugins/atag/skills/atag`
 - `diff -qr -x dev skills/atag codex-plugins/atag/skills/atag`

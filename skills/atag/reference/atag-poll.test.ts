@@ -188,6 +188,16 @@ describe("atag-poll", () => {
     expect(await readLog()).toBe("");
   });
 
+  it("rejects an explicit human name that collides with an agent trigger", async () => {
+    await installClaudeStub();
+
+    const result = runPoll(["--once", "--debug", "--dir", fixtureDir, "--name", "Codex"]);
+
+    expect(result.exitCode).toBe(2);
+    expect(result.stderr).toContain("--name resolves to 'codex', which collides with an agent trigger label");
+    expect(await readLog()).toBe("");
+  });
+
   it("falls back to git name before GitHub name and unix username", async () => {
     await installGitStub("Sam Collins");
     await installGhStub("Maya Example");
@@ -213,6 +223,49 @@ describe("atag-poll", () => {
     expect(result.stdout).toMatch(/\[[0-9]{2}:[0-9]{2}\]  No @agent, @claude, @codex agent tags detected\n?$/);
     expect(result.stderr).toBe("");
     expect(await readLog()).toBe("");
+  });
+
+  it("skips fallback names that collide with agent triggers", async () => {
+    await installGitStub("Codex");
+    await installGhStub("Maya Example");
+    await installIdStub("unixname");
+    await installClaudeStub();
+    await writeFile(
+      join(fixtureDir, "note.md"),
+      [
+        "> [!NOTE]+ awaiting direction",
+        ">",
+        "> `maya` @claude make this better",
+        ">",
+        "> *`claude`* Which direction should I take it? <!--atag:eot-->",
+        ">",
+        "> `maya` ",
+        "",
+      ].join("\n"),
+    );
+
+    const result = runPoll(["--once", "--debug", "--dir", fixtureDir]);
+
+    expect(result.exitCode).toBe(0);
+    expect(result.stdout).toMatch(/\[[0-9]{2}:[0-9]{2}\]  No @agent, @claude, @codex agent tags detected\n?$/);
+    expect(result.stderr).toBe("");
+    expect(await readLog()).toBe("");
+  });
+
+  it("uses a non-colliding missing-name fallback when user is a custom trigger", async () => {
+    await installGitStub(null);
+    await installGhStub(null);
+    await installIdStub(null);
+    await installClaudeStub();
+    await writeFile(join(fixtureDir, "note.md"), "@user please help\n");
+
+    const result = runPoll(["--once", "--dir", fixtureDir, "@user"]);
+
+    expect(result.exitCode).toBe(0);
+    const log = await readLog();
+    expect(log).toContain("Human speaker label: `human` (source: fallback)");
+    expect(log).toContain("prefill `human`");
+    expect(log).toContain("<!--atag:missing-human-name no human name detected;");
   });
 
   it("falls back to GitHub name before the unix username", async () => {

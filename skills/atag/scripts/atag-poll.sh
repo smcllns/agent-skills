@@ -59,41 +59,69 @@ label_from_name() {
   printf '%s' "$label"
 }
 
+label_is_trigger() {
+  local label="$1"
+  local trigger
+  for trigger in "${triggers[@]}"; do
+    [[ "$label" == "$trigger" ]] && return 0
+  done
+  return 1
+}
+
+fallback_missing_human_label() {
+  local label n
+  for label in user human person; do
+    if ! label_is_trigger "$label"; then
+      printf '%s' "$label"
+      return
+    fi
+  done
+
+  n=1
+  while label_is_trigger "human_${n}"; do
+    n=$((n + 1))
+  done
+  printf 'human_%s' "$n"
+}
+
+try_user_label() {
+  local label="$1"
+  local source="$2"
+  if label_is_trigger "$label"; then
+    return 1
+  fi
+  human_label="$label"
+  human_label_source="$source"
+  missing_human_name=0
+}
+
 resolve_user_label() {
   local candidate label
 
   if [[ -n "$user_name_arg" ]]; then
     label="$(label_from_name "$user_name_arg")" || die_usage "--name must contain at least one letter"
-    human_label="$label"
-    human_label_source="--name"
-    missing_human_name=0
+    if label_is_trigger "$label"; then
+      die_usage "--name resolves to '${label}', which collides with an agent trigger label"
+    fi
+    try_user_label "$label" "--name"
     return
   fi
 
-  if candidate="$(git -C "$target_dir" config user.name 2>/dev/null)" && label="$(label_from_name "$candidate")"; then
-    human_label="$label"
-    human_label_source="git config user.name"
-    missing_human_name=0
+  if candidate="$(git -C "$target_dir" config user.name 2>/dev/null)" && label="$(label_from_name "$candidate")" && try_user_label "$label" "git config user.name"; then
     return
   fi
 
   if command -v gh >/dev/null 2>&1; then
-    if candidate="$(GH_PROMPT_DISABLED=1 gh api user --jq 'if .name == null or .name == "" then .login else .name end' 2>/dev/null)" && label="$(label_from_name "$candidate")"; then
-      human_label="$label"
-      human_label_source="gh user"
-      missing_human_name=0
+    if candidate="$(GH_PROMPT_DISABLED=1 gh api user --jq 'if .name == null or .name == "" then .login else .name end' 2>/dev/null)" && label="$(label_from_name "$candidate")" && try_user_label "$label" "gh user"; then
       return
     fi
   fi
 
-  if candidate="$(id -un 2>/dev/null)" && [[ "$candidate" != "root" ]] && label="$(label_from_name "$candidate")"; then
-    human_label="$label"
-    human_label_source="unix username"
-    missing_human_name=0
+  if candidate="$(id -un 2>/dev/null)" && [[ "$candidate" != "root" ]] && label="$(label_from_name "$candidate")" && try_user_label "$label" "unix username"; then
     return
   fi
 
-  human_label="user"
+  human_label="$(fallback_missing_human_label)"
   human_label_source="fallback"
   missing_human_name=1
 }
@@ -175,11 +203,6 @@ fi
 
 target_dir="$(cd "$target_dir" && pwd -P)"
 
-human_label=""
-human_label_source=""
-missing_human_name=0
-resolve_user_label
-
 if [[ "${#trigger_tokens[@]}" -eq 0 ]]; then
   triggers=(agent claude codex)
 else
@@ -195,6 +218,11 @@ else
     triggers+=("${trigger#@}")
   done
 fi
+
+human_label=""
+human_label_source=""
+missing_human_name=0
+resolve_user_label
 
 join_by() {
   local IFS="$1"
@@ -357,7 +385,7 @@ build_prompt() {
   human_instruction="Human speaker label: \`${human_label}\` (source: ${human_label_source}). Use this label for human turns and label-only placeholders."
   if [[ "$missing_human_name" -eq 1 ]]; then
     human_instruction+="
-No human name was detected. If you leave a [!NOTE]+ thread waiting on the human, prefill \`user\` and add this quoted HTML comment immediately after the label-only line:
+No human name was detected. If you leave a [!NOTE]+ thread waiting on the human, prefill \`${human_label}\` and add this quoted HTML comment immediately after the label-only line:
 > <!--atag:missing-human-name no human name detected; please ask the human what name agents should use and store it in AGENTS.md, git config user.name, or pass --name to atag-poll.sh.-->"
   fi
   cat <<EOF

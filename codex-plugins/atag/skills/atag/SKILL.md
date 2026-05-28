@@ -51,7 +51,7 @@ Use `@name` only for trigger tags. Speaker labels use inline code as the sender/
 - Agent turn: ``*`claude`* reply <!--atag:eot-->``.
 - Human turn: `` `sam` reply``.
 
-Throughout this skill, `sam` is the example human speaker label. The poller passes the human label to agents as the agent's known name for the human. Prefer `atag-poll.sh --name <name>` or `--user-name <name>`; when omitted, the poller tries `git config user.name`, GitHub user name/login, and the Unix username before falling back to `user`. Names are normalized to a simple lower-case label, using the first word for full names.
+Throughout this skill, `sam` is the example human speaker label. The poller passes the human label to agents as the agent's known name for the human. Prefer `atag-poll.sh --name <name>` or `--user-name <name>`; when omitted, the poller tries `git config user.name`, GitHub user name/login, and the Unix username before falling back to `user`. Names are normalized to a simple lower-case label, using the first word for full names. Labels that collide with the active agent trigger set are invalid for `--name` and skipped during fallback; if the final fallback would collide, the poller uses the next non-colliding generic label.
 
 Humans are not expected to type the speaker-label markdown by hand. Agents and tools should prefill or normalize the human label in active threads, so the human can just type the reply text after the label.
 
@@ -82,7 +82,7 @@ A tag is unresolved when any of:
 
 A bare inline-code human label for this skill, such as ``> `sam` ``, is a placeholder, not a turn. Legacy emphasized label-only human placeholders are also skipped so old prefilled threads do not retrigger. This skip applies only to this skill's human speaker label; other code-only quoted lines remain real replies.
 
-If the human label falls back to `user`, add this quoted HTML comment immediately after the label-only line when leaving a `[!NOTE]+` thread waiting on the human:
+If the human label falls back to `user` or another generic missing-name label, add this quoted HTML comment immediately after the label-only line when leaving a `[!NOTE]+` thread waiting on the human:
 
 ```markdown
 > `user`
@@ -216,7 +216,7 @@ Defaults:
 - With `--debug`, no-match prints: `[HH:MM]  No @agent, @claude, @codex agent tags detected`.
 - Runs Claude from the target directory with `claude -p --model sonnet --permission-mode acceptEdits`.
 - Defaults `--response-style auto`: terminal stdout requests plain terminal text; piped/redirected/UI callers get Markdown. Use `--response-style terminal` or `--response-style markdown` to force it.
-- Resolves the human speaker label from `--name`/`--user-name`, then `git config user.name`, GitHub user name, Unix username, and finally `user`.
+- Resolves the human speaker label from `--name`/`--user-name`, then `git config user.name`, GitHub user name, Unix username, and finally a non-colliding generic label, usually `user`.
 - Uses a 30-minute timeout around Claude as a runaway guard.
 
 Useful options:
