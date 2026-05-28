@@ -12,7 +12,7 @@
 
 This renders well and gives agents a consistent turn structure. The UX problem: humans should not have to manually type ``> `sam` `` or learn that syntax just to reply.
 
-In this handoff, `sam` is the local example human label. When adapting the skill for another human, replace `sam` in the examples and prefilled human-label convention with that human's preferred short label.
+In this handoff, `sam` is the local example human label. The poller now accepts `--name`/`--user-name` for the agent's known name for the human, then falls back through local identity sources before using `user`.
 
 ## Current state
 
@@ -159,22 +159,23 @@ Nice to have / acceptable experiment risk:
 
 PR #29 merged with three settled-but-still-labeled "unresolved questions" in the plan. Fast-follow PR #30 records them as closed decisions:
 
-- Human speaker name: v1 names `sam` once as the example human label for this skill copy. When adapting the skill, replace `sam` with the human's preferred short label.
+- Human speaker name: v1 accepts the agent's known human name with `--name`/`--user-name`, then falls back to `git config user.name`, GitHub user name/login, Unix username, and finally `user`.
 - `[!DONE]-` prefill: no v1 prefill for DONE follow-ups. DONE threads are already append-friendly after `<!--atag:eot-->`; prefill stays scoped to active `[!NOTE]+` turns waiting on the human.
-- Placeholder marker/comment: no explicit marker. A label-only human line is readable and sufficient; hidden comments would add protocol noise.
+- Placeholder marker/comment: no explicit marker for known human labels. A label-only human line is readable and sufficient when the name is known; only the final `user` fallback gets the scanner-ignored `<!--atag:missing-human-name ...-->` recovery comment.
 - Legacy label support: keep scanning support for old bare/colon agent labels and legacy emphasized human-label placeholders so existing notes do not wake up due to the syntax migration.
 
 No open v1 speaker-prefill questions remain after these decisions.
 
 PR #30 follow-up after review:
 
-- Clarified that `sam` is the example human label for this skill copy.
-- Kept the poller simple: no runtime human-label option in v1.
+- Added `--name`/`--user-name` for the agent's known human name.
+- Added fallback identity resolution: git name, GitHub user name, Unix username, then `user`.
+- Added a scanner-ignored `<!--atag:missing-human-name ...-->` comment for the final fallback.
 
 Fast-follow verification passed:
 
 - `bash -n skills/atag/scripts/atag-poll.sh`
-- `bun test skills/atag/reference/markdown-agent-tags.spec.test.ts skills/atag/reference/atag-poll.test.ts` - 216 pass, 0 fail
+- `bun test skills/atag/reference/markdown-agent-tags.spec.test.ts skills/atag/reference/atag-poll.test.ts` - 234 pass, 0 fail
 - `scripts/sync-skills.sh`
 - `diff -qr -x dev skills/atag claude-plugins/atag/skills/atag`
 - `diff -qr -x dev skills/atag codex-plugins/atag/skills/atag`

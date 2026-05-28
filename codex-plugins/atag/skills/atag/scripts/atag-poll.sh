@@ -7,6 +7,7 @@ debug=0
 once=0
 timeout_seconds=1800
 response_style=auto
+user_name_arg=""
 
 trigger_tokens=()
 triggers=()
@@ -23,6 +24,8 @@ Options:
   --debug               Print one-line no-match status and match diagnostics.
   --timeout SECONDS     Kill Claude after this many seconds. Default: 1800.
   --response-style MODE Claude output style: auto, terminal, or markdown. Default: auto.
+  --name NAME           Human name the agent should use for speaker labels.
+  --user-name NAME      Alias for --name.
   --claude-arg ARG      Pass one argument to Claude. Prefer -- for many args.
   -h, --help            Show this help.
 EOF
@@ -42,6 +45,57 @@ require_value() {
 
 positive_integer() {
   [[ "$1" =~ ^[0-9]+$ ]] && [[ "$1" -gt 0 ]]
+}
+
+label_from_name() {
+  local raw="$1"
+  local first label
+  raw="${raw//$'\r'/ }"
+  raw="${raw//$'\n'/ }"
+  first="$(awk '{ print $1 }' <<< "$raw")"
+  label="$(printf '%s' "$first" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9_]+/_/g; s/^_+//; s/_+$//')"
+  [[ "$label" =~ [a-z] ]] || return 1
+  [[ ! "$label" =~ ^[0-9] ]] || label="user_${label}"
+  printf '%s' "$label"
+}
+
+resolve_user_label() {
+  local candidate label
+
+  if [[ -n "$user_name_arg" ]]; then
+    label="$(label_from_name "$user_name_arg")" || die_usage "--name must contain at least one letter"
+    human_label="$label"
+    human_label_source="--name"
+    missing_human_name=0
+    return
+  fi
+
+  if candidate="$(git -C "$target_dir" config user.name 2>/dev/null)" && label="$(label_from_name "$candidate")"; then
+    human_label="$label"
+    human_label_source="git config user.name"
+    missing_human_name=0
+    return
+  fi
+
+  if command -v gh >/dev/null 2>&1; then
+    if candidate="$(GH_PROMPT_DISABLED=1 gh api user --jq 'if .name == null or .name == "" then .login else .name end' 2>/dev/null)" && label="$(label_from_name "$candidate")"; then
+      human_label="$label"
+      human_label_source="gh user"
+      missing_human_name=0
+      return
+    fi
+  fi
+
+  if candidate="$(id -un 2>/dev/null)" && [[ "$candidate" != "root" ]] && label="$(label_from_name "$candidate")"; then
+    human_label="$label"
+    human_label_source="unix username"
+    missing_human_name=0
+    return
+  fi
+
+  human_label="user"
+  human_label_source="fallback"
+  missing_human_name=1
 }
 
 while [[ $# -gt 0 ]]; do
@@ -83,6 +137,11 @@ while [[ $# -gt 0 ]]; do
       esac
       shift 2
       ;;
+    --name|--user-name)
+      require_value "$1" "${2:-}"
+      user_name_arg="$2"
+      shift 2
+      ;;
     --claude-arg)
       require_value "$1" "${2:-}"
       claude_args+=("$2")
@@ -115,6 +174,11 @@ if [[ ! -d "$target_dir" ]]; then
 fi
 
 target_dir="$(cd "$target_dir" && pwd -P)"
+
+human_label=""
+human_label_source=""
+missing_human_name=0
+resolve_user_label
 
 if [[ "${#trigger_tokens[@]}" -eq 0 ]]; then
   triggers=(agent claude codex)
@@ -163,7 +227,8 @@ inline_scan_regex="^([^>]*[[:space:]])?@(${trigger_alt})([^[:alnum:]_]|$)"
 callout_scan_awk='BEGIN {
   trigger_re = "(^|[[:space:]])@(" trigger_alt ")([^[:alnum:]_]|$)"
   agent_re = "^[[:space:]]*(\\*`(" trigger_alt ")`\\*|`(" trigger_alt ")`)([[:space:]]|:|$)"
-  human_placeholder_re = "^[[:space:]]*(\\*`sam`\\*|`sam`):?[[:space:]]*$"
+  human_placeholder_re = "^[[:space:]]*(\\*`" human_label "`\\*|`" human_label "`):?[[:space:]]*$"
+  missing_human_name_re = "^[[:space:]]*<!--atag:missing-human-name "
 }
 function finish_callout() {
   if (in_callout && has_trigger) {
@@ -190,7 +255,7 @@ function process_quoted_line() {
   line = $0
   sub(/^[[:space:]]*>[[:space:]]*/, "", line)
   if (line ~ trigger_re) has_trigger = 1
-  if (line !~ /^[[:space:]]*$/ && line !~ human_placeholder_re) {
+  if (line !~ /^[[:space:]]*$/ && line !~ human_placeholder_re && line !~ missing_human_name_re) {
     sealed = (line ~ /<!--atag:eot-->[[:space:]]*$/)
     agent_last = (line ~ agent_re)
   }
@@ -261,7 +326,7 @@ scan_matches() {
     return "$grep_status"
   fi
 
-  find "$target_dir" -name '*.md' -exec awk -v trigger_alt="$trigger_alt" "$callout_scan_awk" {} + > "$callout_matches"
+  find "$target_dir" -name '*.md' -exec awk -v trigger_alt="$trigger_alt" -v human_label="$human_label" "$callout_scan_awk" {} + > "$callout_matches"
 
   cat "$inline_matches" > "$unique_matches"
   awk '{ sub(/:[0-9]+$/, ""); print }' "$callout_matches" >> "$unique_matches"
@@ -282,16 +347,24 @@ build_prompt() {
   local matches="$1"
   local files
   local response_instruction
+  local human_instruction
   files="$(sed "s#^${target_dir}/##; s#^#- #" "$matches")"
   if [[ "$resolved_response_style" == "terminal" ]]; then
     response_instruction="Response style: terminal plain text. Do not use Markdown tables. Output only changes made, active threads left unchanged, and changes you could not make."
   else
     response_instruction="Response style: Markdown. Output only changes made, active threads left unchanged, and changes you could not make."
   fi
+  human_instruction="Human speaker label: \`${human_label}\` (source: ${human_label_source}). Use this label for human turns and label-only placeholders."
+  if [[ "$missing_human_name" -eq 1 ]]; then
+    human_instruction+="
+No human name was detected. If you leave a [!NOTE]+ thread waiting on the human, prefill \`user\` and add this quoted HTML comment immediately after the label-only line:
+> <!--atag:missing-human-name no human name detected; please ask the human what name agents should use and store it in AGENTS.md, git config user.name, or pass --name to atag-poll.sh.-->"
+  fi
   cat <<EOF
 Use the atag skill in the current working directory.
 
 Trigger set: ${trigger_display}
+${human_instruction}
 
 ${response_instruction}
 
