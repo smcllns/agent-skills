@@ -78,7 +78,7 @@ A tag is unresolved when any of:
 - A valid inline tag for a recognized trigger not yet processed into a callout.
 - A resolved `> [!DONE]- ...` callout whose latest nonblank quoted line does not end with `<!--atag:eot-->`.
 
-A bare inline-code human label with no reply text, such as ``> `sam` ``, is a placeholder, not a turn. Legacy emphasized label-only placeholders are also skipped so old prefilled threads do not retrigger.
+A bare inline-code Sam label with no reply text, such as ``> `sam` ``, is a placeholder, not a turn. Legacy emphasized label-only Sam placeholders are also skipped so old prefilled threads do not retrigger.
 
 ## Resolution contract
 
@@ -136,7 +136,7 @@ find <path> -name '*.md' -exec awk -v trigger_alt='agent|claude|codex' '
 BEGIN {
   trigger_re = "(^|[[:space:]])@(" trigger_alt ")([^[:alnum:]_]|$)"
   agent_re = "^[[:space:]]*(\\*`(" trigger_alt ")`\\*|`(" trigger_alt ")`)([[:space:]]|:|$)"
-  human_placeholder_re = "^[[:space:]]*(\\*`[^`]+`\\*|`[^`]+`):?[[:space:]]*$"
+  human_placeholder_re = "^[[:space:]]*(\\*`sam`\\*|`sam`):?[[:space:]]*$"
 }
 function finish_callout() {
   if (in_callout && has_trigger) {

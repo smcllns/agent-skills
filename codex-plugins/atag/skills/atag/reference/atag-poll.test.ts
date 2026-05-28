@@ -234,6 +234,30 @@ describe("atag-poll", () => {
     expect(await readLog()).toContain("note.md");
   });
 
+  it("invokes Claude when a human replies with a code-only line after a prefilled label", async () => {
+    await installClaudeStub({ stdout: "code-only reply scan\n" });
+    await writeFile(
+      join(fixtureDir, "note.md"),
+      [
+        "> [!NOTE]+ awaiting direction",
+        ">",
+        "> `sam` @claude which command?",
+        ">",
+        "> *`claude`* Which command should I use? <!--atag:eot-->",
+        ">",
+        "> `sam`",
+        "> `bun`",
+        "",
+      ].join("\n"),
+    );
+
+    const result = runPoll(["--once", "--dir", fixtureDir]);
+
+    expect(result.exitCode).toBe(0);
+    expect(result.stdout).toContain("code-only reply scan\n");
+    expect(await readLog()).toContain("note.md");
+  });
+
   it("does not invoke custom-trigger runs for default-trigger active NOTE threads", async () => {
     await installClaudeStub();
     await writeFile(

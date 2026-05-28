@@ -2,7 +2,7 @@
 
 ## Goal
 
-Make agent-tag callouts ergonomic for humans: users should not have to manually type markdown speaker-label syntax like ``> *`sam`* `` before replying.
+Make agent-tag callouts ergonomic for humans: users should not have to manually type markdown speaker-label syntax like ``> `sam` `` before replying.
 
 ## Problem
 
@@ -17,19 +17,19 @@ Do not let an empty prefilled human speaker line trigger the poller.
 Example placeholder:
 
 ```md
-> `claude` Which direction should I take it? <!--atag:eot-->
+> *`claude`* Which direction should I take it? <!--atag:eot-->
 >
-> *`sam`* 
+> `sam`
 ```
 
-Current callout scanning would treat the `*sam*` line as the latest nonblank human turn and may immediately spawn the agent again. Any implementation must make label-only placeholders count as "still waiting on human" until the user types real content after the label.
+Current callout scanning would treat the `sam` line as the latest nonblank human turn and may immediately spawn the agent again. Any implementation must make label-only placeholders count as "still waiting on human" until the user types real content after the label.
 
 ## Proposed approach
 
 - [x] Update the `atag` callout protocol so every real turn starts with a speaker label.
 - [x] For active `[!NOTE]+` threads where the agent is explicitly waiting on the human, prefill a trailing human speaker line:
   - quoted blank separator
-  - quoted user label line, e.g. ``> *`sam`*``
+  - quoted user label line, e.g. ``> `sam` ``
   - cursor/user can type directly after the trailing space.
 - [x] Update the scanner to ignore human-label-only placeholder lines when deciding whether the human has replied.
 - [x] Do not prefill completed `[!DONE]-` threads in v1 unless there is a clear follow-up prompt. Keep v1 narrow.
@@ -46,8 +46,8 @@ Current callout scanning would treat the `*sam*` line as the latest nonblank hum
 
 ## Verification
 
-- Add fixture: active `[!NOTE]+` ending with agent `<!--atag:eot-->` plus placeholder ``> *`sam`* `` is skipped.
-- Add fixture: same thread with ``> *`sam`* actual reply`` is matched.
+- Add fixture: active `[!NOTE]+` ending with agent `<!--atag:eot-->` plus placeholder ``> `sam` `` is skipped.
+- Add fixture: same thread with ``> `sam` actual reply`` is matched.
 - Run:
   - `bash -n skills/atag/scripts/atag-poll.sh`
   - `bun test skills/atag/reference/markdown-agent-tags.spec.test.ts skills/atag/reference/atag-poll.test.ts`
@@ -69,9 +69,9 @@ Current callout scanning would treat the `*sam*` line as the latest nonblank hum
 
 - [x] Swapped current speaker-label syntax: humans use bare inline code like `` `sam` ``, agents use emphasized inline code like ``*`claude`*``.
 - [x] Moved companion CSS role styling so human labels keep the accented rendered style and agent labels keep the quieter rendered style.
-- [x] Added source fixtures proving label-only human placeholders are skipped and typed replies after or below the label are actionable.
-- [x] Added poller tests for a trailing-space placeholder, a legacy emphasized placeholder, a real same-line typed reply, and a next-line typed reply.
-- [x] Patched `skills/atag/scripts/atag-poll.sh` to ignore bare and legacy emphasized label-only human placeholder lines for latest-turn detection.
+- [x] Added source fixtures proving label-only Sam placeholders are skipped and typed replies after or below the label are actionable, including a code-only reply.
+- [x] Added poller tests for a trailing-space placeholder, a legacy emphasized placeholder, a real same-line typed reply, a next-line typed reply, and a code-only reply.
+- [x] Patched `skills/atag/scripts/atag-poll.sh` to ignore bare and legacy emphasized label-only Sam placeholder lines for latest-turn detection.
 - [x] Updated `skills/atag/SKILL.md` and `skills/atag/reference/markdown-agent-tags.spec.md` so agents/tools prefill or normalize labels and humans are not expected to type raw syntax.
 - [x] Ran `scripts/sync-skills.sh`; plugin copies match canonical.
 - [x] Synced active local copies:
@@ -81,7 +81,7 @@ Current callout scanning would treat the `*sam*` line as the latest nonblank hum
 Verification passed:
 
 - `bash -n skills/atag/scripts/atag-poll.sh`
-- `bun test skills/atag/reference/markdown-agent-tags.spec.test.ts skills/atag/reference/atag-poll.test.ts` — 210 pass, 0 fail
+- `bun test skills/atag/reference/markdown-agent-tags.spec.test.ts skills/atag/reference/atag-poll.test.ts` — 216 pass, 0 fail
 - `scripts/sync-skills.sh`
 - `diff -qr -x dev skills/atag claude-plugins/atag/skills/atag`
 - `diff -qr -x dev skills/atag codex-plugins/atag/skills/atag`
@@ -105,6 +105,11 @@ Nice to have / acceptable experiment risk:
   - Decision: fixed by scoping the PR to `codex/atag-poller-base`; `git diff --check 44fc87b..HEAD` is the relevant check for this stacked PR and passes.
 - Reviewer noted coverage did not include the case where the placeholder label remains and the human replies on the next quoted line.
   - Decision: fixed with an added spec fixture and poller regression test.
+- Follow-up review of the label-swap commit found no blockers.
+- Follow-up reviewer noted the placeholder regex was too broad and could skip a code-only reply like `` `bun` `` after a prefilled label.
+  - Decision: fixed by limiting placeholder detection to bare/legacy-emphasized `sam` labels and adding source/poller coverage for the code-only reply case.
+- Follow-up reviewer noted stale handoff prose still showed the previous raw label contract.
+  - Decision: fixed the stale handoff examples and companion CSS handoff wording.
 
 ## Non-goals
 
@@ -114,6 +119,6 @@ Nice to have / acceptable experiment risk:
 
 ## Unresolved questions
 
-- Human speaker name: v1 documents `sam`; scanner ignores any bare inline-code label-only placeholder so future names do not retrigger. It also skips legacy emphasized placeholders.
+- Human speaker name: v1 documents `sam`; scanner ignores bare and legacy emphasized label-only Sam placeholders. It intentionally does not skip every code-only line, so a reply like `` `bun` `` remains actionable.
 - `[!DONE]-` prefill: no v1 change; active `[!NOTE]+` only.
 - Placeholder marker/comment: no marker; "speaker label only" is enough for v1.

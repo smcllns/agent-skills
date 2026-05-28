@@ -182,6 +182,22 @@ actionable.
 > make it more concrete
 ```
 
+### Active agent thread — code-only human reply after prefilled label
+
+Only the prefilled Sam label is a placeholder. If the human replies on the next
+line with a code-only token, the thread is actionable.
+
+```md @test:match
+> [!NOTE]+ awaiting direction
+>
+> `sam` @claude which command?
+>
+> *`claude`* Which command should I use? <!--atag:eot-->
+>
+> `sam`
+> `bun`
+```
+
 ### Bare `[!NOTE]` — plain markdown, not an agent thread
 
 A `[!NOTE]` without `+` is a regular Obsidian note callout. The scan skips it

@@ -163,7 +163,7 @@ inline_scan_regex="^([^>]*[[:space:]])?@(${trigger_alt})([^[:alnum:]_]|$)"
 callout_scan_awk='BEGIN {
   trigger_re = "(^|[[:space:]])@(" trigger_alt ")([^[:alnum:]_]|$)"
   agent_re = "^[[:space:]]*(\\*`(" trigger_alt ")`\\*|`(" trigger_alt ")`)([[:space:]]|:|$)"
-  human_placeholder_re = "^[[:space:]]*(\\*`[^`]+`\\*|`[^`]+`):?[[:space:]]*$"
+  human_placeholder_re = "^[[:space:]]*(\\*`sam`\\*|`sam`):?[[:space:]]*$"
 }
 function finish_callout() {
   if (in_callout && has_trigger) {
