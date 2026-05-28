@@ -32,9 +32,9 @@ becomes unresolved until an agent inspects it and reseals the final reply.
 
 Inside callouts, `@name` is only for the original trigger tag. Speaker labels
 are inline-code sender/from fields with no trailing colon or punctuation. Agent
-replies start with a plain inline-code label like `` `claude` reply`` and end
-with `<!--atag:eot-->` after yielding the turn. Human replies start with an
-emphasized inline-code label like ``*`sam`* reply``.
+replies start with an emphasized inline-code label like ``*`claude`* reply``
+and end with `<!--atag:eot-->` after yielding the turn. Human replies start
+with a bare inline-code label like `` `sam` reply``.
 
 ---
 
@@ -61,13 +61,26 @@ the human replies.
 >
 > @claude make this better
 >
-> `claude` Which direction should I take it? <!--atag:eot-->
+> *`claude`* Which direction should I take it? <!--atag:eot-->
 ```
 
-### Active agent thread — legacy agent-last reply
+### Active agent thread — agent-last reply
 
-Older active threads may not have the seal yet. If the latest nonblank quoted
-line is an agent speaker label, the scanner treats it as waiting on the human.
+Active threads may not have the seal yet. If the latest nonblank quoted line is
+an agent speaker label, the scanner treats it as waiting on the human.
+
+```md @test:nomatch
+> [!NOTE]+ awaiting direction
+>
+> @claude make this better
+>
+> *`claude`* Which direction should I take it?
+```
+
+### Active agent thread — legacy bare agent-last reply
+
+Older active threads used bare inline-code agent labels. The scanner still
+accepts them so existing notes do not become actionable forever.
 
 ```md @test:nomatch
 > [!NOTE]+ awaiting direction
@@ -101,9 +114,9 @@ again.
 >
 > @claude make this better
 >
-> `claude` Which direction should I take it? <!--atag:eot-->
+> *`claude`* Which direction should I take it? <!--atag:eot-->
 >
-> *`sam`* make it more concrete
+> `sam` make it more concrete
 ```
 
 ### Active agent thread — prefilled human label placeholder
@@ -115,9 +128,24 @@ skips it.
 ```md @test:nomatch
 > [!NOTE]+ awaiting direction
 >
-> *`sam`* @claude make this better
+> `sam` @claude make this better
 >
-> `claude` Which direction should I take it? <!--atag:eot-->
+> *`claude`* Which direction should I take it? <!--atag:eot-->
+>
+> `sam`
+```
+
+### Active agent thread — legacy emphasized human label placeholder
+
+The old prefilled human label form is still treated as a placeholder, not a
+reply, so existing prefilled threads do not retrigger.
+
+```md @test:nomatch
+> [!NOTE]+ awaiting direction
+>
+> `sam` @claude make this better
+>
+> *`claude`* Which direction should I take it? <!--atag:eot-->
 >
 > *`sam`*
 ```
@@ -130,11 +158,11 @@ actionable again.
 ```md @test:match
 > [!NOTE]+ awaiting direction
 >
-> *`sam`* @claude make this better
+> `sam` @claude make this better
 >
-> `claude` Which direction should I take it? <!--atag:eot-->
+> *`claude`* Which direction should I take it? <!--atag:eot-->
 >
-> *`sam`* make it more concrete
+> `sam` make it more concrete
 ```
 
 ### Active agent thread — human reply on line after prefilled label
@@ -146,11 +174,11 @@ actionable.
 ```md @test:match
 > [!NOTE]+ awaiting direction
 >
-> *`sam`* @claude make this better
+> `sam` @claude make this better
 >
-> `claude` Which direction should I take it? <!--atag:eot-->
+> *`claude`* Which direction should I take it? <!--atag:eot-->
 >
-> *`sam`*
+> `sam`
 > make it more concrete
 ```
 
@@ -182,7 +210,7 @@ agent-authored quoted line with `<!--atag:eot-->`.
 >
 > @claude already handled
 >
-> `claude` done. <!--atag:eot-->
+> *`claude`* done. <!--atag:eot-->
 ```
 
 ### Bare `[!DONE]` — plain markdown
@@ -223,7 +251,7 @@ human wrote after the seal.
 >
 > @claude tighten the intro
 >
-> `claude` done, tightened it. <!--atag:eot-->
+> *`claude`* done, tightened it. <!--atag:eot-->
 > one more tweak please
 ```
 
@@ -237,10 +265,10 @@ the seal token.
 >
 > @claude tighten the intro
 >
-> `claude` done, tightened it. <!--atag:eot-->
+> *`claude`* done, tightened it. <!--atag:eot-->
 > one more tweak please
 >
-> `claude` done, tightened it again. <!--atag:eot-->
+> *`claude`* done, tightened it again. <!--atag:eot-->
 ```
 
 ### Multiple DONE callouts with one unsealed
@@ -252,13 +280,13 @@ Any unsealed DONE callout in a file makes the file actionable.
 >
 > @claude first task
 >
-> `claude` done. <!--atag:eot-->
+> *`claude`* done. <!--atag:eot-->
 
 > [!DONE]- second
 >
 > @codex second task
 >
-> `codex` done.
+> *`codex`* done.
 ```
 
 ### Tag inside an indented blockquote
@@ -338,7 +366,7 @@ the sealed callout immediately after the affected block.
 >
 > - [ ] brainstorm a `config.yml` shaped joke @claude do this pls
 >
-> `claude` done — joke above. <!--atag:eot-->
+> *`claude`* done — joke above. <!--atag:eot-->
 ```
 
 ---

@@ -85,9 +85,15 @@ describe("atag-poll", () => {
         ">",
         "> @claude make this better",
         ">",
-        "> `claude` Which direction should I take it? <!--atag:eot-->",
+        "> *`claude`* Which direction should I take it? <!--atag:eot-->",
         "",
-        "> [!NOTE]+ legacy agent-last thread",
+        "> [!NOTE]+ agent-last thread",
+        ">",
+        "> @claude draft a headline",
+        ">",
+        "> *`claude`* What benefit should the headline emphasize?",
+        "",
+        "> [!NOTE]+ legacy bare agent-last thread",
         ">",
         "> @claude draft a headline",
         ">",
@@ -119,9 +125,9 @@ describe("atag-poll", () => {
         ">",
         "> @claude make this better",
         ">",
-        "> `claude` Which direction should I take it? <!--atag:eot-->",
+        "> *`claude`* Which direction should I take it? <!--atag:eot-->",
         ">",
-        "> *`sam`* make it more concrete",
+        "> `sam` make it more concrete",
         "",
       ].join("\n"),
     );
@@ -140,9 +146,33 @@ describe("atag-poll", () => {
       [
         "> [!NOTE]+ awaiting direction",
         ">",
-        "> *`sam`* @claude make this better",
+        "> `sam` @claude make this better",
         ">",
-        "> `claude` Which direction should I take it? <!--atag:eot-->",
+        "> *`claude`* Which direction should I take it? <!--atag:eot-->",
+        ">",
+        "> `sam` ",
+        "",
+      ].join("\n"),
+    );
+
+    const result = runPoll(["--once", "--debug", "--dir", fixtureDir]);
+
+    expect(result.exitCode).toBe(0);
+    expect(result.stdout).toMatch(/\[[0-9]{2}:[0-9]{2}\]  No @agent, @claude, @codex agent tags detected\n?$/);
+    expect(result.stderr).toBe("");
+    expect(await readLog()).toBe("");
+  });
+
+  it("does not invoke Claude for a legacy emphasized label-only human reply line", async () => {
+    await installClaudeStub();
+    await writeFile(
+      join(fixtureDir, "note.md"),
+      [
+        "> [!NOTE]+ awaiting direction",
+        ">",
+        "> `sam` @claude make this better",
+        ">",
+        "> *`claude`* Which direction should I take it? <!--atag:eot-->",
         ">",
         "> *`sam`* ",
         "",
@@ -164,11 +194,11 @@ describe("atag-poll", () => {
       [
         "> [!NOTE]+ awaiting direction",
         ">",
-        "> *`sam`* @claude make this better",
+        "> `sam` @claude make this better",
         ">",
-        "> `claude` Which direction should I take it? <!--atag:eot-->",
+        "> *`claude`* Which direction should I take it? <!--atag:eot-->",
         ">",
-        "> *`sam`* make it more concrete",
+        "> `sam` make it more concrete",
         "",
       ].join("\n"),
     );
@@ -187,11 +217,11 @@ describe("atag-poll", () => {
       [
         "> [!NOTE]+ awaiting direction",
         ">",
-        "> *`sam`* @claude make this better",
+        "> `sam` @claude make this better",
         ">",
-        "> `claude` Which direction should I take it? <!--atag:eot-->",
+        "> *`claude`* Which direction should I take it? <!--atag:eot-->",
         ">",
-        "> *`sam`*",
+        "> `sam`",
         "> make it more concrete",
         "",
       ].join("\n"),
@@ -213,7 +243,7 @@ describe("atag-poll", () => {
         ">",
         "> @codex please help",
         ">",
-        "> *`sam`* one more thing",
+        "> `sam` one more thing",
         "",
       ].join("\n"),
     );
@@ -298,7 +328,7 @@ describe("atag-poll", () => {
         ">",
         "> @claude tighten the intro",
         ">",
-        "> `claude` done. <!--atag:eot-->",
+        "> *`claude`* done. <!--atag:eot-->",
         "> one more tweak",
         "",
       ].join("\n"),

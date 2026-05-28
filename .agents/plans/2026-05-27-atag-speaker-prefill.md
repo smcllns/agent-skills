@@ -67,9 +67,11 @@ Current callout scanning would treat the `*sam*` line as the latest nonblank hum
 
 ## Implementation status — 2026-05-27
 
-- [x] Added source fixtures proving label-only ``*`sam`*`` placeholders are skipped and typed replies after or below the label are actionable.
-- [x] Added poller tests for a trailing-space placeholder, a real same-line typed reply, and a next-line typed reply.
-- [x] Patched `skills/atag/scripts/atag-poll.sh` to ignore emphasized inline-code label-only human placeholder lines for latest-turn detection.
+- [x] Swapped current speaker-label syntax: humans use bare inline code like `` `sam` ``, agents use emphasized inline code like ``*`claude`*``.
+- [x] Moved companion CSS role styling so human labels keep the accented rendered style and agent labels keep the quieter rendered style.
+- [x] Added source fixtures proving label-only human placeholders are skipped and typed replies after or below the label are actionable.
+- [x] Added poller tests for a trailing-space placeholder, a legacy emphasized placeholder, a real same-line typed reply, and a next-line typed reply.
+- [x] Patched `skills/atag/scripts/atag-poll.sh` to ignore bare and legacy emphasized label-only human placeholder lines for latest-turn detection.
 - [x] Updated `skills/atag/SKILL.md` and `skills/atag/reference/markdown-agent-tags.spec.md` so agents/tools prefill or normalize labels and humans are not expected to type raw syntax.
 - [x] Ran `scripts/sync-skills.sh`; plugin copies match canonical.
 - [x] Synced active local copies:
@@ -79,7 +81,7 @@ Current callout scanning would treat the `*sam*` line as the latest nonblank hum
 Verification passed:
 
 - `bash -n skills/atag/scripts/atag-poll.sh`
-- `bun test skills/atag/reference/markdown-agent-tags.spec.test.ts skills/atag/reference/atag-poll.test.ts` — 201 pass, 0 fail
+- `bun test skills/atag/reference/markdown-agent-tags.spec.test.ts skills/atag/reference/atag-poll.test.ts` — 210 pass, 0 fail
 - `scripts/sync-skills.sh`
 - `diff -qr -x dev skills/atag claude-plugins/atag/skills/atag`
 - `diff -qr -x dev skills/atag codex-plugins/atag/skills/atag`
@@ -112,6 +114,6 @@ Nice to have / acceptable experiment risk:
 
 ## Unresolved questions
 
-- Human speaker name: v1 documents `sam`; scanner ignores any emphasized inline-code label-only placeholder so future names do not retrigger.
+- Human speaker name: v1 documents `sam`; scanner ignores any bare inline-code label-only placeholder so future names do not retrigger. It also skips legacy emphasized placeholders.
 - `[!DONE]-` prefill: no v1 change; active `[!NOTE]+` only.
 - Placeholder marker/comment: no marker; "speaker label only" is enough for v1.

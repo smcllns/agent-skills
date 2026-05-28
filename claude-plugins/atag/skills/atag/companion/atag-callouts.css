@@ -117,9 +117,9 @@ body[for="html-export"] .callout:is([data-callout="note"], [data-callout="done"]
   vertical-align: 0.08em;
 }
 
-.markdown-rendered .callout:is([data-callout="note"], [data-callout="done"]) > .callout-content > p > em:first-child > code:first-child,
-.markdown-preview .callout:is([data-callout="note"], [data-callout="done"]) > p > em:first-child > code:first-child,
-body[for="html-export"] .callout:is([data-callout="note"], [data-callout="done"]) > p > em:first-child > code:first-child {
+.markdown-rendered .callout:is([data-callout="note"], [data-callout="done"]) > .callout-content > p > code:first-child,
+.markdown-preview .callout:is([data-callout="note"], [data-callout="done"]) > p > code:first-child,
+body[for="html-export"] .callout:is([data-callout="note"], [data-callout="done"]) > p > code:first-child {
   border-color: rgba(var(--atag-accent), 0.72);
   color: var(--text-normal, #1f2937);
   background: rgba(var(--atag-title), 0.55);

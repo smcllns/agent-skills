@@ -94,7 +94,7 @@ The goal is transparency, not perfection. It is valid to skip non-blocking findi
 
 Implemented on `codex/atag-poller`:
 
-- `skills/atag/scripts/atag-poll.sh` now treats emphasized inline-code label-only human lines like ``*`sam`*`` as placeholders for latest-turn detection.
+- `skills/atag/scripts/atag-poll.sh` now treats bare inline-code label-only human lines like `` `sam` `` as placeholders for latest-turn detection, while still skipping legacy emphasized placeholders.
 - `skills/atag/reference/markdown-agent-tags.spec.md` has fixtures for skipped placeholders, same-line replies after a prefilled label, and next-line replies after a prefilled label.
 - `skills/atag/reference/atag-poll.test.ts` covers the trailing-space placeholder, same-line typed reply, and next-line typed reply.
 - `skills/atag/SKILL.md` says agents/tools prefill or normalize human labels; humans should not have to type raw speaker-label markdown.
@@ -104,10 +104,17 @@ Implemented on `codex/atag-poller`:
   - `/Users/smcllns/Projects/dotfiles/skills/atag`
   - `/Users/smcllns/.agents/skills/atag`
 
+Follow-up label swap in the same PR:
+
+- Current human labels are bare inline code, e.g. `` `sam` reply``.
+- Current agent labels are emphasized inline code, e.g. ``*`claude`* reply``.
+- Companion CSS moved the accented rendered style to bare inline-code labels, so the human label keeps its previous visual treatment after the raw markdown swap.
+- The scanner still recognizes legacy bare and colon-form agent labels, and still skips legacy emphasized label-only human placeholders.
+
 Verification passed:
 
 - `bash -n skills/atag/scripts/atag-poll.sh`
-- `bun test skills/atag/reference/markdown-agent-tags.spec.test.ts skills/atag/reference/atag-poll.test.ts` — 201 pass, 0 fail
+- `bun test skills/atag/reference/markdown-agent-tags.spec.test.ts skills/atag/reference/atag-poll.test.ts` — 210 pass, 0 fail
 - `scripts/sync-skills.sh`
 - `diff -qr -x dev skills/atag claude-plugins/atag/skills/atag`
 - `diff -qr -x dev skills/atag codex-plugins/atag/skills/atag`

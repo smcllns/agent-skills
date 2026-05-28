@@ -24,7 +24,7 @@ After the agent acts:
 >
 > @codex can you clean up that formatting pls
 >
-> `codex` done — removed broken newlines and added missing periods. No changes to text content. <!--atag:eot-->
+> *`codex`* done — removed broken newlines and added missing periods. No changes to text content. <!--atag:eot-->
 ```
 
 The original tag is preserved verbatim as the first body line. The title is the outcome summary.
@@ -48,8 +48,8 @@ Inside an active callout, separate turns with a **single blank `>` line** — on
 
 Use `@name` only for trigger tags. Speaker labels use inline code as the sender/from field. Do not add a colon or other punctuation after the label:
 
-- Agent turn: `` `claude` reply <!--atag:eot-->``.
-- Human turn: ``*`sam`* reply``.
+- Agent turn: ``*`claude`* reply <!--atag:eot-->``.
+- Human turn: `` `sam` reply``.
 
 Humans are not expected to type the speaker-label markdown by hand. Agents and tools should prefill or normalize the human label in active threads, so the human can just type the reply text after the label.
 
@@ -60,11 +60,11 @@ Humans are not expected to type the speaker-label markdown by hand. Agents and t
 >
 > @claude tighten the intro
 >
-> `claude` trimmed to 3 sentences — does that read OK or want to go shorter? <!--atag:eot-->
+> *`claude`* trimmed to 3 sentences — does that read OK or want to go shorter? <!--atag:eot-->
 >
-> *`sam`* shorter please, ~1 sentence
+> `sam` shorter please, ~1 sentence
 >
-> `claude` done — single sentence. <!--atag:eot-->
+> *`claude`* done — single sentence. <!--atag:eot-->
 > no, make it sharper
 ```
 
@@ -78,7 +78,7 @@ A tag is unresolved when any of:
 - A valid inline tag for a recognized trigger not yet processed into a callout.
 - A resolved `> [!DONE]- ...` callout whose latest nonblank quoted line does not end with `<!--atag:eot-->`.
 
-An emphasized inline-code human label with no reply text, such as ``> *`sam`*``, is a placeholder, not a turn.
+A bare inline-code human label with no reply text, such as ``> `sam` ``, is a placeholder, not a turn. Legacy emphasized label-only placeholders are also skipped so old prefilled threads do not retrigger.
 
 ## Resolution contract
 
@@ -98,9 +98,9 @@ End every agent reply with `<!--atag:eot-->` so cheap pollers can skip threads w
 **Take a turn** with `[!NOTE]+` if completion requires further input from the human, so the thread stays visually open. End the agent response with `<!--atag:eot-->`, then prefill a blank quoted separator and label-only human line:
 
 ```markdown
-> `claude` Which direction should I take it? <!--atag:eot-->
+> *`claude`* Which direction should I take it? <!--atag:eot-->
 >
-> *`sam`*
+> `sam`
 ```
 
 ## If further human input required
@@ -112,9 +112,9 @@ When the tag is ambiguous, missing context, or non-actionable, **don't guess**. 
 >
 > @claude tighten the wording above
 >
-> `claude` the wording above stretches back 12,000 words but your request sounds smaller. Confirm: (1) the last paragraph, (2) the last 4 paragraphs on this topic, or (3) the full doc. <!--atag:eot-->
+> *`claude`* the wording above stretches back 12,000 words but your request sounds smaller. Confirm: (1) the last paragraph, (2) the last 4 paragraphs on this topic, or (3) the full doc. <!--atag:eot-->
 >
-> *`sam`*
+> `sam`
 ```
 
 ## Scanning for unresolved tags
@@ -135,8 +135,8 @@ Default agent names are `agent claude codex`. For custom triggers, replace the `
 find <path> -name '*.md' -exec awk -v trigger_alt='agent|claude|codex' '
 BEGIN {
   trigger_re = "(^|[[:space:]])@(" trigger_alt ")([^[:alnum:]_]|$)"
-  agent_re = "^[[:space:]]*`(" trigger_alt ")`([[:space:]]|:|$)"
-  human_placeholder_re = "^[[:space:]]*\\*`[^`]+`\\*:?[[:space:]]*$"
+  agent_re = "^[[:space:]]*(\\*`(" trigger_alt ")`\\*|`(" trigger_alt ")`)([[:space:]]|:|$)"
+  human_placeholder_re = "^[[:space:]]*(\\*`[^`]+`\\*|`[^`]+`):?[[:space:]]*$"
 }
 function finish_callout() {
   if (in_callout && has_trigger) {
@@ -252,6 +252,6 @@ Do not summarize already sealed `[!DONE]-` threads, skipped false positives, or 
 
 **Proactively correct formatting.** Allow the human to write shorthand imperfectly, and normalize speaker labels to the inline-code no-colon format when you touch a thread.
 
-**Reply using familiar agent name.** Use the agent name the user expects in your context (`` `claude` ...``, `` `codex` ...``, `` `pi` ...``, `` `hermes` ...``, etc).
+**Reply using familiar agent name.** Use the agent name the user expects in your context (``*`claude`* ...``, ``*`codex`* ...``, ``*`pi`* ...``, ``*`hermes`* ...``, etc).
 
-**Don't self-reply.** If the most recent speaker label in a `[!NOTE]+` thread is your agent label (for example `` `claude` reply``), the thread is waiting on the human. Leave it. If the same thread keeps showing up across scans with no human movement, mention it to the user.
+**Don't self-reply.** If the most recent speaker label in a `[!NOTE]+` thread is your agent label (for example ``*`claude`* reply``), the thread is waiting on the human. Leave it. If the same thread keeps showing up across scans with no human movement, mention it to the user.
