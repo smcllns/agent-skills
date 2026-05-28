@@ -19,5 +19,6 @@ Use GitHub issue [#37](https://github.com/smcllns/skills/issues/37) for the broa
 - `bash -n` passed for canonical, plugin, and active installed `atag-poll.sh` copies.
 - Canonical/plugin/active skill copies matched with `diff -qr -x dev`.
 - No stale default-Sonnet references remained outside override examples.
-- `bun test skills/atag/reference/markdown-agent-tags.spec.test.ts skills/atag/reference/atag-poll.test.ts claude-plugins/atag/skills/atag/reference/markdown-agent-tags.spec.test.ts claude-plugins/atag/skills/atag/reference/atag-poll.test.ts codex-plugins/atag/skills/atag/reference/markdown-agent-tags.spec.test.ts codex-plugins/atag/skills/atag/reference/atag-poll.test.ts` passed: 246 pass, 0 fail.
+- Independent Haiku PR review found a timeout/interrupt blocker where `run_with_timeout()` had lost `exec`, which could leave Claude orphaned. Fixed by restoring `exec "$@"` and adding a timeout regression test.
+- `bun test skills/atag/reference/markdown-agent-tags.spec.test.ts skills/atag/reference/atag-poll.test.ts claude-plugins/atag/skills/atag/reference/markdown-agent-tags.spec.test.ts claude-plugins/atag/skills/atag/reference/atag-poll.test.ts codex-plugins/atag/skills/atag/reference/markdown-agent-tags.spec.test.ts codex-plugins/atag/skills/atag/reference/atag-poll.test.ts` passed: 249 pass, 0 fail.
 - Stubbed default invocation printed `--model opus --permission-mode acceptEdits --effort low`.
