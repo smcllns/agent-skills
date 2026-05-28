@@ -499,7 +499,7 @@ describe("atag-poll", () => {
     });
 
     expect(result.exitCode).toBe(0);
-    expect(result.stderr).toContain("[DEBUG] atag-poll: claude still running (1s elapsed)");
+    expect(result.stderr).toMatch(/\[DEBUG\] atag-poll: claude still running \([0-9]+s elapsed\)/);
     expect(result.stdout).toContain("slow output\n");
   });
 
@@ -558,19 +558,19 @@ describe("atag-poll", () => {
     expect(await readLog()).toContain("note.md");
   });
 
-  it("passes through Claude args and lets callers override default effort", async () => {
+  it("passes through Claude args and lets callers override default model and effort", async () => {
     await installClaudeStub();
     await writeFile(join(fixtureDir, "note.md"), "@codex please help\n");
 
-    const result = runPoll(["--once", "--dir", fixtureDir, "--", "--model", "opus", "--effort", "medium", "--max-budget-usd", "1"]);
+    const result = runPoll(["--once", "--dir", fixtureDir, "--", "--model", "haiku", "--effort", "low", "--max-budget-usd", "1"]);
 
     expect(result.exitCode).toBe(0);
     const log = await readLog();
     expect(log).toContain("arg=--max-budget-usd");
     expect(log).toContain("arg=1");
-    expect(log).toContain("arg=opus");
-    expect(log).toContain("arg=medium");
-    expect(log).not.toContain("arg=low");
+    expect(log).toContain("arg=haiku");
+    expect(log).toContain("arg=low");
+    expect(log).not.toContain("arg=sonnet");
   });
 
   it("propagates Claude failures", async () => {

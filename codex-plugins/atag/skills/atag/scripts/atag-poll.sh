@@ -513,7 +513,11 @@ has_claude_option() {
 
 run_claude() {
   local prompt="$1"
-  local cmd=(claude -p --model sonnet --permission-mode acceptEdits)
+  local cmd=(claude -p)
+  if ! has_claude_option "--model"; then
+    cmd+=(--model sonnet)
+  fi
+  cmd+=(--permission-mode acceptEdits)
   if ! has_claude_option "--effort"; then
     cmd+=(--effort low)
   fi
