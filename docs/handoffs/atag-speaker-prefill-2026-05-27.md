@@ -12,6 +12,8 @@
 
 This renders well and gives agents a consistent turn structure. The UX problem: humans should not have to manually type ``> `sam` `` or learn that syntax just to reply.
 
+In this handoff, `sam` is the local example human label. The poller now accepts `--name`/`--user-name` for the agent's known name for the human, then falls back through local identity sources before using `user`.
+
 ## Current state
 
 - Run-3 is ready to test the inline-tag protocol change separately.
@@ -20,7 +22,7 @@ This renders well and gives agents a consistent turn structure. The UX problem: 
 
 ## Project goal
 
-When an agent leaves an active thread waiting on Sam, the markdown should already contain the next human speaker label so Sam can just type after it.
+When an agent leaves an active thread waiting on the human, the markdown should already contain the next human speaker label so the human can just type after it.
 
 Desired shape:
 
@@ -40,7 +42,7 @@ A prefilled label-only line must not count as a human reply.
 
 If the scanner sees the above and immediately respawns Claude, the feature fails. The scanner needs to treat a quoted line that is only a human speaker label (plus whitespace) as placeholder/blank for turn-detection purposes.
 
-But once Sam types real content:
+But once the human types real content:
 
 ```md
 > `sam` make it more concrete
@@ -58,7 +60,7 @@ the thread should become actionable again.
    > `sam`
    ```
 
-3. Update scanner logic and fixtures so label-only Sam placeholders are skipped.
+3. Update scanner logic and fixtures so label-only human-label placeholders are skipped.
 4. Update examples/docs so humans understand agents/tools provide or normalize labels; users are not expected to type raw markdown syntax.
 
 ## Tests to add
@@ -94,7 +96,7 @@ The goal is transparency, not perfection. It is valid to skip non-blocking findi
 
 Implemented on `codex/atag-poller`:
 
-- `skills/atag/scripts/atag-poll.sh` now treats bare inline-code label-only Sam lines like `` `sam` `` as placeholders for latest-turn detection, while still skipping legacy emphasized Sam placeholders.
+- `skills/atag/scripts/atag-poll.sh` now treats bare inline-code label-only human-label lines like `` `sam` `` as placeholders for latest-turn detection, while still skipping legacy emphasized human placeholders.
 - `skills/atag/reference/markdown-agent-tags.spec.md` has fixtures for skipped placeholders, same-line replies after a prefilled label, and next-line replies after a prefilled label.
 - `skills/atag/reference/atag-poll.test.ts` covers the trailing-space placeholder, same-line typed reply, and next-line typed reply.
 - `skills/atag/SKILL.md` says agents/tools prefill or normalize human labels; humans should not have to type raw speaker-label markdown.
@@ -109,7 +111,7 @@ Follow-up label swap in the same PR:
 - Current human labels are bare inline code, e.g. `` `sam` reply``.
 - Current agent labels are emphasized inline code, e.g. ``*`claude`* reply``.
 - Companion CSS moved the accented rendered style to bare inline-code labels, so the human label keeps its previous visual treatment after the raw markdown swap.
-- The scanner still recognizes legacy bare and colon-form agent labels, and still skips legacy emphasized label-only Sam placeholders.
+- The scanner still recognizes legacy bare and colon-form agent labels, and still skips legacy emphasized label-only human placeholders.
 
 Verification passed:
 
@@ -126,7 +128,7 @@ Verification passed:
 Still required before merge:
 
 - Keep PR #29 scoped to the stacked base branch `codex/atag-poller-base` unless deliberately expanding the merge unit.
-- Merge only after Sam approves the stacked PR shape.
+- Merge only after the stacked PR shape is approved.
 
 ## Independent review result — 2026-05-27
 
@@ -149,6 +151,34 @@ Follow-up review after the label swap found no blockers.
 Nice to have / acceptable experiment risk:
 
 - Finding: the placeholder regex was too broad and skipped a code-only reply like `` `bun` `` after a prefilled label.
-- Resolution: limited placeholder detection to bare/legacy-emphasized `sam` labels and added source/poller coverage for the code-only reply case.
+- Resolution: limited placeholder detection to the skill's human label and added source/poller coverage for the code-only reply case.
 - Finding: stale handoff prose still showed the previous raw label contract.
 - Resolution: updated stale handoff examples and companion CSS handoff wording.
+
+## Fast-follow decisions after PR #29
+
+PR #29 merged with three settled-but-still-labeled "unresolved questions" in the plan. Fast-follow PR #30 records them as closed decisions:
+
+- Human speaker name: v1 accepts the agent's known human name with `--name`/`--user-name`, then falls back to `git config user.name`, GitHub user name/login, Unix username, and finally `user`.
+- `[!DONE]-` prefill: no v1 prefill for DONE follow-ups. DONE threads are already append-friendly after `<!--atag:eot-->`; prefill stays scoped to active `[!NOTE]+` turns waiting on the human.
+- Placeholder marker/comment: no explicit marker for known human labels. A label-only human line is readable and sufficient when the name is known; only the final `user` fallback gets the scanner-ignored `<!--atag:missing-human-name ...-->` recovery comment.
+- Legacy label support: keep scanning support for old bare/colon agent labels and legacy emphasized human-label placeholders so existing notes do not wake up due to the syntax migration.
+
+No open v1 speaker-prefill questions remain after these decisions.
+
+PR #30 follow-up after review:
+
+- Added `--name`/`--user-name` for the agent's known human name.
+- Added fallback identity resolution: git name, GitHub user name, Unix username, then `user`.
+- Added a scanner-ignored `<!--atag:missing-human-name ...-->` comment for the final fallback.
+
+Fast-follow verification passed:
+
+- `bash -n skills/atag/scripts/atag-poll.sh`
+- `bun test skills/atag/reference/markdown-agent-tags.spec.test.ts skills/atag/reference/atag-poll.test.ts` - 234 pass, 0 fail
+- `scripts/sync-skills.sh`
+- `diff -qr -x dev skills/atag claude-plugins/atag/skills/atag`
+- `diff -qr -x dev skills/atag codex-plugins/atag/skills/atag`
+- `diff -qr -x dev skills/atag /Users/smcllns/Projects/dotfiles/skills/atag`
+- `diff -qr -x dev skills/atag /Users/smcllns/.agents/skills/atag`
+- `git diff --check`

@@ -7,6 +7,7 @@ whether the scan should pick this file up:
 
 - info `md @test:match` — unresolved scan should find this file
 - info `md @test:nomatch` — unresolved scan should skip this file
+- optional `@human:<label>` — run this fixture with a non-`sam` human label
 - info `md @done:match` — DONE seal scan should find this file
 - info `md @done:nomatch` — DONE seal scan should skip this file
 - any other info string (or no fenced block) — ignored by the runner, free for
@@ -28,13 +29,30 @@ them.
 
 The DONE seal is deliberately append-friendly: a human can type directly after
 the token, without a blank quoted separator or speaker label, and the thread
-becomes unresolved until an agent inspects it and reseals the final reply.
+becomes unresolved until an agent inspects it and reseals the final reply. v1
+does not prefill `[!DONE]-` follow-up lines.
 
 Inside callouts, `@name` is only for the original trigger tag. Speaker labels
 are inline-code sender/from fields with no trailing colon or punctuation. Agent
 replies start with an emphasized inline-code label like ``*`claude`* reply``
 and end with `<!--atag:eot-->` after yielding the turn. Human replies start
 with a bare inline-code label like `` `sam` reply``.
+
+Throughout this spec, `sam` is the example human speaker label. When adapting
+the skill for another human, pass the agent's known name for that human with
+`atag-poll.sh --name <name>` or replace `sam` in the examples and prefilled
+human-label convention with that human's preferred short label. Agents/tools may
+prefill that bare human label in active `[!NOTE]+` threads so the human can just
+type the reply text. Label-only human-label lines are placeholders; other
+code-only quoted lines remain real replies. Poller-provided names are normalized
+to a simple lower-case label, using the first word for full names.
+
+If no human name can be detected, agents/tools may use `user` and include this
+quoted comment at the bottom of the callout:
+
+```md
+> <!--atag:missing-human-name no human name detected; please ask the human what name agents should use and store it in AGENTS.md, git config user.name, or pass --name to atag-poll.sh.-->
+```
 
 ---
 
@@ -150,6 +168,22 @@ reply, so existing prefilled threads do not retrigger.
 > *`sam`*
 ```
 
+### Active agent thread — missing human name placeholder comment
+
+When no human name can be detected, the fallback label and explanatory comment
+are both placeholders, not a reply.
+
+```md @test:nomatch @human:user
+> [!NOTE]+ awaiting direction
+>
+> `sam` @claude make this better
+>
+> *`claude`* Which direction should I take it? <!--atag:eot-->
+>
+> `user`
+> <!--atag:missing-human-name no human name detected; please ask the human what name agents should use and store it in AGENTS.md, git config user.name, or pass --name to atag-poll.sh.-->
+```
+
 ### Active agent thread — human reply after prefilled label
 
 Once the human types real content after the prefilled label, the thread is
@@ -184,7 +218,7 @@ actionable.
 
 ### Active agent thread — code-only human reply after prefilled label
 
-Only the prefilled Sam label is a placeholder. If the human replies on the next
+Only the skill's human label is a placeholder. If the human replies on the next
 line with a code-only token, the thread is actionable.
 
 ```md @test:match
@@ -363,7 +397,7 @@ see @claude for the rule (mid-line)
 
 ### Trailing tag
 
-Sam's case from 2026-05-19 — tag at the end of a sentence.
+A tag at the end of a sentence is still actionable.
 
 ```md @test:match
 tell me my options please @claude

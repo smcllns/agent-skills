@@ -51,9 +51,11 @@ Use `@name` only for trigger tags. Speaker labels use inline code as the sender/
 - Agent turn: ``*`claude`* reply <!--atag:eot-->``.
 - Human turn: `` `sam` reply``.
 
+Throughout this skill, `sam` is the example human speaker label. The poller passes the human label to agents as the agent's known name for the human. Prefer `atag-poll.sh --name <name>` or `--user-name <name>`; when omitted, the poller tries `git config user.name`, GitHub user name/login, and the Unix username before falling back to `user`. Names are normalized to a simple lower-case label, using the first word for full names.
+
 Humans are not expected to type the speaker-label markdown by hand. Agents and tools should prefill or normalize the human label in active threads, so the human can just type the reply text after the label.
 
-`<!--atag:eot-->` means the agent yielded the turn. End every agent response with it, including `[!NOTE]+` questions and partial answers. In `[!DONE]-` threads, a human can add follow-up text directly after the token; the next agent pass will inspect and reseal.
+`<!--atag:eot-->` means the agent yielded the turn. End every agent response with it, including `[!NOTE]+` questions and partial answers. In `[!DONE]-` threads, a human can add follow-up text directly after the token; the next agent pass will inspect and reseal. Do not prefill `[!DONE]-` follow-up lines in v1.
 
 ```markdown
 > [!DONE]- tightened introduction
@@ -78,7 +80,14 @@ A tag is unresolved when any of:
 - A valid inline tag for a recognized trigger not yet processed into a callout.
 - A resolved `> [!DONE]- ...` callout whose latest nonblank quoted line does not end with `<!--atag:eot-->`.
 
-A bare inline-code Sam label with no reply text, such as ``> `sam` ``, is a placeholder, not a turn. Legacy emphasized label-only Sam placeholders are also skipped so old prefilled threads do not retrigger.
+A bare inline-code human label for this skill, such as ``> `sam` ``, is a placeholder, not a turn. Legacy emphasized label-only human placeholders are also skipped so old prefilled threads do not retrigger. This skip applies only to this skill's human speaker label; other code-only quoted lines remain real replies.
+
+If the human label falls back to `user`, add this quoted HTML comment immediately after the label-only line when leaving a `[!NOTE]+` thread waiting on the human:
+
+```markdown
+> `user`
+> <!--atag:missing-human-name no human name detected; please ask the human what name agents should use and store it in AGENTS.md, git config user.name, or pass --name to atag-poll.sh.-->
+```
 
 ## Resolution contract
 
@@ -129,14 +138,15 @@ grep -rlnE --include='*.md' '^([^>]*[[:space:]])?@(agent|claude|codex)([^[:alnum
 
 Default agent names are `agent claude codex`. For custom triggers, replace the `agent|claude|codex` alternation with the custom alternation, e.g. `nora|hermes`.
 
-2. **Inline awk for callout threads** — multiline scan for actionable `[!NOTE]+` and unsealed `[!DONE]-` callouts. Pass `trigger_alt` as the same alternation used above, e.g. `agent|claude|codex`.
+2. **Inline awk for callout threads** — multiline scan for actionable `[!NOTE]+` and unsealed `[!DONE]-` callouts. Pass `trigger_alt` as the same alternation used above, e.g. `agent|claude|codex`, and `human_label` as the human speaker label, e.g. `sam`.
 
 ```sh
-find <path> -name '*.md' -exec awk -v trigger_alt='agent|claude|codex' '
+find <path> -name '*.md' -exec awk -v trigger_alt='agent|claude|codex' -v human_label='sam' '
 BEGIN {
   trigger_re = "(^|[[:space:]])@(" trigger_alt ")([^[:alnum:]_]|$)"
   agent_re = "^[[:space:]]*(\\*`(" trigger_alt ")`\\*|`(" trigger_alt ")`)([[:space:]]|:|$)"
-  human_placeholder_re = "^[[:space:]]*(\\*`sam`\\*|`sam`):?[[:space:]]*$"
+  human_placeholder_re = "^[[:space:]]*(\\*`" human_label "`\\*|`" human_label "`):?[[:space:]]*$"
+  missing_human_name_re = "^[[:space:]]*<!--atag:missing-human-name "
 }
 function finish_callout() {
   if (in_callout && has_trigger) {
@@ -163,7 +173,7 @@ function process_quoted_line() {
   line = $0
   sub(/^[[:space:]]*>[[:space:]]*/, "", line)
   if (line ~ trigger_re) has_trigger = 1
-  if (line !~ /^[[:space:]]*$/ && line !~ human_placeholder_re) {
+  if (line !~ /^[[:space:]]*$/ && line !~ human_placeholder_re && line !~ missing_human_name_re) {
     sealed = (line ~ /<!--atag:eot-->[[:space:]]*$/)
     agent_last = (line ~ agent_re)
   }
@@ -206,12 +216,14 @@ Defaults:
 - With `--debug`, no-match prints: `[HH:MM]  No @agent, @claude, @codex agent tags detected`.
 - Runs Claude from the target directory with `claude -p --model sonnet --permission-mode acceptEdits`.
 - Defaults `--response-style auto`: terminal stdout requests plain terminal text; piped/redirected/UI callers get Markdown. Use `--response-style terminal` or `--response-style markdown` to force it.
+- Resolves the human speaker label from `--name`/`--user-name`, then `git config user.name`, GitHub user name, Unix username, and finally `user`.
 - Uses a 30-minute timeout around Claude as a runaway guard.
 
 Useful options:
 
 ```sh
 skills/atag/scripts/atag-poll.sh --once --dir /path/to/notes
+skills/atag/scripts/atag-poll.sh --name Sam --dir /path/to/notes
 skills/atag/scripts/atag-poll.sh --debug --interval 30 --dir /path/to/notes
 skills/atag/scripts/atag-poll.sh --response-style terminal --dir /path/to/notes
 skills/atag/scripts/atag-poll.sh --dir /path/to/notes @pi

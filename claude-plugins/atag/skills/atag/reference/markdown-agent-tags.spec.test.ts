@@ -14,6 +14,7 @@
 //   - Fixtures live in `markdown-agent-tags.spec.md`. Each section's fenced
 //     block can opt into the unresolved scan with `@test:match` / `@test:nomatch`,
 //     and into the DONE callout scan with `@done:match` / `@done:nomatch`.
+//     A fixture can add `@human:<label>` when it needs a non-default human label.
 //   - Per-agent fixtures (one bare `@<agent>` tag per name) are
 //     generated programmatically from AGENTS.
 
@@ -26,13 +27,15 @@ import { join } from "node:path";
 // ─── single source of truth (TS side) ─────────────────────────────────────
 const INLINE_SCAN_REGEX = String.raw`^([^>]*[[:space:]])?@(agent|claude|codex)([^[:alnum:]_]|$)`;
 const AGENTS = ["agent", "claude", "codex"] as const;
+const HUMAN_LABEL = "sam";
 const DONE_EOT = "<!--atag:eot-->";
 const TRIGGER_ALT = AGENTS.join("|");
 const CALLOUT_SCAN_AWK = [
   'BEGIN {',
   '  trigger_re = "(^|[[:space:]])@(" trigger_alt ")([^[:alnum:]_]|$)"',
   '  agent_re = "^[[:space:]]*(\\\\*`(" trigger_alt ")`\\\\*|`(" trigger_alt ")`)([[:space:]]|:|$)"',
-  '  human_placeholder_re = "^[[:space:]]*(\\\\*`sam`\\\\*|`sam`):?[[:space:]]*$"',
+  '  human_placeholder_re = "^[[:space:]]*(\\\\*`" human_label "`\\\\*|`" human_label "`):?[[:space:]]*$"',
+  '  missing_human_name_re = "^[[:space:]]*<!--atag:missing-human-name "',
   '}',
   'function finish_callout() {',
   '  if (in_callout && has_trigger) {',
@@ -59,7 +62,7 @@ const CALLOUT_SCAN_AWK = [
   '  line = $0',
   '  sub(/^[[:space:]]*>[[:space:]]*/, "", line)',
   '  if (line ~ trigger_re) has_trigger = 1',
-  '  if (line !~ /^[[:space:]]*$/ && line !~ human_placeholder_re) {',
+  '  if (line !~ /^[[:space:]]*$/ && line !~ human_placeholder_re && line !~ missing_human_name_re) {',
   '    sealed = (line ~ /<!--atag:eot-->[[:space:]]*$/)',
   '    agent_last = (line ~ agent_re)',
   '  }',
@@ -98,15 +101,21 @@ interface Fixture {
   name: string;
   expect: "match" | "nomatch";
   content: string;
+  humanLabel?: string;
 }
 
 function parseSpec(spec: string): Fixture[] {
   const fixtures: Fixture[] = [];
-  const fenceRe = /(`{3,})md @test:(match|nomatch)\b[^\n]*\n([\s\S]*?)\n\1\s*$/gm;
+  const fenceRe = /(`{3,})md ([^\n]*)\n([\s\S]*?)\n\1\s*$/gm;
+  const markerRe = /(?:^|\s)@test:(match|nomatch)\b/;
+  const humanRe = /(?:^|\s)@human:([a-z0-9_]+)\b/;
   for (const m of spec.matchAll(fenceRe)) {
-    const [, , expect, content] = m;
+    const [, , info, content] = m;
+    const markerMatch = info.match(markerRe);
+    if (!markerMatch) continue;
+    const humanMatch = info.match(humanRe);
     const name = nearestHeadingBefore(spec, m.index!) ?? `fixture@${m.index}`;
-    fixtures.push({ name, expect: expect as "match" | "nomatch", content });
+    fixtures.push({ name, expect: markerMatch[1] as "match" | "nomatch", content, humanLabel: humanMatch?.[1] });
   }
   return fixtures;
 }
@@ -115,12 +124,14 @@ function parseMarkedSpec(spec: string, marker: "done"): Fixture[] {
   const fixtures: Fixture[] = [];
   const fenceRe = /(`{3,})md ([^\n]*)\n([\s\S]*?)\n\1\s*$/gm;
   const markerRe = new RegExp(`(?:^|\\s)@${marker}:(match|nomatch)\\b`);
+  const humanRe = /(?:^|\s)@human:([a-z0-9_]+)\b/;
   for (const m of spec.matchAll(fenceRe)) {
     const [, , info, content] = m;
     const markerMatch = info.match(markerRe);
     if (!markerMatch) continue;
+    const humanMatch = info.match(humanRe);
     const name = nearestHeadingBefore(spec, m.index!) ?? `fixture@${m.index}`;
-    fixtures.push({ name, expect: markerMatch[1] as "match" | "nomatch", content });
+    fixtures.push({ name, expect: markerMatch[1] as "match" | "nomatch", content, humanLabel: humanMatch?.[1] });
   }
   return fixtures;
 }
@@ -159,32 +170,17 @@ beforeAll(async () => {
     throw new Error(`grep failed (exit ${inlineProc.exitCode}): ${new TextDecoder().decode(inlineProc.stderr)}`);
   }
 
-  const calloutProc = Bun.spawnSync({
-    cmd: ["awk", "-v", `trigger_alt=${TRIGGER_ALT}`, CALLOUT_SCAN_AWK, ...scan.paths],
-    stdout: "pipe",
-    stderr: "pipe",
-  });
-  if (calloutProc.exitCode !== 0) {
-    throw new Error(`callout scan failed (exit ${calloutProc.exitCode}): ${new TextDecoder().decode(calloutProc.stderr)}`);
-  }
+  const calloutFixtureNames = runCalloutScans(ALL_FIXTURES, scan.pathsBySlug, scanTempDir, "callout scan");
 
   scanMatched = new Set([
     ...pathsToFixtureNames(new TextDecoder().decode(inlineProc.stdout), scanTempDir),
-    ...calloutLinesToFixtureNames(new TextDecoder().decode(calloutProc.stdout), scanTempDir),
+    ...calloutFixtureNames,
   ]);
 
   const doneScan = await writeFixtures(DONE_FIXTURES, "markdown-agent-tags-done-");
   doneTempDir = doneScan.tempDir;
 
-  const doneProc = Bun.spawnSync({
-    cmd: ["awk", "-v", `trigger_alt=${TRIGGER_ALT}`, CALLOUT_SCAN_AWK, ...doneScan.paths],
-    stdout: "pipe",
-    stderr: "pipe",
-  });
-  if (doneProc.exitCode !== 0) {
-    throw new Error(`DONE scan failed (exit ${doneProc.exitCode}): ${new TextDecoder().decode(doneProc.stderr)}`);
-  }
-  doneMatched = new Set(calloutLinesToFixtureNames(new TextDecoder().decode(doneProc.stdout), doneTempDir));
+  doneMatched = new Set(runCalloutScans(DONE_FIXTURES, doneScan.pathsBySlug, doneTempDir, "DONE scan"));
 
   console.log(`Inline:   ${INLINE_SCAN_REGEX}`);
   console.log(`DONE EOT: ${DONE_EOT}`);
@@ -243,9 +239,10 @@ describe("callout scan picks up exactly the expected DONE fixtures", () => {
 });
 
 // ─── helpers ──────────────────────────────────────────────────────────────
-async function writeFixtures(fixtures: Fixture[], prefix: string): Promise<{ tempDir: string; paths: string[] }> {
+async function writeFixtures(fixtures: Fixture[], prefix: string): Promise<{ tempDir: string; paths: string[]; pathsBySlug: Map<string, string> }> {
   const tempDir = await mkdtemp(join(tmpdir(), prefix));
   const paths: string[] = [];
+  const pathsBySlug = new Map<string, string>();
   const seen = new Set<string>();
   for (const fx of fixtures) {
     const slug = slugify(fx.name);
@@ -255,8 +252,35 @@ async function writeFixtures(fixtures: Fixture[], prefix: string): Promise<{ tem
     const content = fx.content.endsWith("\n") ? fx.content : fx.content + "\n";
     await writeFile(path, content);
     paths.push(path);
+    pathsBySlug.set(slug, path);
   }
-  return { tempDir, paths };
+  return { tempDir, paths, pathsBySlug };
+}
+
+function runCalloutScans(fixtures: Fixture[], pathsBySlug: Map<string, string>, tempDir: string, label: string): string[] {
+  const pathsByHumanLabel = new Map<string, string[]>();
+  for (const fx of fixtures) {
+    const path = pathsBySlug.get(slugify(fx.name));
+    if (!path) throw new Error(`Missing fixture path for "${fx.name}"`);
+    const humanLabel = fx.humanLabel ?? HUMAN_LABEL;
+    const paths = pathsByHumanLabel.get(humanLabel) ?? [];
+    paths.push(path);
+    pathsByHumanLabel.set(humanLabel, paths);
+  }
+
+  const matches: string[] = [];
+  for (const [humanLabel, paths] of pathsByHumanLabel) {
+    const proc = Bun.spawnSync({
+      cmd: ["awk", "-v", `trigger_alt=${TRIGGER_ALT}`, "-v", `human_label=${humanLabel}`, CALLOUT_SCAN_AWK, ...paths],
+      stdout: "pipe",
+      stderr: "pipe",
+    });
+    if (proc.exitCode !== 0) {
+      throw new Error(`${label} failed (exit ${proc.exitCode}): ${new TextDecoder().decode(proc.stderr)}`);
+    }
+    matches.push(...calloutLinesToFixtureNames(new TextDecoder().decode(proc.stdout), tempDir));
+  }
+  return matches;
 }
 
 function slugify(s: string): string {

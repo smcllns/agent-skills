@@ -18,6 +18,7 @@ beforeEach(async () => {
   logPath = join(tempDir, "claude.log");
   await mkdir(binDir);
   await mkdir(fixtureDir);
+  await installGitStub("Sam Collins");
 });
 
 afterEach(async () => {
@@ -151,6 +152,128 @@ describe("atag-poll", () => {
         "> *`claude`* Which direction should I take it? <!--atag:eot-->",
         ">",
         "> `sam` ",
+        "",
+      ].join("\n"),
+    );
+
+    const result = runPoll(["--once", "--debug", "--dir", fixtureDir]);
+
+    expect(result.exitCode).toBe(0);
+    expect(result.stdout).toMatch(/\[[0-9]{2}:[0-9]{2}\]  No @agent, @claude, @codex agent tags detected\n?$/);
+    expect(result.stderr).toBe("");
+    expect(await readLog()).toBe("");
+  });
+
+  it("uses an explicit human name for label-only placeholders", async () => {
+    await installClaudeStub();
+    await writeFile(
+      join(fixtureDir, "note.md"),
+      [
+        "> [!NOTE]+ awaiting direction",
+        ">",
+        "> `maya` @claude make this better",
+        ">",
+        "> *`claude`* Which direction should I take it? <!--atag:eot-->",
+        ">",
+        "> `maya` ",
+        "",
+      ].join("\n"),
+    );
+
+    const result = runPoll(["--once", "--debug", "--dir", fixtureDir, "--name", "Maya"]);
+
+    expect(result.exitCode).toBe(0);
+    expect(result.stdout).toMatch(/\[[0-9]{2}:[0-9]{2}\]  No @agent, @claude, @codex agent tags detected\n?$/);
+    expect(result.stderr).toBe("");
+    expect(await readLog()).toBe("");
+  });
+
+  it("falls back to git name before GitHub name and unix username", async () => {
+    await installGitStub("Sam Collins");
+    await installGhStub("Maya Example");
+    await installIdStub("unixname");
+    await installClaudeStub();
+    await writeFile(
+      join(fixtureDir, "note.md"),
+      [
+        "> [!NOTE]+ awaiting direction",
+        ">",
+        "> `sam` @claude make this better",
+        ">",
+        "> *`claude`* Which direction should I take it? <!--atag:eot-->",
+        ">",
+        "> `sam` ",
+        "",
+      ].join("\n"),
+    );
+
+    const result = runPoll(["--once", "--debug", "--dir", fixtureDir]);
+
+    expect(result.exitCode).toBe(0);
+    expect(result.stdout).toMatch(/\[[0-9]{2}:[0-9]{2}\]  No @agent, @claude, @codex agent tags detected\n?$/);
+    expect(result.stderr).toBe("");
+    expect(await readLog()).toBe("");
+  });
+
+  it("falls back to GitHub name before the unix username", async () => {
+    await installGitStub(null);
+    await installGhStub("Maya Example");
+    await installIdStub("unixname");
+    await installClaudeStub();
+    await writeFile(
+      join(fixtureDir, "note.md"),
+      [
+        "> [!NOTE]+ awaiting direction",
+        ">",
+        "> `maya` @claude make this better",
+        ">",
+        "> *`claude`* Which direction should I take it? <!--atag:eot-->",
+        ">",
+        "> `maya` ",
+        "",
+      ].join("\n"),
+    );
+
+    const result = runPoll(["--once", "--debug", "--dir", fixtureDir]);
+
+    expect(result.exitCode).toBe(0);
+    expect(result.stdout).toMatch(/\[[0-9]{2}:[0-9]{2}\]  No @agent, @claude, @codex agent tags detected\n?$/);
+    expect(result.stderr).toBe("");
+    expect(await readLog()).toBe("");
+  });
+
+  it("uses the fallback user label and missing-name comment when no local identity is found", async () => {
+    await installGitStub(null);
+    await installGhStub(null);
+    await installIdStub(null);
+    await installClaudeStub();
+    await writeFile(join(fixtureDir, "note.md"), "@codex please help\n");
+
+    const result = runPoll(["--once", "--dir", fixtureDir]);
+
+    expect(result.exitCode).toBe(0);
+    const log = await readLog();
+    expect(log).toContain("Human speaker label: `user` (source: fallback)");
+    expect(log).toContain("<!--atag:missing-human-name no human name detected;");
+    expect(log).toContain("pass --name to atag-poll.sh");
+  });
+
+  it("does not invoke Claude for a fallback user placeholder with the missing-name comment", async () => {
+    await installGitStub(null);
+    await installGhStub(null);
+    await installIdStub(null);
+    await installClaudeStub();
+    await writeFile(
+      join(fixtureDir, "note.md"),
+      [
+        "> [!NOTE]+ awaiting direction",
+        ">",
+        "> `user` @claude make this better",
+        ">",
+        "> *`claude`* Which direction should I take it? <!--atag:eot-->",
+        ">",
+        "> `user`",
+        "> <!--atag:missing-human-name no human name detected; please ask the human what name agents should use and store it in AGENTS.md, git config user.name, or pass --name to atag-poll.sh.-->",
         "",
       ].join("\n"),
     );
@@ -424,6 +547,36 @@ exit ${exitCode}
 `;
   const path = join(binDir, "claude");
   await writeFile(path, stub);
+  await chmod(path, 0o755);
+}
+
+async function installGitStub(userName: string | null) {
+  const body =
+    userName === null
+      ? "exit 1\n"
+      : `if [[ "$*" == *"config user.name"* ]]; then printf '%s\\n' ${JSON.stringify(userName)}; exit 0; fi\nexit 1\n`;
+  await installStub("git", body);
+}
+
+async function installGhStub(userName: string | null) {
+  const body =
+    userName === null
+      ? "exit 1\n"
+      : `if [[ "$*" == *"api user"* ]]; then printf '%s\\n' ${JSON.stringify(userName)}; exit 0; fi\nexit 1\n`;
+  await installStub("gh", body);
+}
+
+async function installIdStub(userName: string | null) {
+  const body =
+    userName === null
+      ? "exit 1\n"
+      : `if [[ "$*" == "-un" ]]; then printf '%s\\n' ${JSON.stringify(userName)}; exit 0; fi\nexit 1\n`;
+  await installStub("id", body);
+}
+
+async function installStub(name: string, body: string) {
+  const path = join(binDir, name);
+  await writeFile(path, `#!/usr/bin/env bash\nset -euo pipefail\n${body}`);
   await chmod(path, 0o755);
 }
 
