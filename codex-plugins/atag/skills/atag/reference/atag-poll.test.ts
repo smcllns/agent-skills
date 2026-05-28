@@ -454,26 +454,6 @@ describe("atag-poll", () => {
     expect(await readLog()).toBe("");
   });
 
-  it("adds terminal response-style instructions when requested", async () => {
-    await installClaudeStub();
-    await writeFile(join(fixtureDir, "note.md"), "@codex please help\n");
-
-    const result = runPoll(["--once", "--dir", fixtureDir, "--response-style", "terminal"]);
-
-    expect(result.exitCode).toBe(0);
-    expect(await readLog()).toContain("Response style: terminal plain text");
-  });
-
-  it("adds markdown response-style instructions when requested", async () => {
-    await installClaudeStub();
-    await writeFile(join(fixtureDir, "note.md"), "@codex please help\n");
-
-    const result = runPoll(["--once", "--dir", fixtureDir, "--response-style", "markdown"]);
-
-    expect(result.exitCode).toBe(0);
-    expect(await readLog()).toContain("Response style: Markdown");
-  });
-
   it("separates debug match and invocation output with blank lines", async () => {
     await installClaudeStub({ stdout: "claude output\n" });
     await writeFile(join(fixtureDir, "note.md"), "@codex please help\n");

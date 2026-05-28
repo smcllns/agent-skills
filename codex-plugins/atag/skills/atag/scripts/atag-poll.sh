@@ -6,7 +6,6 @@ target_dir="$PWD"
 debug=0
 once=0
 timeout_seconds=1800
-response_style=auto
 user_name_arg=""
 
 trigger_tokens=()
@@ -23,11 +22,14 @@ Options:
   --once                Run one scan cycle and exit.
   --debug               Print one-line no-match status and match diagnostics.
   --timeout SECONDS     Kill Claude after this many seconds. Default: 1800.
-  --response-style MODE Claude output style: auto, terminal, or markdown. Default: auto.
   --name NAME           Human name the agent should use for speaker labels.
   --user-name NAME      Alias for --name.
   --claude-arg ARG      Pass one argument to Claude. Prefer -- for many args.
   -h, --help            Show this help.
+
+Trust boundary: launches Claude with auto-accepted edits (--permission-mode
+acceptEdits) on the markdown it scans. Note content is untrusted input that the
+agent reads and acts on. Only point this at directories whose content you trust.
 EOF
 }
 
@@ -153,18 +155,6 @@ while [[ $# -gt 0 ]]; do
       timeout_seconds="$2"
       shift 2
       ;;
-    --response-style)
-      require_value "$1" "${2:-}"
-      case "$2" in
-        auto|terminal|markdown)
-          response_style="$2"
-          ;;
-        *)
-          die_usage "--response-style must be auto, terminal, or markdown"
-          ;;
-      esac
-      shift 2
-      ;;
     --name|--user-name)
       require_value "$1" "${2:-}"
       user_name_arg="$2"
@@ -239,15 +229,6 @@ for trigger in "${triggers[@]}"; do
   trigger_display+="@${trigger}"
 done
 
-resolved_response_style="$response_style"
-if [[ "$resolved_response_style" == "auto" ]]; then
-  if [[ -t 1 ]]; then
-    resolved_response_style=terminal
-  else
-    resolved_response_style=markdown
-  fi
-fi
-
 echo "Watching for ${trigger_display} agent tags in ${target_dir}..."
 echo ""
 inline_scan_regex="^([^>]*[[:space:]])?@(${trigger_alt})([^[:alnum:]_]|$)"
@@ -308,14 +289,12 @@ $0 !~ /^[[:space:]]*>/ { finish_callout(); next }
 }
 END { finish_callout() }'
 
-cleanup_files=()
+matches_file="$(mktemp -t atag-poll.XXXXXX)"
+scan_inline_file="$(mktemp -t atag-poll.XXXXXX)"
+scan_callout_file="$(mktemp -t atag-poll.XXXXXX)"
 
 cleanup() {
-  if [[ "${#cleanup_files[@]}" -gt 0 ]]; then
-    for path in "${cleanup_files[@]}"; do
-      [[ -n "$path" ]] && rm -f "$path"
-    done
-  fi
+  rm -f "$matches_file" "$scan_inline_file" "$scan_callout_file"
 }
 
 stop_loop() {
@@ -326,27 +305,11 @@ stop_loop() {
 trap cleanup EXIT
 trap stop_loop INT TERM HUP
 
-new_temp() {
-  local path
-  path="$(mktemp -t atag-poll.XXXXXX)"
-  cleanup_files+=("$path")
-  printf '%s' "$path"
-}
-
 scan_matches() {
   local output="$1"
-  local inline_matches callout_matches unique_matches mtime_matches
-  inline_matches="$(new_temp)"
-  callout_matches="$(new_temp)"
-  unique_matches="$(new_temp)"
-  mtime_matches="$(new_temp)"
-
-  : > "$inline_matches"
-  : > "$callout_matches"
-  : > "$output"
 
   set +e
-  grep -rlnE --include='*.md' "$inline_scan_regex" "$target_dir" > "$inline_matches"
+  grep -rlnE --include='*.md' "$inline_scan_regex" "$target_dir" > "$scan_inline_file"
   local grep_status=$?
   set -e
   if [[ "$grep_status" -ne 0 && "$grep_status" -ne 1 ]]; then
@@ -354,34 +317,19 @@ scan_matches() {
     return "$grep_status"
   fi
 
-  find "$target_dir" -name '*.md' -exec awk -v trigger_alt="$trigger_alt" -v human_label="$human_label" "$callout_scan_awk" {} + > "$callout_matches"
+  find "$target_dir" -name '*.md' -exec awk -v trigger_alt="$trigger_alt" -v human_label="$human_label" "$callout_scan_awk" {} + > "$scan_callout_file"
 
-  cat "$inline_matches" > "$unique_matches"
-  awk '{ sub(/:[0-9]+$/, ""); print }' "$callout_matches" >> "$unique_matches"
-  sort -u "$unique_matches" > "$mtime_matches"
-
-  : > "$output"
-  while IFS= read -r file; do
-    [[ -n "$file" ]] || continue
-    if mtime="$(stat -f '%m' "$file" 2>/dev/null)" || mtime="$(stat -c '%Y' "$file" 2>/dev/null)"; then
-      printf '%s\t%s\n' "$mtime" "$file"
-    else
-      printf '0\t%s\n' "$file"
-    fi
-  done < "$mtime_matches" | sort -rn | cut -f2- > "$output"
+  {
+    cat "$scan_inline_file"
+    awk '{ sub(/:[0-9]+$/, ""); print }' "$scan_callout_file"
+  } | sort -u > "$output"
 }
 
 build_prompt() {
   local matches="$1"
   local files
-  local response_instruction
   local human_instruction
-  files="$(sed "s#^${target_dir}/##; s#^#- #" "$matches")"
-  if [[ "$resolved_response_style" == "terminal" ]]; then
-    response_instruction="Response style: terminal plain text. Do not use Markdown tables. Output only changes made, active threads left unchanged, and changes you could not make."
-  else
-    response_instruction="Response style: Markdown. Output only changes made, active threads left unchanged, and changes you could not make."
-  fi
+  files="$(while IFS= read -r f; do [[ -n "$f" ]] && printf -- '- %s\n' "${f#"$target_dir"/}"; done < "$matches")"
   human_instruction="Human speaker label: \`${human_label}\` (source: ${human_label_source}). Use this label for human turns and label-only placeholders."
   if [[ "$missing_human_name" -eq 1 ]]; then
     human_instruction+="
@@ -394,7 +342,7 @@ Use the atag skill in the current working directory.
 Trigger set: ${trigger_display}
 ${human_instruction}
 
-${response_instruction}
+Output only changes made, active threads left unchanged, and changes you could not make.
 
 The cheap pre-scan found unresolved tag work in:
 ${files}
@@ -409,7 +357,7 @@ run_with_timeout() {
 
   (
     cd "$target_dir"
-    "$@"
+    exec "$@"
   ) &
   local pid=$!
 
@@ -457,11 +405,9 @@ run_claude() {
 }
 
 run_once() {
-  local matches
-  matches="$(new_temp)"
-  scan_matches "$matches"
+  scan_matches "$matches_file"
 
-  if [[ ! -s "$matches" ]]; then
+  if [[ ! -s "$matches_file" ]]; then
     if [[ "$debug" -eq 1 ]]; then
       printf '[%s]  No %s agent tags detected\n' "$(date +%H:%M)" "$trigger_display"
     fi
@@ -470,14 +416,14 @@ run_once() {
 
   if [[ "$debug" -eq 1 ]]; then
     local count
-    count="$(wc -l < "$matches" | tr -d '[:space:]')"
+    count="$(wc -l < "$matches_file" | tr -d '[:space:]')"
     echo "atag-poll: found ${count} matched file(s) in $target_dir for ${trigger_display}" >&2
     echo >&2
-    sed 's/^/atag-poll: match /' "$matches" >&2
+    sed 's/^/atag-poll: match /' "$matches_file" >&2
   fi
 
   local prompt
-  prompt="$(build_prompt "$matches")"
+  prompt="$(build_prompt "$matches_file")"
   run_claude "$prompt"
 }
 

@@ -76,9 +76,9 @@ For a soft line break inside a single turn, use two trailing spaces.
 
 A tag is unresolved when any of:
 
-- An open `> [!NOTE]+ ...` callout whose latest nonblank, non-placeholder quoted line is not a sealed agent turn.
+- An open `> [!NOTE]+ ...` callout whose latest nonblank, non-placeholder quoted line is neither sealed with `<!--atag:eot-->` nor an agent speaker label (i.e. a human spoke last).
 - A valid inline tag for a recognized trigger not yet processed into a callout.
-- A resolved `> [!DONE]- ...` callout whose latest nonblank quoted line does not end with `<!--atag:eot-->`.
+- A resolved `> [!DONE]- ...` callout whose latest nonblank, non-placeholder quoted line does not end with `<!--atag:eot-->`.
 
 A bare inline-code human label for this skill, such as ``> `sam` ``, is a placeholder, not a turn. Legacy emphasized label-only human placeholders are also skipped so old prefilled threads do not retrigger. This skip applies only to this skill's human speaker label; other code-only quoted lines remain real replies.
 
@@ -215,9 +215,10 @@ Defaults:
 - Prints nothing on no-match unless `--debug` is set.
 - With `--debug`, no-match prints: `[HH:MM]  No @agent, @claude, @codex agent tags detected`.
 - Runs Claude from the target directory with `claude -p --model sonnet --permission-mode acceptEdits`.
-- Defaults `--response-style auto`: terminal stdout requests plain terminal text; piped/redirected/UI callers get Markdown. Use `--response-style terminal` or `--response-style markdown` to force it.
 - Resolves the human speaker label from `--name`/`--user-name`, then `git config user.name`, GitHub user name, Unix username, and finally a non-colliding generic label, usually `user`.
 - Uses a 30-minute timeout around Claude as a runaway guard.
+
+⚠️ **Trust boundary:** the scanned notes are untrusted input that Claude reads and acts on with auto-accepted edits. Only run this against directories whose content you trust.
 
 Useful options:
 
@@ -225,7 +226,6 @@ Useful options:
 skills/atag/scripts/atag-poll.sh --once --dir /path/to/notes
 skills/atag/scripts/atag-poll.sh --name Sam --dir /path/to/notes
 skills/atag/scripts/atag-poll.sh --debug --interval 30 --dir /path/to/notes
-skills/atag/scripts/atag-poll.sh --response-style terminal --dir /path/to/notes
 skills/atag/scripts/atag-poll.sh --dir /path/to/notes @pi
 skills/atag/scripts/atag-poll.sh --dir /path/to/notes '@agento, @pi' -- --max-budget-usd 1
 ```
