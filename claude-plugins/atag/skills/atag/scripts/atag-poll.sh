@@ -6,6 +6,8 @@ target_dir="$PWD"
 debug=0
 once=0
 timeout_seconds=1800
+response_style=auto
+heartbeat_seconds="${ATAG_POLL_HEARTBEAT_SECONDS:-15}"
 user_name_arg=""
 
 trigger_tokens=()
@@ -22,6 +24,7 @@ Options:
   --once                Run one scan cycle and exit.
   --debug               Print one-line no-match status and match diagnostics.
   --timeout SECONDS     Kill Claude after this many seconds. Default: 1800.
+  --response-style MODE Claude output style: auto, terminal, or markdown. Default: auto.
   --name NAME           Human name the agent should use for speaker labels.
   --user-name NAME      Alias for --name.
   --claude-arg ARG      Pass one argument to Claude. Prefer -- for many args.
@@ -47,6 +50,18 @@ require_value() {
 
 positive_integer() {
   [[ "$1" =~ ^[0-9]+$ ]] && [[ "$1" -gt 0 ]]
+}
+
+timestamp() {
+  date +%H:%M
+}
+
+log_stdout() {
+  printf '[%s]  %s\n' "$(timestamp)" "$*"
+}
+
+log_stderr() {
+  printf '[%s]  %s\n' "$(timestamp)" "$*" >&2
 }
 
 label_from_name() {
@@ -155,6 +170,18 @@ while [[ $# -gt 0 ]]; do
       timeout_seconds="$2"
       shift 2
       ;;
+    --response-style)
+      require_value "$1" "${2:-}"
+      case "$2" in
+        auto|terminal|markdown)
+          response_style="$2"
+          ;;
+        *)
+          die_usage "--response-style must be auto, terminal, or markdown"
+          ;;
+      esac
+      shift 2
+      ;;
     --name|--user-name)
       require_value "$1" "${2:-}"
       user_name_arg="$2"
@@ -185,6 +212,8 @@ while [[ $# -gt 0 ]]; do
       ;;
   esac
 done
+
+positive_integer "$heartbeat_seconds" || die_usage "ATAG_POLL_HEARTBEAT_SECONDS must be a positive integer"
 
 if [[ ! -d "$target_dir" ]]; then
   echo "atag-poll: directory not found: $target_dir" >&2
@@ -229,7 +258,16 @@ for trigger in "${triggers[@]}"; do
   trigger_display+="@${trigger}"
 done
 
-echo "Watching for ${trigger_display} agent tags in ${target_dir}..."
+resolved_response_style="$response_style"
+if [[ "$resolved_response_style" == "auto" ]]; then
+  if [[ -t 1 ]]; then
+    resolved_response_style=terminal
+  else
+    resolved_response_style=markdown
+  fi
+fi
+
+log_stdout "Watching for ${trigger_display} agent tags in ${target_dir}..."
 echo ""
 inline_scan_regex="^([^>]*[[:space:]])?@(${trigger_alt})([^[:alnum:]_]|$)"
 
@@ -289,15 +327,31 @@ $0 !~ /^[[:space:]]*>/ { finish_callout(); next }
 }
 END { finish_callout() }'
 
-matches_file="$(mktemp -t atag-poll.XXXXXX)"
-scan_inline_file="$(mktemp -t atag-poll.XXXXXX)"
-scan_callout_file="$(mktemp -t atag-poll.XXXXXX)"
+cleanup_files=()
+current_child_pid=0
+current_timer_pid=0
+current_heartbeat_pid=0
 
 cleanup() {
-  rm -f "$matches_file" "$scan_inline_file" "$scan_callout_file"
+  if [[ "${#cleanup_files[@]}" -gt 0 ]]; then
+    for path in "${cleanup_files[@]}"; do
+      [[ -n "$path" ]] && rm -f "$path"
+    done
+  fi
 }
 
 stop_loop() {
+  trap - INT TERM HUP
+  log_stderr "atag-poll: interrupted; exiting. If Claude was editing, the document may be partially updated."
+  if [[ "${current_child_pid:-0}" -gt 0 ]] && kill -0 "$current_child_pid" 2>/dev/null; then
+    kill -INT "$current_child_pid" 2>/dev/null || true
+  fi
+  if [[ "${current_timer_pid:-0}" -gt 0 ]]; then
+    kill "$current_timer_pid" 2>/dev/null || true
+  fi
+  if [[ "${current_heartbeat_pid:-0}" -gt 0 ]]; then
+    kill "$current_heartbeat_pid" 2>/dev/null || true
+  fi
   cleanup
   exit 130
 }
@@ -305,11 +359,27 @@ stop_loop() {
 trap cleanup EXIT
 trap stop_loop INT TERM HUP
 
+new_temp() {
+  local path
+  path="$(mktemp -t atag-poll.XXXXXX)"
+  cleanup_files+=("$path")
+  printf '%s' "$path"
+}
+
 scan_matches() {
   local output="$1"
+  local inline_matches callout_matches unique_matches mtime_matches
+  inline_matches="$(new_temp)"
+  callout_matches="$(new_temp)"
+  unique_matches="$(new_temp)"
+  mtime_matches="$(new_temp)"
+
+  : > "$inline_matches"
+  : > "$callout_matches"
+  : > "$output"
 
   set +e
-  grep -rlnE --include='*.md' "$inline_scan_regex" "$target_dir" > "$scan_inline_file"
+  grep -rlnE --include='*.md' "$inline_scan_regex" "$target_dir" > "$inline_matches"
   local grep_status=$?
   set -e
   if [[ "$grep_status" -ne 0 && "$grep_status" -ne 1 ]]; then
@@ -317,19 +387,34 @@ scan_matches() {
     return "$grep_status"
   fi
 
-  find "$target_dir" -name '*.md' -exec awk -v trigger_alt="$trigger_alt" -v human_label="$human_label" "$callout_scan_awk" {} + > "$scan_callout_file"
+  find "$target_dir" -name '*.md' -exec awk -v trigger_alt="$trigger_alt" -v human_label="$human_label" "$callout_scan_awk" {} + > "$callout_matches"
 
-  {
-    cat "$scan_inline_file"
-    awk '{ sub(/:[0-9]+$/, ""); print }' "$scan_callout_file"
-  } | sort -u > "$output"
+  cat "$inline_matches" > "$unique_matches"
+  awk '{ sub(/:[0-9]+$/, ""); print }' "$callout_matches" >> "$unique_matches"
+  sort -u "$unique_matches" > "$mtime_matches"
+
+  : > "$output"
+  while IFS= read -r file; do
+    [[ -n "$file" ]] || continue
+    if mtime="$(stat -f '%m' "$file" 2>/dev/null)" || mtime="$(stat -c '%Y' "$file" 2>/dev/null)"; then
+      printf '%s\t%s\n' "$mtime" "$file"
+    else
+      printf '0\t%s\n' "$file"
+    fi
+  done < "$mtime_matches" | sort -rn | cut -f2- > "$output"
 }
 
 build_prompt() {
   local matches="$1"
   local files
+  local response_instruction
   local human_instruction
-  files="$(while IFS= read -r f; do [[ -n "$f" ]] && printf -- '- %s\n' "${f#"$target_dir"/}"; done < "$matches")"
+  files="$(sed "s#^${target_dir}/##; s#^#- #" "$matches")"
+  if [[ "$resolved_response_style" == "terminal" ]]; then
+    response_instruction="Response style: terminal plain text. Do not use Markdown tables. Output only changes made, active threads left unchanged, and changes you could not make."
+  else
+    response_instruction="Response style: Markdown. Output only changes made, active threads left unchanged, and changes you could not make."
+  fi
   human_instruction="Human speaker label: \`${human_label}\` (source: ${human_label_source}). Use this label for human turns and label-only placeholders."
   if [[ "$missing_human_name" -eq 1 ]]; then
     human_instruction+="
@@ -342,7 +427,7 @@ Use the atag skill in the current working directory.
 Trigger set: ${trigger_display}
 ${human_instruction}
 
-Output only changes made, active threads left unchanged, and changes you could not make.
+${response_instruction}
 
 The cheap pre-scan found unresolved tag work in:
 ${files}
@@ -357,9 +442,12 @@ run_with_timeout() {
 
   (
     cd "$target_dir"
-    exec "$@"
+    "$@"
   ) &
   local pid=$!
+  current_child_pid=$pid
+  local start_epoch
+  start_epoch="$(date +%s)"
 
   (
     sleep "$limit"
@@ -370,6 +458,25 @@ run_with_timeout() {
     fi
   ) &
   local timer_pid=$!
+  current_timer_pid=$timer_pid
+
+  local heartbeat_pid=0
+  if [[ "$debug" -eq 1 ]]; then
+    (
+      while sleep "$heartbeat_seconds"; do
+        if kill -0 "$pid" 2>/dev/null; then
+          local now elapsed
+          now="$(date +%s)"
+          elapsed=$((now - start_epoch))
+          log_stderr "[DEBUG] atag-poll: claude still running (${elapsed}s elapsed)"
+        else
+          exit 0
+        fi
+      done
+    ) &
+    heartbeat_pid=$!
+    current_heartbeat_pid=$heartbeat_pid
+  fi
 
   set +e
   wait "$pid"
@@ -378,48 +485,84 @@ run_with_timeout() {
 
   kill "$timer_pid" 2>/dev/null || true
   wait "$timer_pid" 2>/dev/null || true
+  if [[ "$heartbeat_pid" -gt 0 ]]; then
+    kill "$heartbeat_pid" 2>/dev/null || true
+    wait "$heartbeat_pid" 2>/dev/null || true
+  fi
+  current_child_pid=0
+  current_timer_pid=0
+  current_heartbeat_pid=0
 
   if [[ "$status" -eq 143 || "$status" -eq 137 ]]; then
-    echo "atag-poll: claude timed out after ${limit}s" >&2
+    log_stderr "atag-poll: claude timed out after ${limit}s"
     return 124
   fi
 
   return "$status"
 }
 
+has_claude_option() {
+  local option="$1"
+  local arg
+  [[ "${#claude_args[@]}" -gt 0 ]] || return 1
+  for arg in "${claude_args[@]}"; do
+    [[ "$arg" == "$option" || "$arg" == "${option}="* ]] && return 0
+  done
+  return 1
+}
+
 run_claude() {
   local prompt="$1"
   local cmd=(claude -p --model sonnet --permission-mode acceptEdits)
+  if ! has_claude_option "--effort"; then
+    cmd+=(--effort low)
+  fi
   if [[ "${#claude_args[@]}" -gt 0 ]]; then
     cmd+=("${claude_args[@]}")
   fi
   cmd+=("$prompt")
 
+  log_stderr "atag-poll: spawning claude agent to resolve..."
   if [[ "$debug" -eq 1 ]]; then
-    printf 'atag-poll: invoking'
+    printf '[%s]  [DEBUG] atag-poll: invoking' "$(timestamp)"
     printf ' %q' "${cmd[@]}"
     printf '\n\n'
+  else
+    echo
   fi >&2
 
   run_with_timeout "$timeout_seconds" "${cmd[@]}"
 }
 
 run_once() {
+  local matches_file
+  matches_file="$(new_temp)"
   scan_matches "$matches_file"
 
   if [[ ! -s "$matches_file" ]]; then
     if [[ "$debug" -eq 1 ]]; then
-      printf '[%s]  No %s agent tags detected\n' "$(date +%H:%M)" "$trigger_display"
+      log_stdout "No ${trigger_display} agent tags detected"
     fi
     return 0
   fi
 
-  if [[ "$debug" -eq 1 ]]; then
-    local count
-    count="$(wc -l < "$matches_file" | tr -d '[:space:]')"
-    echo "atag-poll: found ${count} matched file(s) in $target_dir for ${trigger_display}" >&2
-    echo >&2
-    sed 's/^/atag-poll: match /' "$matches_file" >&2
+  local count
+  count="$(wc -l < "$matches_file" | tr -d '[:space:]')"
+  echo >&2
+  if [[ "$count" -eq 1 ]]; then
+    local match_file match_rel match_display
+    read -r match_file < "$matches_file"
+    match_rel="${match_file#${target_dir}/}"
+    match_display="$(basename "$target_dir")/${match_rel}"
+    log_stderr "atag-poll: found 1 agent tag match (${trigger_display}) in ${match_display}"
+  else
+    log_stderr "atag-poll: found ${count} agent tag matches (${trigger_display})"
+    while IFS= read -r match_file; do
+      [[ -n "$match_file" ]] || continue
+      match_rel="${match_file#${target_dir}/}"
+      match_display="$(basename "$target_dir")/${match_rel}"
+      log_stderr "  - ${match_display}"
+    done < "$matches_file"
   fi
 
   local prompt
