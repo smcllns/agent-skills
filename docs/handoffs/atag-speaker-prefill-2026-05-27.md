@@ -159,23 +159,24 @@ Nice to have / acceptable experiment risk:
 
 PR #29 merged with three settled-but-still-labeled "unresolved questions" in the plan. Fast-follow PR #30 records them as closed decisions:
 
-- Human speaker name: v1 accepts the agent's known human name with `--name`/`--user-name`, then falls back to `git config user.name`, GitHub user name/login, Unix username, and finally `user`.
+- Human speaker name: v1 accepts the agent's known human name with `--name`/`--user-name`, then falls back to `git config user.name`, GitHub user name/login, Unix username, and finally a non-colliding generic label, usually `user`.
 - `[!DONE]-` prefill: no v1 prefill for DONE follow-ups. DONE threads are already append-friendly after `<!--atag:eot-->`; prefill stays scoped to active `[!NOTE]+` turns waiting on the human.
-- Placeholder marker/comment: no explicit marker for known human labels. A label-only human line is readable and sufficient when the name is known; only the final `user` fallback gets the scanner-ignored `<!--atag:missing-human-name ...-->` recovery comment.
+- Placeholder marker/comment: no explicit marker for known human labels. A label-only human line is readable and sufficient when the name is known; only the generic missing-name fallback gets the scanner-ignored `<!--atag:missing-human-name ...-->` recovery comment.
 - Legacy label support: keep scanning support for old bare/colon agent labels and legacy emphasized human-label placeholders so existing notes do not wake up due to the syntax migration.
 
 No open v1 speaker-prefill questions remain after these decisions.
 
-PR #30 follow-up after review:
+PR #30/31 follow-up after review:
 
 - Added `--name`/`--user-name` for the agent's known human name.
-- Added fallback identity resolution: git name, GitHub user name, Unix username, then `user`.
+- Added fallback identity resolution: git name, GitHub user name, Unix username, then a non-colliding generic label, usually `user`.
 - Added a scanner-ignored `<!--atag:missing-human-name ...-->` comment for the final fallback.
+- Fixed the independent-review blocker where a human label colliding with an agent trigger, such as `codex`, could make a real human reply look like an agent-last line. Explicit colliding `--name` values now fail loud; fallback identities that collide with the trigger set are skipped.
 
 Fast-follow verification passed:
 
 - `bash -n skills/atag/scripts/atag-poll.sh`
-- `bun test skills/atag/reference/markdown-agent-tags.spec.test.ts skills/atag/reference/atag-poll.test.ts` - 234 pass, 0 fail
+- `bun test skills/atag/reference/markdown-agent-tags.spec.test.ts skills/atag/reference/atag-poll.test.ts` - 243 pass, 0 fail
 - `scripts/sync-skills.sh`
 - `diff -qr -x dev skills/atag claude-plugins/atag/skills/atag`
 - `diff -qr -x dev skills/atag codex-plugins/atag/skills/atag`

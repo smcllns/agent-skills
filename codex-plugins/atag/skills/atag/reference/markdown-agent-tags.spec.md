@@ -45,10 +45,14 @@ human-label convention with that human's preferred short label. Agents/tools may
 prefill that bare human label in active `[!NOTE]+` threads so the human can just
 type the reply text. Label-only human-label lines are placeholders; other
 code-only quoted lines remain real replies. Poller-provided names are normalized
-to a simple lower-case label, using the first word for full names.
+to a simple lower-case label, using the first word for full names. Labels that
+collide with the active agent trigger set are invalid for `--name` and skipped
+during fallback; if the final fallback would collide, the poller uses the next
+non-colliding generic label.
 
-If no human name can be detected, agents/tools may use `user` and include this
-quoted comment at the bottom of the callout:
+If no human name can be detected, agents/tools may use `user` or another
+non-colliding generic label and include this quoted comment at the bottom of the
+callout:
 
 ```md
 > <!--atag:missing-human-name no human name detected; please ask the human what name agents should use and store it in AGENTS.md, git config user.name, or pass --name to atag-poll.sh.-->
